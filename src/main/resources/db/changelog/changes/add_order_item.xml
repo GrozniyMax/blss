@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="add_order_item" author="m.s.taranenko">
+        <sql>
+            CREATE TABLE order_item
+            (
+                id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                order_id   UUID NOT NULL REFERENCES order,
+                product_id UUID NOT NULL REFERENCES product,
+                yacheyka   TEXT,
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

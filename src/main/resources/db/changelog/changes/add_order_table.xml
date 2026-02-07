@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="add_order_table" author="m.s.taranenko">
+        <preConditions>
+            <tableExists tableName="order"/>
+        </preConditions>
+        <sql>
+            CREATE TABLE order
+            (
+                id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                status        TEXT        NOT NULL,
+                owner         UUID        NOT NULL REFERENCES users,
+                localtion     UUID        NOT NULL REFERENCES delivery_point,
+                total_amount  INTEGER     NOT NULL,
+                creation_date TIMESTAMPTZ NOT NULL,
+                last_edited   TIMESTAMPTZ
+            );
+        </sql>
+    </changeSet>

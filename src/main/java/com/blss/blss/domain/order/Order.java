@@ -2,11 +2,13 @@ package com.blss.blss.domain.order;
 
 import lombok.With;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @With
+@Table("order")
 public record Order(
         @Id
         UUID id,
