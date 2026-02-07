@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @With
-record Order(
+public record Order(
         @Id
         UUID id,
 

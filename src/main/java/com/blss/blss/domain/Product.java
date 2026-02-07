@@ -8,7 +8,7 @@ import java.util.UUID;
 /**
  * Информация о товаре в магазине
  */
-record Product(
+public record Product(
 
         @Id
         UUID id,

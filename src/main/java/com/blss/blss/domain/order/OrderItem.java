@@ -12,7 +12,7 @@ import java.util.UUID;
  * @param yacheyka
  */
 @With
-record OrderItem(
+public record OrderItem(
 
     UUID orderId,
     UUID storeItem,
