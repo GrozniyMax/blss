@@ -1,0 +1,658 @@
+openapi: 3.0.3
+info:
+  title: API для процесса выдачи заказа
+  description: |
+    API для взаимодействия между консультантом и складской системой в процессе выдачи заказа.
+    Основано на бизнес-процессе BPMN.
+  version: 1.0.0
+  contact:
+    name: Support Team
+    email: support@example.com
+
+servers:
+  - url: https://api.warehouse.example.com/v1
+    description: Production server
+  - url: https://api.staging.warehouse.example.com/v1
+    description: Staging server
+
+tags:
+  - name: Orders
+    description: Операции с заказами
+  - name: Inventory
+    description: Управление складскими запасами
+  - name: OrderPickup
+    description: Процесс выдачи заказа
+
+paths:
+  # ============================================
+  # Эндпоинты для Консультанта -> Складская система
+  # ============================================
+
+  /orders/{orderId}/verify:
+    post:
+      tags:
+        - Orders
+      summary: Проверка заказа (проверка заказа)
+      description: |
+        Консультант отправляет номер заказа для проверки его корректности и наличия.
+        Соответствует задаче "получение номера заказа" и "проверка заказа" в BPMN.
+      operationId: verifyOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Номер заказа
+      responses:
+        '200':
+          description: Заказ корректный и доступен для выдачи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderVerificationResponse'
+        '400':
+          description: Заказ некорректен (неверный номер, отменен и т.д.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Заказ уже выдан или забронирован другим клиентом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{orderId}/pickup/prepare:
+    post:
+      tags:
+        - OrderPickup
+      summary: Подготовка товара к выдаче (принести товар со склада)
+      description: |
+        Запрос на подготовку товара для выдачи клиенту.
+        Соответствует задаче "принести товар со склада".
+      operationId: prepareOrderForPickup
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Номер заказа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupPreparationRequest'
+      responses:
+        '200':
+          description: Товар подготовлен и готов к проверке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupPreparationResponse'
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Товар недоступен для выдачи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{orderId}/pickup/confirm:
+    post:
+      tags:
+        - OrderPickup
+      summary: Подтверждение выдачи заказа (выдача заказа)
+      description: |
+        Подтверждение, что клиент забрал заказ.
+        Соответствует задаче "выдача заказа".
+      operationId: confirmOrderPickup
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Номер заказа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupConfirmationRequest'
+      responses:
+        '200':
+          description: Выдача заказа успешно подтверждена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupConfirmationResponse'
+        '400':
+          description: Неверный статус заказа для подтверждения выдачи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{orderId}/pickup/reject:
+    post:
+      tags:
+        - OrderPickup
+      summary: Отказ от выдачи заказа (формирование возврата)
+      description: |
+        Клиент отказался от заказа, необходимо оформить возврат.
+        Соответствует задаче "формирование возврата".
+      operationId: rejectOrderPickup
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Номер заказа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupRejectionRequest'
+      responses:
+        '200':
+          description: Возврат успешно оформлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickupRejectionResponse'
+        '400':
+          description: Неверный статус заказа для возврата
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================
+  # Эндпоинты для Складской системы -> Консультант
+  # ============================================
+
+  /orders/{orderId}/status:
+    get:
+      tags:
+        - Orders
+      summary: Получение статуса заказа (получение ответа)
+      description: |
+        Консультант запрашивает текущий статус заказа.
+        Соответствует задаче "получение ответа".
+      operationId: getOrderStatus
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Номер заказа
+      responses:
+        '200':
+          description: Статус заказа успешно получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusResponse'
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================
+  # Эндпоинты для управления инвентарем
+  # ============================================
+
+  /inventory/reserve:
+    post:
+      tags:
+        - Inventory
+      summary: Бронирование товара (формируется бронь товара)
+      description: |
+        Бронирование товара при оформлении заказа.
+        Соответствует задаче "формируется бронь товара".
+      operationId: reserveInventory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryReservationRequest'
+      responses:
+        '200':
+          description: Товар успешно забронирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryReservationResponse'
+        '400':
+          description: Недостаточно товара на складе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /inventory/release:
+    post:
+      tags:
+        - Inventory
+      summary: Освобождение брони товара
+      description: |
+        Освобождение забронированного товара при отказе или отмене заказа.
+      operationId: releaseInventory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryReleaseRequest'
+      responses:
+        '200':
+          description: Бронь успешно освобождена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryReleaseResponse'
+        '404':
+          description: Бронь не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /inventory/update-status:
+    post:
+      tags:
+        - Inventory
+      summary: Обновление статуса инвентаря
+      description: |
+        Обновление статуса товара (например, после выдачи или возврата).
+        Соответствует задаче "получение изменения о заказе".
+      operationId: updateInventoryStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryStatusUpdateRequest'
+      responses:
+        '200':
+          description: Статус успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryStatusUpdateResponse'
+        '400':
+          description: Неверные данные для обновления
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # ============================================
+    # Основные модели данных
+    # ============================================
+
+    Order:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: Уникальный идентификатор заказа
+        customerId:
+          type: string
+          description: Идентификатор клиента
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        totalAmount:
+          type: number
+          format: decimal
+          description: Общая сумма заказа
+        status:
+          type: string
+          enum:
+            - CREATED
+            - PROCESSING
+            - READY_FOR_PICKUP
+            - PICKED_UP
+            - CANCELLED
+            - RETURNED
+          description: Статус заказа
+        createdAt:
+          type: string
+          format: date-time
+          description: Дата создания заказа
+        pickupLocation:
+          type: string
+          description: Место выдачи заказа
+        consultantId:
+          type: string
+          description: Идентификатор консультанта
+
+    OrderItem:
+      type: object
+      properties:
+        sku:
+          type: string
+          description: SKU товара
+        name:
+          type: string
+          description: Наименование товара
+        quantity:
+          type: integer
+          minimum: 1
+          description: Количество
+        price:
+          type: number
+          format: decimal
+          description: Цена за единицу
+        reservedInventoryId:
+          type: string
+          description: Идентификатор брони инвентаря
+
+    # ============================================
+    # Модели запросов и ответов
+    # ============================================
+
+    OrderVerificationResponse:
+      type: object
+      properties:
+        isValid:
+          type: boolean
+          description: Корректен ли заказ
+        order:
+          $ref: '#/components/schemas/Order'
+        message:
+          type: string
+          description: Дополнительное сообщение
+        pickupInstructions:
+          type: string
+          description: Инструкции по выдаче
+
+    PickupPreparationRequest:
+      type: object
+      required:
+        - consultantId
+      properties:
+        consultantId:
+          type: string
+          description: Идентификатор консультанта
+        preparationNotes:
+          type: string
+          description: Примечания по подготовке
+
+    PickupPreparationResponse:
+      type: object
+      properties:
+        preparationId:
+          type: string
+          description: Идентификатор подготовки
+        location:
+          type: string
+          description: Местонахождение подготовленного товара
+        estimatedTime:
+          type: integer
+          description: Оценочное время подготовки в минутах
+        itemsPrepared:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreparedItem'
+
+    PreparedItem:
+      type: object
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        quantity:
+          type: integer
+        condition:
+          type: string
+          enum:
+            - NEW
+            - GOOD
+            - DAMAGED
+          description: Внешнее состояние
+
+    PickupConfirmationRequest:
+      type: object
+      required:
+        - consultantId
+        - customerSignature
+      properties:
+        consultantId:
+          type: string
+        customerSignature:
+          type: string
+          description: Подпись клиента (базовая строка)
+        pickupTime:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    PickupConfirmationResponse:
+      type: object
+      properties:
+        confirmationId:
+          type: string
+        pickupTime:
+          type: string
+          format: date-time
+        receiptNumber:
+          type: string
+          description: Номер квитанции о выдаче
+
+    PickupRejectionRequest:
+      type: object
+      required:
+        - consultantId
+        - reason
+      properties:
+        consultantId:
+          type: string
+        reason:
+          type: string
+          enum:
+            - CUSTOMER_REFUSED
+            - DAMAGED_GOODS
+            - WRONG_ITEM
+            - OTHER
+        details:
+          type: string
+        returnToInventory:
+          type: boolean
+          default: true
+
+    PickupRejectionResponse:
+      type: object
+      properties:
+        returnId:
+          type: string
+          description: Идентификатор возврата
+        refundAmount:
+          type: number
+          format: decimal
+        inventoryUpdated:
+          type: boolean
+          description: Инвентарь успешно обновлен
+
+    OrderStatusResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        status:
+          type: string
+        lastUpdated:
+          type: string
+          format: date-time
+        nextAction:
+          type: string
+          description: Следующее рекомендуемое действие
+
+    InventoryReservationRequest:
+      type: object
+      required:
+        - orderId
+        - items
+      properties:
+        orderId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservationItem'
+        reservationDuration:
+          type: integer
+          description: Длительность брони в часах
+          default: 24
+
+    ReservationItem:
+      type: object
+      required:
+        - sku
+        - quantity
+      properties:
+        sku:
+          type: string
+        quantity:
+          type: integer
+        warehouseLocation:
+          type: string
+          description: Предпочтительное место на складе
+
+    InventoryReservationResponse:
+      type: object
+      properties:
+        reservationId:
+          type: string
+        itemsReserved:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservedItem'
+        validUntil:
+          type: string
+          format: date-time
+
+    ReservedItem:
+      type: object
+      properties:
+        sku:
+          type: string
+        quantity:
+          type: integer
+        reservationId:
+          type: string
+        location:
+          type: string
+
+    InventoryReleaseRequest:
+      type: object
+      required:
+        - reservationId
+      properties:
+        reservationId:
+          type: string
+        reason:
+          type: string
+        force:
+          type: boolean
+          default: false
+
+    InventoryReleaseResponse:
+      type: object
+      properties:
+        released:
+          type: boolean
+        itemsReleased:
+          type: integer
+          description: Количество освобожденных позиций
+
+    InventoryStatusUpdateRequest:
+      type: object
+      required:
+        - sku
+        - action
+      properties:
+        sku:
+          type: string
+        action:
+          type: string
+          enum:
+            - PICKUP
+            - RETURN
+            - DAMAGE
+            - LOSS
+        quantity:
+          type: integer
+        orderId:
+          type: string
+        notes:
+          type: string
+
+    InventoryStatusUpdateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        newQuantity:
+          type: integer
+        transactionId:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
+        details:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  # ============================================
+  # Заголовки безопасности
+  # ============================================
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API ключ для аутентификации
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
