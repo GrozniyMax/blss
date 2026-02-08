@@ -4,6 +4,7 @@ import com.blss.blss.domain.Product;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ProductRepo extends CrudRepository<Product, UUID> {

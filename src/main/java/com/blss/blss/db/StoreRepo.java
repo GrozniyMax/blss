@@ -5,6 +5,7 @@ import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -21,4 +22,7 @@ public interface StoreRepo extends CrudRepository<StoreItem, UUID> {
 
     @Query("INSERT INTO store (product_id, count) VALUES (:#{#storeItem.productId}, :#{#storeItem.count})")
     void create(StoreItem storeItem);
+
+    @Query("UPDATE store SET count = count - 1 WHERE product_id IN :productIds")
+    void decrementCount(List<UUID> productId);
 }
