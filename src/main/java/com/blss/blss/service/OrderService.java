@@ -50,6 +50,8 @@ public class OrderService {
                 .totalAmount(totalPrice)
                 .build();
 
+        storeRepo.decrementCount(productIds);
+
         order = orderRepo.create(order);
         var orderId = order.id();
 
