@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public class GetOrderResponse (
+public record GetOrderResponse (
     UUID id,
     UUID owner,
     Instant creationDate,
