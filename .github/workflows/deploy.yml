@@ -1,0 +1,49 @@
+name: Build and Deploy Spring Boot App (Gradle + SCP with password)
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: ./gradlew clean build
+
+      - name: Install dependencies (sshpass, scp, ssh)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client sshpass
+
+      - name: Deploy JAR via SCP (with password)
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_PATH: ${{ secrets.SERVER_PATH }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        run: |
+          # Формируем путь к JAR файлу
+          JAR_FILE=$(ls build/libs/*.jar)
+
+          # Выполняем SCP с использованием пароля
+          sshpass -p "$SERVER_PASSWORD" scp -P $SERVER_PORT "$JAR_FILE" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}"
