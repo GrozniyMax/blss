@@ -1,0 +1,35 @@
+@baseUrl = http://localhost:8080
+@productId = 00000000-0000-0000-0000-000000000000
+
+### Create product (bulk stock)
+POST {{baseUrl}}/inventory/products
+Content-Type: application/json
+
+{
+  "name": "Laptop Pro 15",
+  "price": 159990.00,
+  "initialCount": 250
+}
+
+### Create product (bulk stock)
+POST {{baseUrl}}/inventory/products
+Content-Type: application/json
+
+{
+  "name": "Smartphone X",
+  "price": 69990.00,
+  "initialCount": 500
+}
+
+### Create product (bulk stock)
+POST {{baseUrl}}/inventory/products
+Content-Type: application/json
+
+{
+  "name": "Wireless Headphones",
+  "price": 12990.00,
+  "initialCount": 1200
+}
+
+### Get product count
+GET {{baseUrl}}/inventory/products/{{productId}}/count
