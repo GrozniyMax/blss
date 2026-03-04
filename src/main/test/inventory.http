@@ -11,6 +11,7 @@ Content-Type: application/json
   "price": 159990.00,
   "initialCount": 250
 }
+
 > {% client.global.set("productId1", response.body.product.id); %}
 
 ### Create product
@@ -22,6 +23,7 @@ Content-Type: application/json
   "price": 69990.00,
   "initialCount": 500
 }
+
 > {% client.global.set("productId2", response.body.product.id); %}
 
 ### Create product

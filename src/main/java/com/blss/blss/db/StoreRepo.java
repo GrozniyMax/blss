@@ -1,7 +1,9 @@
 package com.blss.blss.db;
 
 import com.blss.blss.domain.store.StoreItem;
+import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,14 +17,18 @@ public interface StoreRepo extends CrudRepository<StoreItem, UUID> {
     StoreItem findByProductId(UUID productId);
 
     @Query("UPDATE store SET count = :#{#storeItem.count} WHERE product_id = :#{#storeItem.productId}")
+    @Modifying
     void update(StoreItem storeItem);
 
     @Query("UPDATE store SET count = count + :change WHERE product_id = :productId")
+    @Modifying
     void updateCount(UUID productId, Integer change);
 
     @Query("INSERT INTO store (product_id, count) VALUES (:#{#storeItem.productId}, :#{#storeItem.count})")
+    @Modifying
     void create(StoreItem storeItem);
 
-    @Query("UPDATE store SET count = count - 1 WHERE product_id IN :productIds")
-    void decrementCount(List<UUID> productId);
+    @Query("UPDATE store SET count = count - 1 WHERE product_id IN (:productIds)")
+    @Modifying
+    void decrementCount(@Param("productIds") List<UUID> productIds);
 }

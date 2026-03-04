@@ -35,9 +35,10 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
                 :#{#order.owner},
                 :#{#order.localtion},
                 :#{#order.totalAmount},
-                :#{#order.creationDate},
-                :#{#order.lastEdited}
+                NOW(),
+                NULL
             )
+            RETURNING *
             """)
     Order create(Order order);
 

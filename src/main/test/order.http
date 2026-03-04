@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:8080
-@orderId = {{orderId}}
-@ownerId = 00000000-0000-0000-0000-000000000100
-@locationId = 00000000-0000-0000-0000-000000000200
+@orderId = 00000000-0000-0000-0000-000000000010
+@ownerId = {{ownerId}}
+@locationId = {{locationId}}
 @productId1 = {{productId1}}
 @productId2 = {{productId2}}
 
@@ -17,11 +17,13 @@ Content-Type: application/json
     "{{productId2}}"
   ]
 }
-> {% client.global.set("orderId", response.body.orderId); %}
+
+> {% if (response.status === 201) { client.global.set("orderId", response.body.orderId); } %}
 
 ### Get order by id
 GET {{baseUrl}}/order/{{orderId}}
-> {% client.global.set("orderItemId", response.body.positions[0].id); %}
+
+> {% if (response.status === 200 && response.body.positions?.length) { client.global.set("orderItemId", response.body.positions[0].id); } %}
 
 ### Update order status
 PATCH {{baseUrl}}/order/{{orderId}}/status?status=PROCESSING
