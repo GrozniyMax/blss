@@ -10,9 +10,9 @@
             CREATE TABLE order_item
             (
                 id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                order_id   UUID NOT NULL REFERENCES order,
+                order_id   UUID NOT NULL REFERENCES orders,
                 product_id UUID NOT NULL REFERENCES product,
-                yacheyka   TEXT,
+                yacheyka   TEXT
             );
         </sql>
     </changeSet>

@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @With
 @Builder
-@Table("order")
+@Table("orders")
 public record Order(
         @Id
         UUID id,

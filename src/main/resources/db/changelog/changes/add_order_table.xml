@@ -7,10 +7,12 @@
 
     <changeSet id="add_order_table" author="m.s.taranenko">
         <preConditions>
-            <tableExists tableName="order"/>
+            <not>
+                <tableExists tableName="orders"/>
+            </not>
         </preConditions>
         <sql>
-            CREATE TABLE order
+            CREATE TABLE orders
             (
                 id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 status        TEXT           NOT NULL,
@@ -22,3 +24,5 @@
             );
         </sql>
     </changeSet>
+    
+</databaseChangeLog>

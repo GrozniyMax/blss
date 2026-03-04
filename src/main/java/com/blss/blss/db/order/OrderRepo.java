@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface OrderRepo extends CrudRepository<Order, UUID> {
 
     @Query("""
-            UPDATE order
+            UPDATE orders
             SET
                 status = :#{#order.status},
                 owner = :#{#order.owner},
@@ -23,7 +23,7 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
     Order update(Order order);
 
     @Query("""
-            INSERT INTO "order" (
+            INSERT INTO orders (
                 status,
                 owner,
                 localtion,
@@ -41,6 +41,6 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
             """)
     Order create(Order order);
 
-    @Query("UPDATE order SET status = :status, last_edited = NOW() WHERE id = :id RETURNING *")
+    @Query("UPDATE orders SET status = :status, last_edited = NOW() WHERE id = :id RETURNING *")
     Order updateStatus(UUID id, Status status);
 }

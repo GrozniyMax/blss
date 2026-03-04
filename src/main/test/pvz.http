@@ -1,0 +1,11 @@
+@baseUrl = http://localhost:8080
+@orderItemId = {{orderItemId}}
+
+### Mark order item as delivered
+POST {{baseUrl}}/mark-delivered
+Content-Type: application/json
+
+{
+  "itemId": "{{orderItemId}}",
+  "yacheyka": "A-12-3"
+}
