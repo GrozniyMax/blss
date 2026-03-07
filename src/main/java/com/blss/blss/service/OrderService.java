@@ -41,8 +41,6 @@ public class OrderService {
 
     OrderItemRepo orderItemRepo;
 
-    OrderStatusUpdater orderStatusUpdater;
-
 
     /**
      * Создание заказа
