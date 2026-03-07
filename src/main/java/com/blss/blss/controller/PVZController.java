@@ -6,8 +6,10 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -21,6 +23,7 @@ public class PVZController {
     StorageService storageService;
 
     @PostMapping("/mark-delivered")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markDelivered(@Valid @RequestBody OrderItemDeliveredDto dto) {
         storageService.updateYacheyka(dto.itemId(), dto.yacheyka());
     }

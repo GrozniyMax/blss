@@ -1,7 +1,6 @@
 package com.blss.blss.domain.order;
 
 public enum Status {
-
     /**
      * Заказ создан
      */
@@ -27,5 +26,6 @@ public enum Status {
     /**
      * Клиент забрал заказ
      */
-    DONE
+    DONE;
+
 }
