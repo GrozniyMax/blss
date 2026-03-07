@@ -24,7 +24,7 @@ public class DeliveryPointController {
     DeliveryPointRegistry registry;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public DeliveryPoint create(@Valid @RequestBody DeliveryPointCreateRequestDto request) {
         var item = new DeliveryPoint(null, request.name(), request.address());
         return registry.createDeliveryPoint(item);
