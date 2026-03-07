@@ -46,4 +46,4 @@ jobs:
           JAR_FILE="build/libs/blss-0.0.1-SNAPSHOT.jar"
 
           # Выполняем SCP с использованием пароля
-          sshpass -p "$SERVER_PASSWORD" scp -P $SERVER_PORT "$JAR_FILE" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}"
+          sshpass -p "$SERVER_PASSWORD" scp -o StrictHostKeyChecking=no -P $SERVER_PORT "$JAR_FILE" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}"
