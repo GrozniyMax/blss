@@ -1,0 +1,12 @@
+@baseUrl = http://localhost:8080
+
+### Create delivery point
+POST {{baseUrl}}/delivery-points
+Content-Type: application/json
+
+{
+  "name": "ПВЗ Дикие Ягоды",
+  "address": "улица Пушкина, дом Колотушкина"
+}
+
+> {% if (response.status === 201) { client.global.set("locationId", response.body.id); } %}

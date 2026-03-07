@@ -1,0 +1,29 @@
+@baseUrl = http://localhost:8080
+@orderId = 5fedb207-0d8d-4a5d-ad63-861a281477aa
+@ownerId = {{ownerId}}
+@locationId = {{locationId}}
+@productId1 = {{productId1}}
+@productId2 = {{productId2}}
+
+### Create order
+POST {{baseUrl}}/order/create
+Content-Type: application/json
+
+{
+  "owner": "{{ownerId}}",
+  "location": "{{locationId}}",
+  "productIds": [
+    "{{productId1}}",
+    "{{productId2}}"
+  ]
+}
+
+> {% if (response.status === 201) { client.global.set("orderId", response.body.orderId); } %}
+
+### Get order by id
+GET {{baseUrl}}/order/{{orderId}}
+
+> {% if (response.status === 200 && response.body.positions?.length) { client.global.set("orderItemId", response.body.positions[0].id); } %}
+
+### Update order status
+PATCH {{baseUrl}}/order/{{orderId}}/status?status=PROCESSING

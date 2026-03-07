@@ -1,0 +1,58 @@
+@baseUrl = http://localhost:8080
+@productId = {{productId1}}
+@productId2 = {{productId2}}
+
+### Create product
+POST {{baseUrl}}/inventory/products
+Content-Type: application/json
+
+{
+  "name": "Laptop Pro 15",
+  "price": 159990.00,
+  "initialCount": 250
+}
+
+> {% client.global.set("productId1", response.body.product.id); %}
+
+### Create product
+POST {{baseUrl}}/inventory/products
+Content-Type: application/json
+
+{
+  "name": "Smartphone X",
+  "price": 69990.00,
+  "initialCount": 500
+}
+
+> {% client.global.set("productId2", response.body.product.id); %}
+
+### Create product
+POST {{baseUrl}}/inventory/products
+Content-Type: application/json
+
+{
+  "name": "Wireless Headphones",
+  "price": 12990.00,
+  "initialCount": 1200
+}
+
+### Update product
+PUT {{baseUrl}}/inventory/products/{{productId}}
+Content-Type: application/json
+
+{
+  "name": "Laptop Pro 15",
+  "price": 169990.00
+}
+
+### Update product count
+PATCH {{baseUrl}}/inventory/products/{{productId}}/count?change=5
+
+### Get product
+GET {{baseUrl}}/inventory/products/{{productId}}
+
+### Get all products
+GET {{baseUrl}}/inventory/products
+
+### Get product count
+GET {{baseUrl}}/inventory/products/{{productId}}/count

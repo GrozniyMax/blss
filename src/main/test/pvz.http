@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:8080
+@orderId = {{orderId}}
+@orderItemId = {{orderItemId}}
+@orderItemId1 = f06fb584-42a1-4f20-a9d3-c6440a60a4cb
+
+### NOTE: orderId must exist. If missing, set @orderId manually.
+
+### Get order and capture itemId
+GET {{baseUrl}}/order/{{orderId}}
+
+> {% if (response.status === 200 && response.body.positions?.length) { client.global.set("orderItemId", response.body.positions[0].id); } %}
+
+### Mark order item as delivered
+POST {{baseUrl}}/mark-delivered
+Content-Type: application/json
+
+{
+  "itemId": "{{orderItemId}}",
+  "yacheyka": "A-12-2"
+}

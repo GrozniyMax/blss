@@ -1,0 +1,11 @@
+@baseUrl = http://localhost:8080
+
+### Create user
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+> {% if (response.status === 201) { client.global.set("ownerId", response.body.id); } %}
