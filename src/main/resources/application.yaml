@@ -1,10 +1,13 @@
 spring.application.name: blss
 
+server:
+  port: 21001
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/studs
-    username: s408145
-    password: JLzD%6772
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.xml

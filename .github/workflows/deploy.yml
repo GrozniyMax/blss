@@ -41,9 +41,10 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
           SERVER_PATH: ${{ secrets.SERVER_PATH }}
           SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+          SPRING_PORT: ${{ secrets.SPRING_PORT }}
         run: |
           # Формируем путь к JAR файлу
-          JAR_FILE=$(ls build/libs/blss-0.0.1-SNAPSHOT.jar)
+          JAR_FILE="build/libs/blss-0.0.1-SNAPSHOT.jar"
 
           # Выполняем SCP с использованием пароля
-          sshpass -p "$SERVER_PASSWORD" scp -P $SERVER_PORT "$JAR_FILE" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}"
+          sshpass -p "$SERVER_PASSWORD" scp -o StrictHostKeyChecking=no -P $SERVER_PORT "$JAR_FILE" "${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}"
