@@ -5,13 +5,11 @@ import com.blss.blss.dto.input.OrderCreateRequestDTO;
 import com.blss.blss.dto.output.DtoMapper;
 import com.blss.blss.dto.output.GetOrderResponse;
 import com.blss.blss.dto.output.OrderCreationResponse;
-import com.blss.blss.exception.NotFoundException;
 import com.blss.blss.service.OrderService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -51,12 +49,6 @@ public class OrderController {
             @RequestParam Status status
     ) {
         orderService.updateStatus(id, status);
-    }
-
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNotFoundException(NotFoundException ex) {
-        return ex.getMessage();
     }
 
 }

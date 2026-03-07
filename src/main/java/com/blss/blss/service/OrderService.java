@@ -13,7 +13,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -82,12 +81,12 @@ public class OrderService {
     }
 
     public void updateStatus(UUID id, Status status) {
-        orderRepo.updateStatus(id, status).orElseThrow(() -> new NotFoundException(Order.class));
+        orderRepo.updateStatus(id, status).orElseThrow(() -> new NotFoundException(Order.class, id));
     }
 
     public FullOrder getOrderContentById(UUID id) {
         var order = orderRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException(Order.class));
+                .orElseThrow(() -> new NotFoundException(Order.class, id));
 
         var items = orderItemRepo.findAllByOrderId(id);
 

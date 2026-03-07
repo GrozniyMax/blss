@@ -6,6 +6,7 @@ import com.blss.blss.domain.Product;
 import com.blss.blss.domain.store.StoreItem;
 import com.blss.blss.exception.AlreadyExistsException;
 import com.blss.blss.exception.NotFoundException;
+import com.blss.blss.exception.UpdateException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -52,16 +53,16 @@ public class StoreService {
     public void updateProduct(Product product) {
         var updated = productRepo.update(product);
         if (updated == null) {
-            throw new NotFoundException(Product.class);
+            throw new NotFoundException(Product.class, product.id());
         }
     }
 
     public InventoryProduct getProduct(UUID productId) {
         var product = productRepo.findById(productId)
-                .orElseThrow(() -> new NotFoundException(Product.class));
+                .orElseThrow(() -> new NotFoundException(Product.class, productId));
         return storeRepo.findByProductId(productId)
                 .map(storeItem -> new InventoryProduct(product, storeItem.count()))
-                .orElseThrow(() -> new NotFoundException(StoreItem.class));
+                .orElseThrow(() -> new NotFoundException(StoreItem.class, productId));
     }
 
     public List<InventoryProduct> getAllProducts() {
@@ -76,7 +77,7 @@ public class StoreService {
     public Integer getCount(UUID productId) {
         return storeRepo.findByProductId(productId)
                 .map(StoreItem::count)
-                .orElseThrow(() -> new NotFoundException(StoreItem.class));
+                .orElseThrow(() -> new NotFoundException(StoreItem.class, productId));
     }
 
     /**
@@ -88,7 +89,7 @@ public class StoreService {
         try {
             storeRepo.updateCount(productId, change);
         } catch (DataIntegrityViolationException e) {
-            throw new IllegalArgumentException("Items count must be positive");
+            throw new UpdateException(productId, "Items count must be positive");
         }
     }
 

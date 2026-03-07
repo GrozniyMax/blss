@@ -21,7 +21,8 @@ public class StorageService {
     OrderStatusUpdater updater;
 
     public void updateYacheyka(UUID itemId, String yacheyka) {
-        var item = orderItemRepo.updateYacheyka(itemId, yacheyka).orElseThrow(() -> new NotFoundException(OrderItem.class));
+        var item = orderItemRepo.updateYacheyka(itemId, yacheyka)
+                .orElseThrow(() -> new NotFoundException(OrderItem.class, itemId));
         updater.updateStatusIfReady(item.orderId());
     }
 

@@ -5,7 +5,6 @@ import com.blss.blss.dto.input.ProductCreateRequestDto;
 import com.blss.blss.dto.input.ProductUpdateRequestDto;
 import com.blss.blss.dto.output.DtoMapper;
 import com.blss.blss.dto.output.InventoryProductDto;
-import com.blss.blss.exception.NotFoundException;
 import com.blss.blss.service.StoreService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -60,12 +59,6 @@ public class InventoryController {
     @GetMapping("/products/{id}/count")
     public Integer getProductCount(@PathVariable UUID id) {
         return storeService.getCount(id);
-    }
-
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNotFoundException(NotFoundException ex) {
-        return ex.getMessage();
     }
 
 }
