@@ -5,6 +5,7 @@ import com.blss.blss.domain.order.Status;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepo extends CrudRepository<Order, UUID> {
@@ -43,5 +44,5 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
     Order create(Order order);
 
     @Query("UPDATE orders SET status = :status, last_edited = NOW() WHERE id = :id RETURNING *")
-    Order updateStatus(UUID id, Status status);
+    Optional<Order> updateStatus(UUID id, Status status);
 }

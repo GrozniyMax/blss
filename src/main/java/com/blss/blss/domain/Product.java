@@ -13,6 +13,7 @@ import java.util.UUID;
 public record Product(
         @Id
         UUID id,
+        // Название товара. Уникально в рамках текущей доменной модели
         String name,
         BigDecimal price
         //Здесь могла бы быть ваша реклама и другая информация о продукте

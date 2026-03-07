@@ -3,6 +3,7 @@ package com.blss.blss.controller;
 import com.blss.blss.db.UserRepo;
 import com.blss.blss.domain.User;
 import com.blss.blss.dto.input.UserCreateRequestDto;
+import com.blss.blss.service.UserRegistry;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
 
-    UserRepo userRepo;
+    UserRegistry userRepo;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody UserCreateRequestDto request) {
-        return userRepo.save(new User(null, request.email()));
+        return userRepo.register(request.email());
     }
 }

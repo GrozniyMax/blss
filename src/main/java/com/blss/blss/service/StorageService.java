@@ -2,6 +2,7 @@ package com.blss.blss.service;
 
 import com.blss.blss.db.order.OrderItemRepo;
 import com.blss.blss.domain.order.OrderItem;
+import com.blss.blss.exception.NotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +21,7 @@ public class StorageService {
     OrderStatusUpdater updater;
 
     public void updateYacheyka(UUID itemId, String yacheyka) {
-        var item = orderItemRepo.updateYacheyka(itemId, yacheyka);
+        var item = orderItemRepo.updateYacheyka(itemId, yacheyka).orElseThrow(() -> new NotFoundException(OrderItem.class));
         updater.updateStatusIfReady(item.orderId());
     }
 

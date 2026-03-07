@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class NotFoundException extends RuntimeException{
+public class AlreadyExistsException extends RuntimeException {
 
     Class<?> entityClass;
 
@@ -14,5 +14,4 @@ public class NotFoundException extends RuntimeException{
     public String getMessage() {
         return String.format("Entity %s already exists", entityClass.getSimpleName());
     }
-
 }

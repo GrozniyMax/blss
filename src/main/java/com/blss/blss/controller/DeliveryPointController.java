@@ -3,6 +3,7 @@ package com.blss.blss.controller;
 import com.blss.blss.db.DeliveryPointRepo;
 import com.blss.blss.domain.DeliveryPoint;
 import com.blss.blss.dto.input.DeliveryPointCreateRequestDto;
+import com.blss.blss.service.DeliveryPointRegistry;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DeliveryPointController {
 
-    DeliveryPointRepo deliveryPointRepo;
+    DeliveryPointRegistry registry;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public DeliveryPoint create(@Valid @RequestBody DeliveryPointCreateRequestDto request) {
-        return deliveryPointRepo.save(new DeliveryPoint(null, request.name(), request.address()));
+        var item = new DeliveryPoint(null, request.name(), request.address());
+        return registry.createDeliveryPoint(item);
     }
 }

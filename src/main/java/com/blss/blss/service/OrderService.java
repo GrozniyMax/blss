@@ -82,16 +82,12 @@ public class OrderService {
     }
 
     public void updateStatus(UUID id, Status status) {
-        var order = orderRepo.updateStatus(id, status);
-
-        if (order == null) {
-            throw new NotFoundException(Order.class, "Order not found");
-        }
+        orderRepo.updateStatus(id, status).orElseThrow(() -> new NotFoundException(Order.class));
     }
 
     public FullOrder getOrderContentById(UUID id) {
         var order = orderRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException(Order.class, "Order not found"));
+                .orElseThrow(() -> new NotFoundException(Order.class));
 
         var items = orderItemRepo.findAllByOrderId(id);
 

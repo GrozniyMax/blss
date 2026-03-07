@@ -4,6 +4,7 @@ import com.blss.blss.db.ProductRepo;
 import com.blss.blss.db.StoreRepo;
 import com.blss.blss.domain.Product;
 import com.blss.blss.domain.store.StoreItem;
+import com.blss.blss.exception.AlreadyExistsException;
 import com.blss.blss.exception.NotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,9 @@ public class StoreService {
         if (initialCount == null || initialCount <= 0) {
             throw new IllegalArgumentException("Initial count must be positive");
         }
+        productRepo.findByName(product.name()).ifPresent(p -> {
+            throw new AlreadyExistsException(Product.class);
+        });
         var saved = productRepo.create(product);
         storeRepo.create(new StoreItem(saved.id(), initialCount));
         return saved.id();
@@ -48,35 +52,31 @@ public class StoreService {
     public void updateProduct(Product product) {
         var updated = productRepo.update(product);
         if (updated == null) {
-            throw new NotFoundException(Product.class, "Product not found");
+            throw new NotFoundException(Product.class);
         }
     }
 
     public InventoryProduct getProduct(UUID productId) {
         var product = productRepo.findById(productId)
-                .orElseThrow(() -> new NotFoundException(Product.class, "Product not found"));
-        var storeItem = storeRepo.findByProductId(productId);
-        if (storeItem == null) {
-            throw new NotFoundException(StoreItem.class, "Store item not found");
-        }
-        return new InventoryProduct(product, storeItem.count());
+                .orElseThrow(() -> new NotFoundException(Product.class));
+        return storeRepo.findByProductId(productId)
+                .map(storeItem -> new InventoryProduct(product, storeItem.count()))
+                .orElseThrow(() -> new NotFoundException(StoreItem.class));
     }
 
     public List<InventoryProduct> getAllProducts() {
         Map<UUID, Integer> storeByProduct = StreamSupport.stream(storeRepo.findAll().spliterator(), false)
                 .collect(Collectors.toMap(StoreItem::productId, StoreItem::count));
 
-        return StreamSupport.stream(productRepo.findAll().spliterator(), false)
+        return productRepo.findAll().stream()
                 .map(product -> new InventoryProduct(product, storeByProduct.getOrDefault(product.id(), 0)))
                 .toList();
     }
 
     public Integer getCount(UUID productId) {
-        var storeItem = storeRepo.findByProductId(productId);
-        if (storeItem == null) {
-            throw new NotFoundException(StoreItem.class, "Store item not found");
-        }
-        return storeItem.count();
+        return storeRepo.findByProductId(productId)
+                .map(StoreItem::count)
+                .orElseThrow(() -> new NotFoundException(StoreItem.class));
     }
 
     /**

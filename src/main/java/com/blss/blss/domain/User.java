@@ -12,5 +12,6 @@ public record User(
         @Id
         UUID id,
 
+        // Уникальное для доменной модели поле
         String email
 ) { }

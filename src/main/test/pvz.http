@@ -1,6 +1,7 @@
 @baseUrl = http://localhost:8080
 @orderId = {{orderId}}
 @orderItemId = {{orderItemId}}
+@orderItemId1 = f06fb584-42a1-4f20-a9d3-c6440a60a4cb
 
 ### NOTE: orderId must exist. If missing, set @orderId manually.
 
@@ -15,5 +16,5 @@ Content-Type: application/json
 
 {
   "itemId": "{{orderItemId}}",
-  "yacheyka": "A-12-3"
+  "yacheyka": "A-12-2"
 }

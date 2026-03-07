@@ -5,8 +5,8 @@ POST {{baseUrl}}/delivery-points
 Content-Type: application/json
 
 {
-  "name": "Main PVZ",
-  "address": "Some address"
+  "name": "ПВЗ Дикие Ягоды",
+  "address": "улица Пушкина, дом Колотушкина"
 }
 
 > {% if (response.status === 201) { client.global.set("locationId", response.body.id); } %}
