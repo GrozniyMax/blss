@@ -28,7 +28,7 @@ public class InventoryController {
     DtoMapper dtoMapper;
 
     @PostMapping("/products")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.CREATED)
     public InventoryProductDto createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
         var productId = storeService.createProduct(new Product(null, request.name(), request.price()), request.initialCount());
         return dtoMapper.toDto(storeService.getProduct(productId));

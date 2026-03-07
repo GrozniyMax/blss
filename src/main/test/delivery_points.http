@@ -9,4 +9,4 @@ Content-Type: application/json
   "address": "улица Пушкина, дом Колотушкина"
 }
 
-> {% if (response.status === 201) { client.global.set("locationId", response.body.id); } %}
+> {% if (response.status >= 200 && response.status < 300 && response.body?.data?.id) { client.global.set("locationId", response.body.data.id); } %}

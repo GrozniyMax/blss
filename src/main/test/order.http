@@ -18,12 +18,12 @@ Content-Type: application/json
   ]
 }
 
-> {% if (response.status === 201) { client.global.set("orderId", response.body.orderId); } %}
+> {% if (response.status >= 200 && response.status < 300 && response.body?.data?.orderId) { client.global.set("orderId", response.body.data.orderId); } %}
 
 ### Get order by id
-GET {{baseUrl}}/order/663e7e2b-ba24-4e32-bdf6-7119f5bd08f2
+GET {{baseUrl}}/order/{{orderId}}
 
-> {% if (response.status === 200 && response.body.positions?.length) { client.global.set("orderItemId", response.body.positions[0].id); } %}
+> {% if (response.status === 200 && response.body?.data?.positions?.length) { client.global.set("orderItemId", response.body.data.positions[0].id); } %}
 
 ### Update order status
-PATCH {{baseUrl}}/order/663e7e2b-ba24-4e32-bdf6-7119f5bd08f2/status?status=CREATED
+PATCH {{baseUrl}}/order/{{orderId}}/status/next

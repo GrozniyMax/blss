@@ -24,7 +24,7 @@ public class UserController {
     UserRegistry userRepo;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody UserCreateRequestDto request) {
         return userRepo.register(request.email());
     }

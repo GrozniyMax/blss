@@ -23,9 +23,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
+                  "if (pm.response.code >= 200 && pm.response.code < 300 && pm.response.text()) {",
                   "  const body = pm.response.json();",
-                  "  pm.globals.set('ownerId', body.id);",
+                  "  pm.globals.set('ownerId', body.data.id);",
                   "}"
                 ]
               }
@@ -67,9 +67,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
+                  "if (pm.response.code >= 200 && pm.response.code < 300 && pm.response.text()) {",
                   "  const body = pm.response.json();",
-                  "  pm.globals.set('locationId', body.id);",
+                  "  pm.globals.set('locationId', body.data.id);",
                   "}"
                 ]
               }
@@ -111,9 +111,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
+                  "if (pm.response.code >= 200 && pm.response.code < 300 && pm.response.text()) {",
                   "  const body = pm.response.json();",
-                  "  pm.globals.set('productId1', body.product.id);",
+                  "  pm.globals.set('productId1', body.data.product.id);",
                   "}"
                 ]
               }
@@ -151,9 +151,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
+                  "if (pm.response.code >= 200 && pm.response.code < 300 && pm.response.text()) {",
                   "  const body = pm.response.json();",
-                  "  pm.globals.set('productId2', body.product.id);",
+                  "  pm.globals.set('productId2', body.data.product.id);",
                   "}"
                 ]
               }
@@ -324,9 +324,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
+                  "if (pm.response.code >= 200 && pm.response.code < 300 && pm.response.text()) {",
                   "  const body = pm.response.json();",
-                  "  pm.globals.set('orderId', body.orderId);",
+                  "  pm.globals.set('orderId', body.data.orderId);",
                   "}"
                 ]
               }
@@ -366,8 +366,8 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  const body = pm.response.json();",
-                  "  if (body.positions && body.positions.length) {",
-                  "    pm.globals.set('orderItemId', body.positions[0].id);",
+                  "  if (body.data.positions && body.data.positions.length) {",
+                  "    pm.globals.set('orderItemId', body.data.positions[0].id);",
                   "  }",
                   "}"
                 ]
@@ -393,20 +393,15 @@
           "request": {
             "method": "PATCH",
             "url": {
-              "raw": "{{baseUrl}}/order/{{orderId}}/status?status=PROCESSING",
+              "raw": "{{baseUrl}}/order/{{orderId}}/status/next",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "order",
                 "{{orderId}}",
-                "status"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "PROCESSING"
-                }
+                "status",
+                "next"
               ]
             }
           }
@@ -426,8 +421,8 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  const body = pm.response.json();",
-                  "  if (body.positions && body.positions.length) {",
-                  "    pm.globals.set('orderItemId', body.positions[0].id);",
+                  "  if (body.data.positions && body.data.positions.length) {",
+                  "    pm.globals.set('orderItemId', body.data.positions[0].id);",
                   "  }",
                   "}"
                 ]
@@ -477,3 +472,5 @@
     }
   ]
 }
+
+

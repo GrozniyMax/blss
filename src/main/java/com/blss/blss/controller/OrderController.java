@@ -31,7 +31,7 @@ public class OrderController {
     DtoMapper dtoMapper;
 
     @PostMapping("/create")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.CREATED)
     public OrderCreationResponse createOrder(
             @RequestBody OrderCreateRequestDTO order
     ) {

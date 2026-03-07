@@ -8,7 +8,7 @@
 ### Get order and capture itemId
 GET {{baseUrl}}/order/{{orderId}}
 
-> {% if (response.status === 200 && response.body.positions?.length) { client.global.set("orderItemId", response.body.positions[0].id); } %}
+> {% if (response.status === 200 && response.body?.data?.positions?.length) { client.global.set("orderItemId", response.body.data.positions[0].id); } %}
 
 ### Mark order item as delivered
 POST {{baseUrl}}/mark-delivered
@@ -19,6 +19,5 @@ Content-Type: application/json
   "yacheyka": "A-12-2"
 }
 
-### Update status
-PATCH http://localhost:21001/order/{{id}}/status?
-    status={{$random.alphanumeric(8)}}
+### Next order status
+PATCH {{baseUrl}}/order/{{orderId}}/status/next
