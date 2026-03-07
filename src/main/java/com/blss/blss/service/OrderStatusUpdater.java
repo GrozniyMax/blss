@@ -42,7 +42,7 @@ public class OrderStatusUpdater {
 
     public void cancel(UUID orderId) {
         var current = orderService.getStatus(orderId);
-        if (current != Status.DONE) {
+        if (current != Status.DONE && current != Status.CANCELED) {
             orderService.updateStatus(orderId, Status.CANCELED);
         } else {
             throw new InvalidActionException("Заказ уже доставлен, его нельзя отменить");

@@ -46,6 +46,7 @@ public class OrderController {
         return dtoMapper.toDto(order);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/status/next")
     public void nextStatus(
             @PathVariable UUID id
@@ -53,10 +54,11 @@ public class OrderController {
         orderStatusUpdater.next(id);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/status/cancel")
     public void cancelOrder(
             @PathVariable UUID id
     ) {
-        orderStatusUpdater.next(id);
+        orderStatusUpdater.cancel(id);
     }
 }

@@ -17,7 +17,7 @@ public record ProductCreateRequestDto(
         BigDecimal price,
 
         @NotNull
-        @Positive(message = "Количество не дожно")
+        @Positive(message = "Количество не дожно быть отрицательным")
         @Max(value = 10_000_000, message = "Кол-во не более 10млн")
         Integer initialCount
 ) {

@@ -1,14 +1,12 @@
 package com.blss.blss.controller;
 
 import com.blss.blss.dto.output.ErrorResponseDto;
-import com.blss.blss.exception.AlreadyExistsException;
-import com.blss.blss.exception.InvalidOrderException;
-import com.blss.blss.exception.NotFoundException;
-import com.blss.blss.exception.UpdateException;
+import com.blss.blss.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +28,8 @@ public class ApiExceptionHandler {
     @ExceptionHandler({AlreadyExistsException.class,
             InvalidOrderException.class,
             IllegalArgumentException.class,
-            UpdateException.class})
+            UpdateException.class,
+            InvalidActionException.class})
     public ErrorResponseDto handleBadRequestException(Exception e, HttpServletRequest request) {
         return build(e, request.getRequestURI());
     }
@@ -48,6 +47,17 @@ public class ApiExceptionHandler {
 
         return new ErrorResponseDto(
                 message,
+                Instant.now().toString(),
+                request.getRequestURI(),
+                UUID.randomUUID().toString()
+        );
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ErrorResponseDto handleInvalidJsonError(Exception e, HttpServletRequest request) {
+        return new ErrorResponseDto(
+                "Невалидный JSON",
                 Instant.now().toString(),
                 request.getRequestURI(),
                 UUID.randomUUID().toString()

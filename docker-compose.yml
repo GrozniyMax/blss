@@ -14,7 +14,7 @@ services:
       - BLSS-labs
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
       retries: 5
 
