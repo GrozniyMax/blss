@@ -7,12 +7,14 @@
 
     <changeSet id="add_store_table" author="m.s.taranenko">
         <sql>
+            <![CDATA[
             CREATE TABLE store
             (
                 product_id UUID    NOT NULL REFERENCES product,
-                count      INTEGER NOT NULL DEFAULT 0 CHECK ( count > 0 ),
+                count      INTEGER NOT NULL DEFAULT 0 CHECK (count > 0 AND count < 10000000),
                 PRIMARY KEY (product_id)
             );
+            ]]>
         </sql>
     </changeSet>
 
