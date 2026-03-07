@@ -6,6 +6,7 @@ import com.blss.blss.dto.output.DtoMapper;
 import com.blss.blss.dto.output.GetOrderResponse;
 import com.blss.blss.dto.output.OrderCreationResponse;
 import com.blss.blss.service.OrderService;
+import com.blss.blss.service.OrderStatusUpdater;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,6 +26,8 @@ public class OrderController {
 
     OrderService orderService;
 
+    OrderStatusUpdater orderStatusUpdater;
+
     DtoMapper dtoMapper;
 
     @PostMapping("/create")
@@ -43,12 +46,23 @@ public class OrderController {
         return dtoMapper.toDto(order);
     }
 
-    @PatchMapping("/{id}/status")
-    public void updateStatus(
-            @PathVariable UUID id,
-            @RequestParam Status status
+    @PatchMapping("/{id}/status/next")
+    public void nextStatus(
+            @PathVariable UUID id
     ) {
-        orderService.updateStatus(id, status);
+        orderStatusUpdater.next(id);
+    }
+
+    @PatchMapping("/{id}/status/cancel")
+    public void cancelOrder(
+            @PathVariable UUID id
+    ) {
+        orderStatusUpdater.next(id);
+    }
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleNotFoundException(NotFoundException ex) {
+        return ex.getMessage();
     }
 
 }

@@ -41,6 +41,8 @@ public class OrderService {
 
     OrderItemRepo orderItemRepo;
 
+    OrderStatusUpdater orderStatusUpdater;
+
 
     /**
      * Создание заказа
@@ -78,6 +80,10 @@ public class OrderService {
         var ids = orderItemRepo.create(positions);
 
         return new CreationOrderResponse(orderId, ids);
+    }
+
+    public Status getStatus(UUID orderId) {
+        return orderRepo.findById(orderId).map(Order::status).orElseThrow(() -> new NotFoundException(Order.class));
     }
 
     public void updateStatus(UUID id, Status status) {
