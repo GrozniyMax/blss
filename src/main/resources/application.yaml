@@ -1,7 +1,7 @@
 spring.application.name: blss
 
 server:
-  port: ${SPRING_PORT}
+  port: 21001
 
 spring:
   datasource:
