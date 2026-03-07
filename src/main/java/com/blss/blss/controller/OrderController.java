@@ -59,10 +59,4 @@ public class OrderController {
     ) {
         orderStatusUpdater.next(id);
     }
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNotFoundException(NotFoundException ex) {
-        return ex.getMessage();
-    }
-
 }
