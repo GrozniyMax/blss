@@ -1,5 +1,8 @@
 spring.application.name: blss
 
+server:
+  port: ${SPRING_PORT}
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/studs
