@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:8080
-@orderId = {{orderId}}
-@orderItemId = {{orderItemId}}
-@orderItemId1 = f06fb584-42a1-4f20-a9d3-c6440a60a4cb
+@orderId = 663e7e2b-ba24-4e32-bdf6-7119f5bd08f2
+@orderItemId = 27a7364c-4ec4-46fd-a0f3-4ae86b55d23a
+@orderItemId1 = 7941bc5c-271d-43d8-b284-4a01715eda4b
 
 ### NOTE: orderId must exist. If missing, set @orderId manually.
 
@@ -15,6 +15,10 @@ POST {{baseUrl}}/mark-delivered
 Content-Type: application/json
 
 {
-  "itemId": "{{orderItemId}}",
+  "itemId": "{{orderItemId1}}",
   "yacheyka": "A-12-2"
 }
+
+### Update status
+PATCH http://localhost:21001/order/{{id}}/status?
+    status={{$random.alphanumeric(8)}}
