@@ -36,6 +36,7 @@ dependencies {
 
     //Libs
     runtimeOnly("org.postgresql:postgresql")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 

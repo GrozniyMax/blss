@@ -1,18 +1,25 @@
 package com.blss.blss.exception;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+public class NotFoundException extends RuntimeException {
+    private final Class<?> entityClass;
+    private final Object id;
 
-@RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class NotFoundException extends RuntimeException{
+    public NotFoundException(Class<?> entityClass) {
+        this(entityClass, null);
+    }
 
-    Class<?> entityClass;
+    public NotFoundException(Class<?> entityClass, Object id) {
+        this.entityClass = entityClass;
+        this.id = id;
+    }
 
     @Override
     public String getMessage() {
-        return String.format("Entity %s already exists", entityClass.getSimpleName());
+        return String.format("Entity %s not found", entityClass.getSimpleName());
+    }
+
+    public String getId() {
+        return id == null ? null : id.toString();
     }
 
 }
