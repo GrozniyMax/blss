@@ -5,7 +5,7 @@ POST {{baseUrl}}/delivery-points
 Content-Type: application/json
 
 {
-  "name": "ПВЗ Дикие Ягоды",
+  "name": "ПВЗ Озон",
   "address": "улица Пушкина, дом Колотушкина"
 }
 

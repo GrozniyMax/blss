@@ -5,7 +5,7 @@ POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "email": "test@example.com"
+  "email": "test@a.a"
 }
 
 > {% if (response.status === 201) { client.global.set("ownerId", response.body.id); } %}
