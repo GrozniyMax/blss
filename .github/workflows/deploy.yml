@@ -41,6 +41,7 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
           SERVER_PATH: ${{ secrets.SERVER_PATH }}
           SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+          SPRING_PORT: ${{ secrets.SPRING_PORT }}
         run: |
           # Формируем путь к JAR файлу
           JAR_FILE="build/libs/blss-0.0.1-SNAPSHOT.jar"
