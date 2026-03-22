@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -32,6 +33,7 @@ public class OrderController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('CONSULTANT', 'MANAGER', 'ADMIN')")
     public OrderCreationResponse createOrder(
             @RequestBody OrderCreateRequestDTO order
     ) {
@@ -41,6 +43,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('CONSULTANT', 'MANAGER', 'ADMIN')")
     public GetOrderResponse getOrderById(@PathVariable UUID id) {
         var order = orderService.getOrderContentById(id);
         return dtoMapper.toDto(order);
@@ -48,6 +51,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/status/next")
+    @PreAuthorize("hasAnyRole('CONSULTANT', 'MANAGER', 'ADMIN')")
     public void nextStatus(
             @PathVariable UUID id
     ) {
@@ -56,6 +60,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/status/cancel")
+    @PreAuthorize("hasAnyRole('CONSULTANT', 'MANAGER', 'ADMIN')")
     public void cancelOrder(
             @PathVariable UUID id
     ) {

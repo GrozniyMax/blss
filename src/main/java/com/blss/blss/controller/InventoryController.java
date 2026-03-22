@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,34 +30,40 @@ public class InventoryController {
 
     @PostMapping("/products")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN')")
     public InventoryProductDto createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
         var productId = storeService.createProduct(new Product(null, request.name(), request.price()), request.initialCount());
         return dtoMapper.toDto(storeService.getProduct(productId));
     }
 
     @PutMapping("/products/{id}")
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN')")
     public InventoryProductDto updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductUpdateRequestDto request) {
         storeService.updateProduct(new Product(id, request.name(), request.price()));
         return dtoMapper.toDto(storeService.getProduct(id));
     }
 
     @PatchMapping("/products/{id}/count")
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN')")
     public InventoryProductDto updateCount(@PathVariable UUID id, @RequestParam Integer change) {
         storeService.updateItemsCount(id, change);
         return dtoMapper.toDto(storeService.getProduct(id));
     }
 
     @GetMapping("/products/{id}")
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN', 'CONSULTANT')")
     public InventoryProductDto getProduct(@PathVariable UUID id) {
         return dtoMapper.toDto(storeService.getProduct(id));
     }
 
     @GetMapping("/products")
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN', 'CONSULTANT')")
     public List<InventoryProductDto> getAllProducts() {
         return storeService.getAllProducts().stream().map(dtoMapper::toDto).toList();
     }
 
     @GetMapping("/products/{id}/count")
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN', 'CONSULTANT')")
     public Integer getProductCount(@PathVariable UUID id) {
         return storeService.getCount(id);
     }
