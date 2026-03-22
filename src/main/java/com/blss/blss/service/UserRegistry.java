@@ -1,33 +1,45 @@
 package com.blss.blss.service;
 
-import com.blss.blss.db.UserRepo;
-import com.blss.blss.domain.User;
-import com.blss.blss.exception.AlreadyExistsException;
+import com.blss.blss.xml.XmlUserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserRegistry {
 
-    UserRepo userRepo;
+    XmlUserRepository userRepository;
 
-    public User register(String email) {
-
-        userRepo.findByEmail(email)
-                .ifPresent(user -> {
-                    throw new AlreadyExistsException(User.class);
-                });
-
-        return userRepo.save(new User(null, email));
+    /**
+     * Register a new user with username and password.
+     */
+    public void register(String username, String password, List<String> roles) {
+        userRepository.create(username, password, roles);
     }
 
-    public boolean existsById(UUID id) {
-        return userRepo.existsById(id);
+    /**
+     * Check if user exists by username.
+     */
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    /**
+     * Update user password, roles, or enabled status.
+     */
+    public void update(String username, String newPassword, List<String> newRoles, Boolean enabled) {
+        userRepository.update(username, newPassword, newRoles, enabled);
+    }
+
+    /**
+     * Delete user by username.
+     */
+    public void delete(String username) {
+        userRepository.delete(username);
     }
 }

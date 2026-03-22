@@ -1,11 +1,18 @@
 package com.blss.blss.dto.input;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 public record UserCreateRequestDto(
         @NotBlank
-        @Pattern(regexp="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
-        String email
+        String username,
+
+        @NotBlank
+        @Size(min = 1)
+        String password,
+
+        List<String> roles
 ) {
 }

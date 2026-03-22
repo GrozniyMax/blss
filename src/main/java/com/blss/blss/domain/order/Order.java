@@ -18,7 +18,7 @@ public record Order(
 
         Status status,
 
-        UUID owner,
+        String owner,
 
         /*
          * Id ПВЗ

@@ -50,7 +50,7 @@ public class OrderService {
     /**
      * Создание заказа
      */
-    public CreationOrderResponse createOrder(UUID owner, UUID location, List<UUID> productIds) {
+    public CreationOrderResponse createOrder(String owner, UUID location, List<UUID> productIds) {
 
         var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
 
@@ -62,7 +62,7 @@ public class OrderService {
             throw new InvalidOrderException("ПВЗ не существует");
         }
 
-        if (!userRegistry.existsById(owner)) {
+        if (!userRegistry.existsByUsername(owner)) {
             throw new InvalidOrderException("Пользователь не существует");
         }
 
@@ -140,7 +140,7 @@ public class OrderService {
 
     public record FullOrder (
             UUID id,
-            UUID owner,
+            String owner,
             Instant creationDate,
             Status status,
             BigDecimal totalAmount,
