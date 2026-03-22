@@ -1,5 +1,6 @@
 package com.blss.blss.service;
 
+import com.blss.blss.db.DeliveryPointRepo;
 import com.blss.blss.db.ProductRepo;
 import com.blss.blss.db.order.OrderItemRepo;
 import com.blss.blss.db.order.OrderRepo;
@@ -8,6 +9,7 @@ import com.blss.blss.domain.Product;
 import com.blss.blss.domain.order.Order;
 import com.blss.blss.domain.order.OrderItem;
 import com.blss.blss.domain.order.Status;
+import com.blss.blss.exception.InvalidOrderException;
 import com.blss.blss.exception.NotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -41,13 +43,30 @@ public class OrderService {
 
     OrderItemRepo orderItemRepo;
 
+    DeliveryPointRepo deliveryPointRepo;
+
+    UserRegistry userRegistry;
 
     /**
      * Создание заказа
      */
     public CreationOrderResponse createOrder(UUID owner, UUID location, List<UUID> productIds) {
 
-        var totalPrice = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false)
+        var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
+
+        if (foundProduct.size() != productIds.size()) {
+            throw new InvalidOrderException("Не все продукты были найдены");
+        }
+
+        if (deliveryPointRepo.findById(location).isEmpty()) {
+            throw new InvalidOrderException("ПВЗ не существует");
+        }
+
+        if (!userRegistry.existsById(owner)) {
+            throw new InvalidOrderException("Пользователь не существует");
+        }
+
+        var totalPrice = foundProduct.stream()
                 .map(Product::price)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -78,6 +97,10 @@ public class OrderService {
         var ids = orderItemRepo.create(positions);
 
         return new CreationOrderResponse(orderId, ids);
+    }
+
+    public Status getStatus(UUID orderId) {
+        return orderRepo.findById(orderId).map(Order::status).orElseThrow(() -> new NotFoundException(Order.class, orderId));
     }
 
     public void updateStatus(UUID id, Status status) {

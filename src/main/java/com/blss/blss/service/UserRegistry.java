@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -23,5 +25,9 @@ public class UserRegistry {
                 });
 
         return userRepo.save(new User(null, email));
+    }
+
+    public boolean existsById(UUID id) {
+        return userRepo.existsById(id);
     }
 }

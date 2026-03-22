@@ -89,7 +89,7 @@ public class StoreService {
         try {
             storeRepo.updateCount(productId, change);
         } catch (DataIntegrityViolationException e) {
-            throw new UpdateException(productId, "Items count must be positive");
+            throw new UpdateException(productId, "Items count must be positive and less than 10_000_000");
         }
     }
 

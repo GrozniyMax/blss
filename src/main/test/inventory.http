@@ -7,12 +7,12 @@ POST {{baseUrl}}/inventory/products
 Content-Type: application/json
 
 {
-  "name": "Laptop Pro 15",
-  "price": 159990.00,
-  "initialCount": 250
+  "name": "Laptop Pro 1511",
+  "price": 213789217871283721893182309821093892189,  // TODO НЕТ ОГРАНИЧЕНИЯ ПО ЦЕНЕ ВВЕРХ
+  "initialCount": 250 // TODO 10 млн
 }
 
-> {% client.global.set("productId1", response.body.product.id); %}
+> {% if (response.status >= 200 && response.status < 300 && response.body?.data?.product?.id) { client.global.set("productId1", response.body.data.product.id); } %}
 
 ### Create product
 POST {{baseUrl}}/inventory/products
@@ -24,7 +24,7 @@ Content-Type: application/json
   "initialCount": 500
 }
 
-> {% client.global.set("productId2", response.body.product.id); %}
+> {% if (response.status >= 200 && response.status < 300 && response.body?.data?.product?.id) { client.global.set("productId2", response.body.data.product.id); } %}
 
 ### Create product
 POST {{baseUrl}}/inventory/products
@@ -46,7 +46,7 @@ Content-Type: application/json
 }
 
 ### Update product count
-PATCH {{baseUrl}}/inventory/products/{{productId}}/count?change=5
+PATCH {{baseUrl}}/inventory/products/{{productId}}/count?change=59898989080890899908
 
 ### Get product
 GET {{baseUrl}}/inventory/products/{{productId}}

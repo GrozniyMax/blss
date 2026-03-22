@@ -7,10 +7,9 @@ import java.util.UUID;
 
 public record OrderItemDeliveredDto(
 
-        @NotNull
+        @NotNull(message = "Не указан id элемента заказа")
         UUID itemId,
 
-        @NotNull
-        @NotBlank
+        @NotBlank(message = "Не указана ячейка")
         String yacheyka
 ) {  }

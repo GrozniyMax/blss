@@ -1,41 +1,42 @@
 package com.blss.blss.controller;
 
 import com.blss.blss.dto.output.ErrorResponseDto;
-import com.blss.blss.exception.AlreadyExistsException;
-import com.blss.blss.exception.InvalidOrderException;
-import com.blss.blss.exception.NotFoundException;
-import com.blss.blss.exception.UpdateException;
+import com.blss.blss.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponseDto> handleNotFound(NotFoundException e, HttpServletRequest request) {
-        return handleException(e, HttpStatus.NOT_FOUND, request);
+    public ErrorResponseDto handleNotFound(NotFoundException e, HttpServletRequest request) {
+        return build(e, request.getRequestURI());
     }
 
-    @ExceptionHandler({
-            AlreadyExistsException.class,
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({AlreadyExistsException.class,
             InvalidOrderException.class,
+            IllegalArgumentException.class,
             UpdateException.class,
-            IllegalArgumentException.class
-    })
-    public ResponseEntity<ErrorResponseDto> handleBadRequest(Exception e, HttpServletRequest request) {
-        return handleException(e, HttpStatus.BAD_REQUEST, request);
+            InvalidActionException.class})
+    public ErrorResponseDto handleBadRequestException(Exception e, HttpServletRequest request) {
+        return build(e, request.getRequestURI());
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDto> handleValidation(MethodArgumentNotValidException e, HttpServletRequest request) {
+    public ErrorResponseDto handleValidation(MethodArgumentNotValidException e, HttpServletRequest request) {
         String message = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -43,44 +44,49 @@ public class ApiExceptionHandler {
                 .distinct()
                 .reduce((left, right) -> left + "; " + right)
                 .orElse("Validation failed");
-        return buildResponse(message, HttpStatus.BAD_REQUEST, request, null);
-    }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDto> handleError(Exception e, HttpServletRequest request) {
-        return handleException(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
-    }
-
-    private ResponseEntity<ErrorResponseDto> handleException(Exception e, HttpStatus status, HttpServletRequest request) {
-        log.error("Error", e);
-        String message = e.getMessage() == null || e.getMessage().isBlank()
-                ? "Unexpected server error"
-                : e.getMessage();
-        return buildResponse(message, status, request, e);
-    }
-
-    private ResponseEntity<ErrorResponseDto> buildResponse(String message, HttpStatus status, HttpServletRequest request, Exception e) {
-        ErrorResponseDto body = new ErrorResponseDto(
+        return new ErrorResponseDto(
                 message,
                 Instant.now().toString(),
                 request.getRequestURI(),
-                extractEntityId(e)
+                UUID.randomUUID().toString()
         );
-        return ResponseEntity.status(status).body(body);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ErrorResponseDto handleInvalidJsonError(Exception e, HttpServletRequest request) {
+        return new ErrorResponseDto(
+                "Невалидный JSON",
+                Instant.now().toString(),
+                request.getRequestURI(),
+                UUID.randomUUID().toString()
+        );
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public ErrorResponseDto handleError(Exception e, HttpServletRequest request) {
+        log.error("Не смогли обработать исключение", e);
+        return new ErrorResponseDto(
+                "Произошла непредвиденная ошибка",
+                Instant.now().toString(),
+                request.getRequestURI(),
+                UUID.randomUUID().toString()
+        );
+    }
+
+    private ErrorResponseDto build(Exception e, String uri) {
+        return new ErrorResponseDto(
+                e.getMessage(),
+                Instant.now().toString(),
+                uri,
+                UUID.randomUUID().toString()
+        );
     }
 
     private String formatFieldError(FieldError error) {
         String details = error.getDefaultMessage() == null ? "invalid value" : error.getDefaultMessage();
         return error.getField() + ": " + details;
-    }
-
-    private String extractEntityId(Exception e) {
-        if (e instanceof NotFoundException notFoundException) {
-            return notFoundException.getId();
-        }
-        if (e instanceof UpdateException updateException) {
-            return updateException.getId();
-        }
-        return null;
     }
 }

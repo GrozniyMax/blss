@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.UUID;
 
 public record OrderCreateRequestDTO(
-        @NotNull
+        @NotNull(message = "Не указан Id заказа")
         UUID owner,
 
-        @NotNull
+        @NotNull(message = "Не указан Id ПВЗ для доставки")
         UUID location,
 
-        @NotNull
-        @Size(min = 1)
+        @NotNull(message = "Не указаны товары")
+        @Size(min = 1, message = "Не указаны товары")
         List<UUID> productIds) {
 }
