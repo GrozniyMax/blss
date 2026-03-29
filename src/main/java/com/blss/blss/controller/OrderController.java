@@ -5,6 +5,7 @@ import com.blss.blss.dto.input.OrderCreateRequestDTO;
 import com.blss.blss.dto.output.DtoMapper;
 import com.blss.blss.dto.output.GetOrderResponse;
 import com.blss.blss.dto.output.OrderCreationResponse;
+import com.blss.blss.security.OrderSecurityService;
 import com.blss.blss.service.OrderService;
 import com.blss.blss.service.OrderStatusUpdater;
 import lombok.AccessLevel;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -31,11 +33,14 @@ public class OrderController {
 
     DtoMapper dtoMapper;
 
+    OrderSecurityService orderSecurityService;
+
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('USER', 'CONSULTANT', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("@orderSecurityService.canCreateOrderFor(#order.owner())")
     public OrderCreationResponse createOrder(
-            @RequestBody OrderCreateRequestDTO order
+            @RequestBody OrderCreateRequestDTO order,
+            Authentication authentication
     ) {
         var creationResponse = orderService.createOrder(order.owner(), order.location(), order.productIds());
 
@@ -43,7 +48,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'CONSULTANT', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("@orderSecurityService.canAccessOrder(#id, authentication.name)")
     public GetOrderResponse getOrderById(@PathVariable UUID id) {
         var order = orderService.getOrderContentById(id);
         return dtoMapper.toDto(order);

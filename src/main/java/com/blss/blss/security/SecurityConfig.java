@@ -20,12 +20,15 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Spring Security configuration with JAAS integration.
  *
- * Role-based access control:
- * - ADMIN: Full access to all endpoints
- * - MANAGER: Access to orders, inventory, and user management
- * - CONSULTANT: Access to order creation, status updates, and customer operations
- * - WAREHOUSE: Access to inventory management and delivery operations
- * - USER: Access to create orders and view own orders
+ * Role-based access control (per {@link Role} Javadoc):
+ * <ul>
+ *     <li><b>ADMIN</b> — полный доступ ко всем функциям системы</li>
+ *     <li><b>MANAGER</b> — управление заказами (просмотр, редактирование, отмена),
+ *         складскими операциями, создание ПВЗ</li>
+ *     <li><b>CONSULTANT</b> — выдача заказов: просмотр по ID, обновление статуса</li>
+ *     <li><b>WAREHOUSE</b> — только отметка доставки ({@code /mark-delivered})</li>
+ *     <li><b>USER</b> — создание заказов, просмотр только своих заказов</li>
+ * </ul>
  */
 @Slf4j
 @Configuration
@@ -81,26 +84,29 @@ public class SecurityConfig {
                 // Public endpoints (if any)
                 .requestMatchers("/actuator/health").permitAll()
 
-                // Order endpoints - USER, CONSULTANT, MANAGER, ADMIN
-                .requestMatchers(HttpMethod.POST, "/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
+                // Order endpoints
+                // POST: USER (own orders), MANAGER, ADMIN
+                // GET: USER (own), CONSULTANT (view by ID), MANAGER, ADMIN
+                // PATCH: CONSULTANT (update status), MANAGER, ADMIN
+                .requestMatchers(HttpMethod.POST, "/order/**").hasAnyRole("USER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
-                
-                // Inventory endpoints - WAREHOUSE, MANAGER, ADMIN
-                .requestMatchers(HttpMethod.POST, "/inventory/**").hasAnyRole("WAREHOUSE", "MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/inventory/**").hasAnyRole("WAREHOUSE", "MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/inventory/**").hasAnyRole("WAREHOUSE", "MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/inventory/**").hasAnyRole("WAREHOUSE", "MANAGER", "ADMIN", "CONSULTANT")
-                
+
+                // Inventory endpoints - MANAGER, ADMIN only (warehouse operations)
+                .requestMatchers(HttpMethod.POST, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+
                 // PVZ (Pickup Point) endpoints - WAREHOUSE, CONSULTANT, MANAGER, ADMIN
                 .requestMatchers("/mark-delivered").hasAnyRole("WAREHOUSE", "CONSULTANT", "MANAGER", "ADMIN")
-                
+
                 // User endpoints - ADMIN only
                 .requestMatchers("/users/**").hasRole("ADMIN")
-                
+
                 // Delivery Points - MANAGER, ADMIN
                 .requestMatchers("/delivery-points/**").hasAnyRole("MANAGER", "ADMIN")
-                
+
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
