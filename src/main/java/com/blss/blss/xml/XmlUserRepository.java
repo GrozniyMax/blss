@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,12 +33,11 @@ public class XmlUserRepository {
 
     private final Map<String, XmlUser.UserAccount> usersCache = new ConcurrentHashMap<>();
     private final XmlMapper xmlMapper = new XmlMapper();
-    private final SecurityUsersProperties properties;
     private Path xmlFilePath;
     private volatile boolean initialized = false;
 
     public XmlUserRepository(SecurityUsersProperties properties) {
-        this.properties = properties;
+        xmlFilePath = Paths.get(properties.getXmlPath());
     }
 
     @PostConstruct
@@ -81,7 +81,7 @@ public class XmlUserRepository {
 
     private XmlUser readXmlFile() throws Exception {
         if (xmlFilePath == null || !Files.exists(xmlFilePath)) {
-            try (InputStream inputStream = new ClassPathResource(properties.getXmlPath()).getInputStream()) {
+            try (InputStream inputStream = new FileInputStream(xmlFilePath.toFile())) {
                 return xmlMapper.readValue(inputStream, XmlUser.class);
             }
         }
@@ -89,10 +89,6 @@ public class XmlUserRepository {
     }
 
     private void writeXmlFile(XmlUser xmlUser) throws Exception {
-        if (xmlFilePath == null) {
-            xmlFilePath = Paths.get(properties.getXmlPath());
-        }
-
         File parentDir = xmlFilePath.getParent().toFile();
         if (!parentDir.exists()) {
             parentDir.mkdirs();

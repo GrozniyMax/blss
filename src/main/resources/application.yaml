@@ -14,4 +14,4 @@ spring:
 
 security:
   users:
-    xml-path: src/main/resources/security/users.xml
+    xml-path: /Users/m.s.taranenko/IdeaProjects/blss/users.xml
