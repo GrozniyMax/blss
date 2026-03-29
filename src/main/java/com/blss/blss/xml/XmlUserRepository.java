@@ -1,6 +1,7 @@
 package com.blss.blss.xml;
 
 import com.blss.blss.config.SecurityUsersProperties;
+import com.blss.blss.security.Role;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -141,9 +142,9 @@ public class XmlUserRepository {
      * @return the created user account
      * @throws IllegalArgumentException if user already exists
      */
-    public XmlUser.UserAccount create(String username, String password, List<String> roles) {
+    public XmlUser.UserAccount create(String username, String password, List<Role> roles) {
         String normalizedUsername = username.toLowerCase();
-        
+
         if (usersCache.containsKey(normalizedUsername)) {
             throw new IllegalArgumentException("User already exists: " + username);
         }
@@ -152,13 +153,13 @@ public class XmlUserRepository {
         newAccount.setUsername(username);
         newAccount.setPassword(password);
         newAccount.setEnabled(true);
-        
+
         XmlUser.Roles userRoles = new XmlUser.Roles();
         userRoles.setRole(roles != null ? roles : new ArrayList<>());
         newAccount.setRoles(userRoles);
 
         usersCache.put(normalizedUsername, newAccount);
-        
+
         try {
             saveAll();
         } catch (Exception e) {
@@ -180,10 +181,10 @@ public class XmlUserRepository {
      * @return the updated user account
      * @throws IllegalArgumentException if user does not exist
      */
-    public Optional<XmlUser.UserAccount> update(String username, String newPassword, List<String> newRoles, Boolean enabled) {
+    public Optional<XmlUser.UserAccount> update(String username, String newPassword, List<Role> newRoles, Boolean enabled) {
         String normalizedUsername = username.toLowerCase();
         XmlUser.UserAccount existingAccount = usersCache.get(normalizedUsername);
-        
+
         if (existingAccount == null) {
             return Optional.empty();
         }
@@ -191,13 +192,13 @@ public class XmlUserRepository {
         if (newPassword != null) {
             existingAccount.setPassword(newPassword);
         }
-        
+
         if (newRoles != null) {
             XmlUser.Roles userRoles = new XmlUser.Roles();
             userRoles.setRole(newRoles);
             existingAccount.setRoles(userRoles);
         }
-        
+
         if (enabled != null) {
             existingAccount.setEnabled(enabled);
         }

@@ -1,5 +1,6 @@
 package com.blss.blss.security.jaas;
 
+import com.blss.blss.security.Role;
 import com.blss.blss.xml.XmlUser;
 import com.blss.blss.xml.XmlUserRepository;
 import org.slf4j.Logger;
@@ -107,9 +108,9 @@ public class XmlLoginModule implements LoginModule {
 
             // Role principals
             if (userAccount.getRoles() != null && userAccount.getRoles().getRole() != null) {
-                for (String roleName : userAccount.getRoles().getRole()) {
-                    addedPrincipals.add(new RolePrincipal(roleName));
-                    log.debug("Added role principal: {}", roleName);
+                for (Role role : userAccount.getRoles().getRole()) {
+                    addedPrincipals.add(new RolePrincipal(role.name()));
+                    log.debug("Added role principal: {}", role);
                 }
             }
 

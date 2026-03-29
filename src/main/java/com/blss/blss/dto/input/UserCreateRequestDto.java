@@ -1,5 +1,6 @@
 package com.blss.blss.dto.input;
 
+import com.blss.blss.security.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -13,6 +14,6 @@ public record UserCreateRequestDto(
         @Size(min = 1)
         String password,
 
-        List<String> roles
+        List<Role> roles
 ) {
 }

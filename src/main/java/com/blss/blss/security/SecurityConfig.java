@@ -13,17 +13,19 @@ import org.springframework.security.authentication.jaas.DefaultJaasAuthenticatio
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Spring Security configuration with JAAS integration.
- * 
+ *
  * Role-based access control:
  * - ADMIN: Full access to all endpoints
  * - MANAGER: Access to orders, inventory, and user management
  * - CONSULTANT: Access to order creation, status updates, and customer operations
  * - WAREHOUSE: Access to inventory management and delivery operations
+ * - USER: Access to create orders and view own orders
  */
 @Slf4j
 @Configuration
@@ -72,16 +74,16 @@ public class SecurityConfig {
         
         http
             // Disable CSRF for stateless REST API
-            .csrf(csrf -> csrf.disable())
+            .csrf(AbstractHttpConfigurer::disable)
             
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints (if any)
                 .requestMatchers("/actuator/health").permitAll()
-                
-                // Order endpoints - CONSULTANT, MANAGER, ADMIN
-                .requestMatchers(HttpMethod.POST, "/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
+
+                // Order endpoints - USER, CONSULTANT, MANAGER, ADMIN
+                .requestMatchers(HttpMethod.POST, "/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
                 
                 // Inventory endpoints - WAREHOUSE, MANAGER, ADMIN

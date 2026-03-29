@@ -1,5 +1,6 @@
 package com.blss.blss.service;
 
+import com.blss.blss.security.Role;
 import com.blss.blss.xml.XmlUserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class UserRegistry {
     /**
      * Register a new user with username and password.
      */
-    public void register(String username, String password, List<String> roles) {
+    public void register(String username, String password, List<Role> roles) {
         userRepository.create(username, password, roles);
     }
 
@@ -32,7 +33,7 @@ public class UserRegistry {
     /**
      * Update user password, roles, or enabled status.
      */
-    public void update(String username, String newPassword, List<String> newRoles, Boolean enabled) {
+    public void update(String username, String newPassword, List<Role> newRoles, Boolean enabled) {
         userRepository.update(username, newPassword, newRoles, enabled);
     }
 

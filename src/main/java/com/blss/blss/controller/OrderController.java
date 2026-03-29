@@ -33,7 +33,7 @@ public class OrderController {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('CONSULTANT', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'CONSULTANT', 'MANAGER', 'ADMIN')")
     public OrderCreationResponse createOrder(
             @RequestBody OrderCreateRequestDTO order
     ) {
@@ -43,7 +43,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CONSULTANT', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'CONSULTANT', 'MANAGER', 'ADMIN')")
     public GetOrderResponse getOrderById(@PathVariable UUID id) {
         var order = orderService.getOrderContentById(id);
         return dtoMapper.toDto(order);

@@ -1,10 +1,12 @@
 package com.blss.blss.xml;
 
+import com.blss.blss.security.Role;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,25 +22,25 @@ public class XmlUser {
 
     @Data
     public static class UserAccount {
-        
+
         @JacksonXmlProperty(localName = "username")
         private String username;
-        
+
         @JacksonXmlProperty(localName = "password")
         private String password;
-        
+
         @JacksonXmlProperty(localName = "enabled")
         private boolean enabled = true;
-        
+
         @JacksonXmlProperty(localName = "roles")
         private Roles roles;
     }
 
     @Data
     public static class Roles {
-        
+
         @JacksonXmlProperty(localName = "role")
         @JacksonXmlElementWrapper(useWrapping = false)
-        private List<String> role;
+        private List<Role> role = new ArrayList<>();
     }
 }
