@@ -13,6 +13,6 @@ server:
 
 security:
   users:
-    xml-path: ${SECURITY_USERS_XML_PATH:/wildfly/standalone/configuration/users.xml
+    xml-path: ${SECURITY_USERS_XML_PATH:/opt/wildfly/standalone/configuration/users.xml}
 
 

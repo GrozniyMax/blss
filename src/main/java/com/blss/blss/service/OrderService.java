@@ -2,15 +2,16 @@ package com.blss.blss.service;
 
 import com.blss.blss.db.DeliveryPointRepo;
 import com.blss.blss.db.ProductRepo;
+import com.blss.blss.db.StoreRepo;
 import com.blss.blss.db.order.OrderItemRepo;
 import com.blss.blss.db.order.OrderRepo;
-import com.blss.blss.db.StoreRepo;
 import com.blss.blss.domain.Product;
 import com.blss.blss.domain.order.Order;
 import com.blss.blss.domain.order.OrderItem;
 import com.blss.blss.domain.order.Status;
 import com.blss.blss.exception.InvalidOrderException;
 import com.blss.blss.exception.NotFoundException;
+import com.blss.blss.service.tx.TransactionExecutor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -47,12 +48,14 @@ public class OrderService {
 
     UserRegistry userRegistry;
 
+    TransactionExecutor transactionExecutor;
+
     /**
-     * Создание заказа
+     * Creates a new order.
      */
     public CreationOrderResponse createOrder(String owner, UUID location, List<UUID> productIds) {
-
-        var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
+        return transactionExecutor.inTransaction(() -> {
+            var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
 
         if (foundProduct.size() != productIds.size()) {
             throw new InvalidOrderException("Не все продукты были найдены");
@@ -66,37 +69,38 @@ public class OrderService {
             throw new InvalidOrderException("Пользователь не существует");
         }
 
-        var totalPrice = foundProduct.stream()
-                .map(Product::price)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            var totalPrice = foundProduct.stream()
+                    .map(Product::price)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        var order = Order.builder()
-                .owner(owner)
-                .localtion(location)
-                .creationDate(Instant.now())
-                .status(Status.CREATED)
-                .totalAmount(totalPrice)
-                .build();
+            var order = Order.builder()
+                    .owner(owner)
+                    .localtion(location)
+                    .creationDate(Instant.now())
+                    .status(Status.CREATED)
+                    .totalAmount(totalPrice)
+                    .build();
 
-        storeRepo.decrementCount(productIds);
+            storeRepo.decrementCount(productIds);
 
-        order = orderRepo.create(order);
-        var orderId = order.id();
+            order = orderRepo.create(order);
+            var orderId = order.id();
 
-        var positions = productIds.stream()
-                .map(id ->
-                        new OrderItem(
-                                null,
-                                orderId,
-                                id,
-                                null
-                        )
-                )
-                .toList();
+            var positions = productIds.stream()
+                    .map(id ->
+                            new OrderItem(
+                                    null,
+                                    orderId,
+                                    id,
+                                    null
+                            )
+                    )
+                    .toList();
 
-        var ids = orderItemRepo.create(positions);
+            var ids = orderItemRepo.create(positions);
 
-        return new CreationOrderResponse(orderId, ids);
+            return new CreationOrderResponse(orderId, ids);
+        });
     }
 
     public Status getStatus(UUID orderId) {
@@ -104,7 +108,9 @@ public class OrderService {
     }
 
     public void updateStatus(UUID id, Status status) {
-        orderRepo.updateStatus(id, status).orElseThrow(() -> new NotFoundException(Order.class, id));
+        transactionExecutor.inTransaction(() ->
+                orderRepo.updateStatus(id, status).orElseThrow(() -> new NotFoundException(Order.class, id))
+        );
     }
 
     public FullOrder getOrderContentById(UUID id) {
@@ -136,23 +142,23 @@ public class OrderService {
     public record CreationOrderResponse(
             UUID orderId,
             List<UUID> positions
-    ) { }
+    ) {
+    }
 
-    public record FullOrder (
+    public record FullOrder(
             UUID id,
             String owner,
             Instant creationDate,
             Status status,
             BigDecimal totalAmount,
             List<FullOrderItem> positions
-    ) { }
+    ) {
+    }
 
-    public record FullOrderItem (
+    public record FullOrderItem(
             UUID id,
             String yacheyka,
             Product product
-    ) { }
-
-
-
+    ) {
+    }
 }

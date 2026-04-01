@@ -12,5 +12,5 @@ public class SecurityUsersProperties {
     /**
      * Path to the XML file containing user accounts.
      */
-    private String xmlPath = "src/main/resources/security/users.xml";
+    private String xmlPath = "./";
 }

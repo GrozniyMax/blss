@@ -2,6 +2,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     java
+    war
     id("org.springframework.boot") version "4.0.2"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -34,12 +35,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
 
     //Libs
     runtimeOnly("org.postgresql:postgresql")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
     implementation("jakarta.annotation:jakarta.annotation-api")
+    compileOnly("jakarta.transaction:jakarta.transaction-api:2.0.1")
     implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
@@ -59,6 +62,14 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    enabled = false
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootWar>("bootWar") {
+    enabled = true
 }
 
 tasks.processResources {
@@ -85,7 +96,10 @@ tasks.processResources {
     }
 
     // Базовое имя переменной — то, что до двоеточия (обрабатываем ${VAR:...})
-    val requiredVars = allPlaceholders.map { it.substringBefore(':') }.toSet()
+    val requiredVars = allPlaceholders
+        .filter { !it.contains(':') }
+        .map { it.substringBefore(':') }
+        .toSet()
 
     // Инкрементальность: вносим требуемые env как inputs
     inputs.properties(requiredVars.associateWith { envMap[it] ?: "" })
@@ -107,7 +121,14 @@ tasks.processResources {
     // ключ — то, что внутри ${...} (включая ':default'), значение — из env по базовому имени
     val tokensForReplace = allPlaceholders.associateWith { ph ->
         val key = ph.substringBefore(':')
-        envMap[key]!!
+        val defaultValue = ph.substringAfter(':', "")
+        envMap[key]
+            ?.takeIf { it.isNotBlank() }
+            ?: if (defaultValue.isNotEmpty()) {
+                defaultValue
+            } else {
+                throw GradleException("Missing environment variable: $key")
+            }
     }
 
     // Подставляем значения в .properties

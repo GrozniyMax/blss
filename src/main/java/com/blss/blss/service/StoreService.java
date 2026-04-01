@@ -7,6 +7,7 @@ import com.blss.blss.domain.store.StoreItem;
 import com.blss.blss.exception.AlreadyExistsException;
 import com.blss.blss.exception.NotFoundException;
 import com.blss.blss.exception.UpdateException;
+import com.blss.blss.service.tx.TransactionExecutor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -31,6 +32,8 @@ public class StoreService {
 
     ProductRepo productRepo;
 
+    TransactionExecutor transactionExecutor;
+
     /**
      * Создание товара в магазине (на главном складе)
      */
@@ -39,22 +42,26 @@ public class StoreService {
     }
 
     public UUID createProduct(Product product, Integer initialCount) {
-        if (initialCount == null || initialCount <= 0) {
-            throw new IllegalArgumentException("Initial count must be positive");
-        }
-        productRepo.findByName(product.name()).ifPresent(p -> {
-            throw new AlreadyExistsException(Product.class);
+        return transactionExecutor.inTransaction(() -> {
+            if (initialCount == null || initialCount <= 0) {
+                throw new IllegalArgumentException("Initial count must be positive");
+            }
+            productRepo.findByName(product.name()).ifPresent(p -> {
+                throw new AlreadyExistsException(Product.class);
+            });
+            var saved = productRepo.create(product);
+            storeRepo.create(new StoreItem(saved.id(), initialCount));
+            return saved.id();
         });
-        var saved = productRepo.create(product);
-        storeRepo.create(new StoreItem(saved.id(), initialCount));
-        return saved.id();
     }
 
     public void updateProduct(Product product) {
-        var updated = productRepo.update(product);
-        if (updated == null) {
-            throw new NotFoundException(Product.class, product.id());
-        }
+        transactionExecutor.inTransaction(() -> {
+            var updated = productRepo.update(product);
+            if (updated == null) {
+                throw new NotFoundException(Product.class, product.id());
+            }
+        });
     }
 
     public InventoryProduct getProduct(UUID productId) {
@@ -86,11 +93,13 @@ public class StoreService {
      * @param change количество для изменения (может быть любого знака)
      */
     public void updateItemsCount(UUID productId, Integer change) {
-        try {
-            storeRepo.updateCount(productId, change);
-        } catch (DataIntegrityViolationException e) {
-            throw new UpdateException(productId, "Items count must be positive and less than 10_000_000");
-        }
+        transactionExecutor.inTransaction(() -> {
+            try {
+                storeRepo.updateCount(productId, change);
+            } catch (DataIntegrityViolationException e) {
+                throw new UpdateException(productId, "Items count must be positive and less than 10_000_000");
+            }
+        });
     }
 
     public record InventoryProduct(
