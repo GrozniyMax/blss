@@ -1,12 +1,8 @@
-@baseUrl = http://localhost:8080
+POST http://localhost:8080/blss/delivery-points
+    Authorization: Basic <MANAGER_or_ADMIN>
+    Content-Type: application/json
 
-### Create delivery point
-POST {{baseUrl}}/delivery-points
-Content-Type: application/json
-
-{
-  "name": "ПВЗ Озон",
-  "address": "улица Пушкина, дом Колотушкина"
-}
-
-> {% if (response.status >= 200 && response.status < 300 && response.body?.data?.id) { client.global.set("locationId", response.body.data.id); } %}
+  {                                                                                                                                                                                                                                            
+    "name": "PVZ-1",                                                                                                                                                                                                                           
+    "address": "Nevsky 1"                                                                                                                                                                                                                      
+  }   
