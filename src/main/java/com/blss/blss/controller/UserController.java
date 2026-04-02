@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,6 +28,7 @@ import java.util.List;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserController {
 
     XmlUserRepository userRepository;
@@ -35,20 +37,28 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public XmlUser.UserAccount create(@Valid @RequestBody UserCreateRequestDto request) {
-        return userRepository.create(request.username(), request.password(), request.roles());
+        log.info("Creating user: username={}, roles={}", request.username(), request.roles());
+        var user = userRepository.create(request.username(), request.password(), request.roles());
+        log.info("User created successfully: username={}", request.username());
+        return user;
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<String> getAllUsers() {
+        log.info("Getting all users");
         return userRepository.getAllUsernames();
     }
 
     @GetMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<XmlUser.UserAccount> getUser(@PathVariable String username) {
+        log.info("Getting user: username={}", username);
         return userRepository.findByUsername(username)
-                .map(ResponseEntity::ok)
+                .map(user -> {
+                    log.info("User found: username={}", username);
+                    return ResponseEntity.ok(user);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -58,8 +68,12 @@ public class UserController {
             @PathVariable String username,
             @Valid @RequestBody UserUpdateRequestDto request
     ) {
+        log.info("Updating user: username={}", username);
         return userRepository.update(username, request.password(), request.roles(), request.enabled())
-                .map(ResponseEntity::ok)
+                .map(user -> {
+                    log.info("User updated successfully: username={}", username);
+                    return ResponseEntity.ok(user);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -67,8 +81,11 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable String username) {
+        log.info("Deleting user: username={}", username);
         if (!userRepository.delete(username)) {
+            log.warn("User not found for deletion: username={}", username);
             throw new IllegalArgumentException("User not found: " + username);
         }
+        log.info("User deleted successfully: username={}", username);
     }
 }

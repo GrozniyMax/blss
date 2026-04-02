@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class PVZController {
 
     StorageService storageService;
@@ -27,7 +29,9 @@ public class PVZController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('WAREHOUSE', 'ADMIN')")
     public void markDelivered(@Valid @RequestBody OrderItemDeliveredDto dto) {
+        log.info("Marking order item as delivered: itemId={}, yacheyka={}", dto.itemId(), dto.yacheyka());
         storageService.updateYacheyka(dto.itemId(), dto.yacheyka());
+        log.info("Order item marked as delivered: itemId={}", dto.itemId());
     }
 
 

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/delivery-points")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class DeliveryPointController {
 
     DeliveryPointRegistry registry;
@@ -28,7 +30,10 @@ public class DeliveryPointController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public DeliveryPoint create(@Valid @RequestBody DeliveryPointCreateRequestDto request) {
+        log.info("Creating delivery point: name={}, address={}", request.name(), request.address());
         var item = new DeliveryPoint(null, request.name(), request.address());
-        return registry.createDeliveryPoint(item);
+        var created = registry.createDeliveryPoint(item);
+        log.info("Delivery point created successfully: id={}", created.id());
+        return created;
     }
 }
