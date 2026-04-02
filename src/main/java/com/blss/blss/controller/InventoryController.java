@@ -30,40 +30,40 @@ public class InventoryController {
 
     @PostMapping("/products")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
         var productId = storeService.createProduct(new Product(null, request.name(), request.price()), request.initialCount());
         return dtoMapper.toDto(storeService.getProduct(productId));
     }
 
     @PutMapping("/products/{id}")
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductUpdateRequestDto request) {
         storeService.updateProduct(new Product(id, request.name(), request.price()));
         return dtoMapper.toDto(storeService.getProduct(id));
     }
 
     @PatchMapping("/products/{id}/count")
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto updateCount(@PathVariable UUID id, @RequestParam Integer change) {
         storeService.updateItemsCount(id, change);
         return dtoMapper.toDto(storeService.getProduct(id));
     }
 
     @GetMapping("/products/{id}")
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN', 'CONSULTANT')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto getProduct(@PathVariable UUID id) {
         return dtoMapper.toDto(storeService.getProduct(id));
     }
 
     @GetMapping("/products")
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN', 'CONSULTANT')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public List<InventoryProductDto> getAllProducts() {
         return storeService.getAllProducts().stream().map(dtoMapper::toDto).toList();
     }
 
     @GetMapping("/products/{id}/count")
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'MANAGER', 'ADMIN', 'CONSULTANT')")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public Integer getProductCount(@PathVariable UUID id) {
         return storeService.getCount(id);
     }

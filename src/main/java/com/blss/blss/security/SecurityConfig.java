@@ -88,18 +88,18 @@ public class SecurityConfig {
                 // POST: USER (own orders), MANAGER, ADMIN
                 // GET: USER (own), CONSULTANT (view by ID), MANAGER, ADMIN
                 // PATCH: CONSULTANT (update status), MANAGER, ADMIN
-                .requestMatchers(HttpMethod.POST, "/order/**").hasAnyRole("USER", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/order/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
 
-                // Inventory endpoints - MANAGER, ADMIN only (warehouse operations)
+                // Inventory endpoints - MANAGER, ADMIN only
                 .requestMatchers(HttpMethod.POST, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
 
-                // PVZ (Pickup Point) endpoints - WAREHOUSE, CONSULTANT, MANAGER, ADMIN
-                .requestMatchers("/mark-delivered").hasAnyRole("WAREHOUSE", "CONSULTANT", "MANAGER", "ADMIN")
+                // PVZ (Pickup Point) endpoints - WAREHOUSE, ADMIN
+                .requestMatchers("/mark-delivered").hasAnyRole("WAREHOUSE", "ADMIN")
 
                 // User endpoints - ADMIN only
                 .requestMatchers("/users/**").hasRole("ADMIN")

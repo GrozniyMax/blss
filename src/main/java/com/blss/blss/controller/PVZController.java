@@ -25,7 +25,7 @@ public class PVZController {
 
     @PostMapping("/mark-delivered")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'CONSULTANT', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('WAREHOUSE', 'ADMIN')")
     public void markDelivered(@Valid @RequestBody OrderItemDeliveredDto dto) {
         storageService.updateYacheyka(dto.itemId(), dto.yacheyka());
     }
