@@ -81,8 +81,9 @@ public class SecurityConfig {
             
             // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints (if any)
+                // Public endpoints
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/auth/register").permitAll()
 
                 // Order endpoints
                 // POST: USER (own orders), MANAGER, ADMIN
