@@ -3,7 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 plugins {
     java
     war
-    id("org.springframework.boot") version "4.0.2"
+    id("org.springframework.boot") version "3.3.5"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -31,11 +31,11 @@ dependencies {
     //Starters
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("org.springframework.boot:spring-boot-starter-webmvc") {
+    implementation("org.springframework.boot:spring-boot-starter-web") {
         exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
     }
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-liquibase")
+    implementation("org.liquibase:liquibase-core")
     implementation("org.springframework.boot:spring-boot-starter-security")
     providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
     compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
@@ -55,8 +55,8 @@ dependencies {
 
     //Test
     testImplementation("org.springframework.boot:spring-boot-starter-data-jdbc-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-postgresql")

@@ -13,7 +13,7 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
     @Query("""
             UPDATE orders
             SET
-                status = :#{#order.status},
+                status = :#{#order.status.name()},
                 owner = :#{#order.owner},
                 localtion = :#{#order.localtion},
                 total_amount = :#{#order.totalAmount},
@@ -32,7 +32,7 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
                 creation_date,
                 last_edited
             ) VALUES (
-                :#{#order.status},
+                :#{#order.status.name()},
                 :#{#order.owner},
                 :#{#order.localtion},
                 :#{#order.totalAmount},
@@ -43,6 +43,6 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
             """)
     Order create(Order order);
 
-    @Query("UPDATE orders SET status = :status, last_edited = NOW() WHERE id = :id RETURNING *")
+    @Query("UPDATE orders SET status = :#{#status.name()}, last_edited = NOW() WHERE id = :id RETURNING *")
     Optional<Order> updateStatus(UUID id, Status status);
 }
