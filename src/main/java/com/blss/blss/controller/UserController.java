@@ -11,7 +11,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,7 +34,6 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('ADMIN')")
     public XmlUser.UserAccount create(@Valid @RequestBody UserCreateRequestDto request) {
         log.info("Creating user: username={}, roles={}", request.username(), request.roles());
         var user = userRepository.create(request.username(), request.password(), request.roles());
@@ -44,14 +42,12 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public List<String> getAllUsers() {
         log.info("Getting all users");
         return userRepository.getAllUsernames();
     }
 
     @GetMapping("/{username}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<XmlUser.UserAccount> getUser(@PathVariable String username) {
         log.info("Getting user: username={}", username);
         return userRepository.findByUsername(username)
@@ -63,7 +59,6 @@ public class UserController {
     }
 
     @PatchMapping("/{username}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<XmlUser.UserAccount> update(
             @PathVariable String username,
             @Valid @RequestBody UserUpdateRequestDto request
@@ -79,7 +74,6 @@ public class UserController {
 
     @DeleteMapping("/{username}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable String username) {
         log.info("Deleting user: username={}", username);
         if (!userRepository.delete(username)) {

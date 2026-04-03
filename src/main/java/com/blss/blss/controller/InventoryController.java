@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,7 +31,6 @@ public class InventoryController {
 
     @PostMapping("/products")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto createProduct(@Valid @RequestBody ProductCreateRequestDto request) {
         log.info("Creating product: name={}, price={}, initialCount={}", request.name(), request.price(), request.initialCount());
         var productId = storeService.createProduct(new Product(null, request.name(), request.price()), request.initialCount());
@@ -41,7 +39,6 @@ public class InventoryController {
     }
 
     @PutMapping("/products/{id}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductUpdateRequestDto request) {
         log.info("Updating product: id={}, name={}, price={}", id, request.name(), request.price());
         storeService.updateProduct(new Product(id, request.name(), request.price()));
@@ -50,7 +47,6 @@ public class InventoryController {
     }
 
     @PatchMapping("/products/{id}/count")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto updateCount(@PathVariable UUID id, @RequestParam Integer change) {
         log.info("Updating product count: id={}, change={}", id, change);
         storeService.updateItemsCount(id, change);
@@ -59,21 +55,18 @@ public class InventoryController {
     }
 
     @GetMapping("/products/{id}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public InventoryProductDto getProduct(@PathVariable UUID id) {
         log.info("Getting product: id={}", id);
         return dtoMapper.toDto(storeService.getProduct(id));
     }
 
     @GetMapping("/products")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public List<InventoryProductDto> getAllProducts() {
         log.info("Getting all products");
         return storeService.getAllProducts().stream().map(dtoMapper::toDto).toList();
     }
 
     @GetMapping("/products/{id}/count")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public Integer getProductCount(@PathVariable UUID id) {
         log.info("Getting product count: id={}", id);
         return storeService.getCount(id);

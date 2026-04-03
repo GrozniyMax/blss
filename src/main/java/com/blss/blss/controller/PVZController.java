@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -27,7 +26,6 @@ public class PVZController {
 
     @PostMapping("/mark-delivered")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('WAREHOUSE', 'ADMIN')")
     public void markDelivered(@Valid @RequestBody OrderItemDeliveredDto dto) {
         log.info("Marking order item as delivered: itemId={}, yacheyka={}", dto.itemId(), dto.yacheyka());
         storageService.updateYacheyka(dto.itemId(), dto.yacheyka());
