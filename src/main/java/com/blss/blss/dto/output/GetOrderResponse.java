@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public record GetOrderResponse (
     UUID id,
-    UUID owner,
+    String owner,
     Instant creationDate,
     Status status,
     BigDecimal totalAmount,

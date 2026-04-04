@@ -18,12 +18,15 @@ public record Order(
 
         Status status,
 
+        /*
+         * Имя владельца (username из XML)
+         */
         String owner,
 
         /*
          * Id ПВЗ
          */
-        UUID localtion,
+        UUID location,
 
         /*
          * Сумма выдачи

@@ -69,13 +69,13 @@ public class OrderService {
             throw new InvalidOrderException("Пользователь не существует");
         }
 
-            var totalPrice = foundProduct.stream()
+                    var totalPrice = foundProduct.stream()
                     .map(Product::price)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             var order = Order.builder()
                     .owner(owner)
-                    .localtion(location)
+                    .location(location)
                     .creationDate(Instant.now())
                     .status(Status.CREATED)
                     .totalAmount(totalPrice)
