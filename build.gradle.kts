@@ -44,6 +44,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("jakarta.annotation:jakarta.annotation-api")
     compileOnly("jakarta.transaction:jakarta.transaction-api:2.0.1")
     implementation("org.mapstruct:mapstruct:1.6.3")
