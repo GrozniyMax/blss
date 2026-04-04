@@ -10,10 +10,9 @@
             <tableExists tableName="orders"/>
         </preConditions>
         <sql>
+            ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_owner_fkey;
             ALTER TABLE orders ALTER COLUMN owner TYPE TEXT;
             ALTER TABLE orders ALTER COLUMN owner SET NOT NULL;
-            -- Drop FK constraint if it exists (may not exist if not created yet)
-            ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_owner_fkey;
         </sql>
     </changeSet>
 
