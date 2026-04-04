@@ -56,6 +56,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/status/next")
+    @PreAuthorize("@orderSecurityService.canAccessOrder(#id, authentication.name)")
     public void nextStatus(
             @PathVariable UUID id
     ) {
@@ -66,6 +67,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PatchMapping("/{id}/status/cancel")
+    @PreAuthorize("@orderSecurityService.canAccessOrder(#id, authentication.name)")
     public void cancelOrder(
             @PathVariable UUID id
     ) {

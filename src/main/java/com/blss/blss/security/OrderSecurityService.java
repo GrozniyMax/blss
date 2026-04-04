@@ -97,10 +97,17 @@ public class OrderSecurityService {
             return false;
         }
 
+        // Validate input
+        if (owner == null || owner.isBlank()) {
+            log.debug("Create denied: owner is null or blank");
+            return false;
+        }
+
         String currentUsername = authentication.getName();
+        var authorities = authentication.getAuthorities();
 
         // ADMIN, MANAGER — могут создавать для любого
-        if (authentication.getAuthorities().stream()
+        if (authorities.stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
                         || a.getAuthority().equals("ROLE_MANAGER"))) {
             log.debug("Create granted: user {} has ADMIN/MANAGER role", currentUsername);
@@ -108,13 +115,19 @@ public class OrderSecurityService {
         }
 
         // USER — может создавать только для себя
-        boolean isSelf = currentUsername.equals(owner);
-        if (isSelf) {
-            log.debug("Create granted: user {} creating order for self", currentUsername);
-        } else {
-            log.debug("Create denied: user {} cannot create order for {}", currentUsername, owner);
+        if (authorities.stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
+            boolean isSelf = currentUsername.equals(owner);
+            if (isSelf) {
+                log.debug("Create granted: user {} creating order for self", currentUsername);
+            } else {
+                log.debug("Create denied: user {} cannot create order for {}", currentUsername, owner);
+            }
+            return isSelf;
         }
 
-        return isSelf;
+        // CONSULTANT, WAREHOUSE и другие — доступ запрещён
+        log.debug("Create denied: user {} has no suitable role", currentUsername);
+        return false;
     }
 }
