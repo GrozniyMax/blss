@@ -1,5 +1,13 @@
 <users>
     <user>
+        <username>user</username>
+        <password>e2e_pass_123</password>
+        <enabled>true</enabled>
+        <roles>
+            <role>USER</role>
+        </roles>
+    </user>
+    <user>
         <username>manager</username>
         <password>manager123</password>
         <enabled>true</enabled>
@@ -13,6 +21,14 @@
         <enabled>true</enabled>
         <roles>
             <role>CONSULTANT</role>
+        </roles>
+    </user>
+    <user>
+        <username>e2eUsername</username>
+        <password>e2e_pass_123</password>
+        <enabled>true</enabled>
+        <roles>
+            <role>USER</role>
         </roles>
     </user>
     <user>
