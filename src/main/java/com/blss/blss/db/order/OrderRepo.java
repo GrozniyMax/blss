@@ -15,7 +15,7 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
             SET
                 status = :#{#order.status.name()},
                 owner = :#{#order.owner},
-                localtion = :#{#order.localtion},
+                location = :#{#order.location},
                 total_amount = :#{#order.totalAmount},
                 creation_date = :#{#order.creationDate},
                 last_edited = NOW()
@@ -27,14 +27,14 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
             INSERT INTO orders (
                 status,
                 owner,
-                localtion,
+                location,
                 total_amount,
                 creation_date,
                 last_edited
             ) VALUES (
                 :#{#order.status.name()},
                 :#{#order.owner},
-                :#{#order.localtion},
+                :#{#order.location},
                 :#{#order.totalAmount},
                 NOW(),
                 NULL

@@ -11,4 +11,9 @@
     <include file="changes/lab1/add_store_table.xml" relativeToChangelogFile="true" />
     <include file="changes/lab1/add_order_table.xml" relativeToChangelogFile="true" />
     <include file="changes/lab1/add_order_item.xml" relativeToChangelogFile="true" />
+
+    <!-- Schema fixes -->
+    <include file="changes/lab2/fix_user_reference.xml" relativeToChangelogFile="true" />
+    <include file="changes/lab2/fix_location_typo.xml" relativeToChangelogFile="true" />
+    <include file="changes/lab2/fix_product_price_type.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>
