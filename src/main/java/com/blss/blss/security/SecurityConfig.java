@@ -83,30 +83,30 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/auth/register").permitAll()
+                .requestMatchers("/blss/auth/register").permitAll()
 
                 // Order endpoints
                 // POST: USER (own orders), MANAGER, ADMIN
                 // GET: USER (own), CONSULTANT (view by ID), MANAGER, ADMIN
                 // PATCH: CONSULTANT (update status), MANAGER, ADMIN
-                .requestMatchers(HttpMethod.POST, "/order/**").hasAnyRole("USER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/blss/order/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/blss/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/blss/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
 
                 // Inventory endpoints - MANAGER, ADMIN only
-                .requestMatchers(HttpMethod.POST, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
 
                 // PVZ (Pickup Point) endpoints - WAREHOUSE, ADMIN
-                .requestMatchers("/mark-delivered").hasAnyRole("WAREHOUSE", "ADMIN")
+                .requestMatchers("/blss/mark-delivered").hasAnyRole("WAREHOUSE", "ADMIN")
 
                 // User endpoints - ADMIN only
-                .requestMatchers("/users/**").hasRole("ADMIN")
+                .requestMatchers("/blss/users/**").hasRole("ADMIN")
 
                 // Delivery Points - MANAGER, ADMIN
-                .requestMatchers("/delivery-points/**").hasAnyRole("MANAGER", "ADMIN")
+                .requestMatchers("/blss/delivery-points/**").hasAnyRole("MANAGER", "ADMIN")
 
                 // All other requests require authentication
                 .anyRequest().authenticated()

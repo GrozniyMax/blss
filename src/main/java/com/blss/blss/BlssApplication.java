@@ -2,20 +2,13 @@ package com.blss.blss;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @EnableAsync
 @SpringBootApplication
-public class BlssApplication extends SpringBootServletInitializer {
+public class BlssApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(BlssApplication.class, args);
-    }
-
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(BlssApplication.class);
     }
 }

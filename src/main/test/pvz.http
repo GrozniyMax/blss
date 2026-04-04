@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080
+@baseUrl = http://localhost:8080/blss
 @orderId = 663e7e2b-ba24-4e32-bdf6-7119f5bd08f2
 @orderItemId = 27a7364c-4ec4-46fd-a0f3-4ae86b55d23a
 @orderItemId1 = 7941bc5c-271d-43d8-b284-4a01715eda4b

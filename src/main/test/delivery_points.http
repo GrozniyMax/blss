@@ -2,7 +2,7 @@ POST http://localhost:8080/blss/delivery-points
     Authorization: Basic <MANAGER_or_ADMIN>
     Content-Type: application/json
 
-  {                                                                                                                                                                                                                                            
-    "name": "PVZ-1",                                                                                                                                                                                                                           
-    "address": "Nevsky 1"                                                                                                                                                                                                                      
-  }   
+  {
+    "name": "PVZ-1",
+    "address": "Nevsky 1"
+  }

@@ -2,7 +2,6 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     java
-    war
     id("org.springframework.boot") version "3.3.5"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -31,14 +30,10 @@ dependencies {
     //Starters
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("org.springframework.boot:spring-boot-starter-web") {
-        exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
-    }
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.liquibase:liquibase-core")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
-    compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
 
     //Libs
     runtimeOnly("org.postgresql:postgresql")
@@ -68,10 +63,6 @@ tasks.withType<Test> {
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    enabled = false
-}
-
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootWar>("bootWar") {
     enabled = true
 }
 

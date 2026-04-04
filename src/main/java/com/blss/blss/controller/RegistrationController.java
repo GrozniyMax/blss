@@ -23,7 +23,7 @@ import java.util.List;
  * Создает пользователя с базовой ролью USER.
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/blss/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j

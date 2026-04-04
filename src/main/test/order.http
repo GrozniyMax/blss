@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080
+@baseUrl = http://localhost:8080/blss
 @orderId = 78f9528e-ee23-4cc8-bc3a-06bef5a9264f
 @ownerId = {{ownerId}}
 @locationId = {{locationId}}

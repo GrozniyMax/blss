@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:8080
+@baseUrl = http://localhost:8080/blss
 @productId = {{productId1}}
 @productId2 = {{productId2}}
 

@@ -21,7 +21,7 @@ import java.util.UUID;
  * Обработчик связанный с заказами
  */
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/blss/order")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
