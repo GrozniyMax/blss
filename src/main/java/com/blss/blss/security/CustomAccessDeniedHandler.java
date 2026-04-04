@@ -1,5 +1,6 @@
 package com.blss.blss.security;
 
+import com.blss.blss.dto.output.ErrorResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,14 +34,14 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            Map<String, Object> errorResponse = Map.of(
-                "timestamp", LocalDateTime.now().toString(),
-                "status", 403,
-                "error", "Forbidden",
-                "message", "Access denied",
-                "path", request.getRequestURI()
+            ErrorResponseDto dto = new ErrorResponseDto(
+                    "Access Denied",
+                    LocalDateTime.now().toString(),
+                    request.getRequestURI(),
+                    "403"
             );
-            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+
+            response.getWriter().write(objectMapper.writeValueAsString(dto));
         } catch (Exception e) {
             log.error("Error writing access denied response", e);
         }
