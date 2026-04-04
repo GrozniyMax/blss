@@ -21,11 +21,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * Repository for loading and caching user accounts from XML configuration file.
- * Loads users into cache at startup and persists changes to file on shutdown.
+ * Loads users into cache at startup and persists changes to file on shutdown and every minute.
  */
 @Slf4j
 @Repository
@@ -33,6 +36,7 @@ public class XmlUserRepository {
 
     private final Map<String, XmlUser.UserAccount> usersCache = new ConcurrentHashMap<>();
     private final XmlMapper xmlMapper = new XmlMapper();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private Path xmlFilePath;
     private volatile boolean initialized = false;
 
@@ -44,10 +48,21 @@ public class XmlUserRepository {
     public void init() {
         loadUsers();
         initialized = true;
+        schedulePeriodicSave();
     }
 
     @PreDestroy
     public void shutdown() {
+        scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
         if (initialized && !usersCache.isEmpty()) {
             try {
                 saveAll();
@@ -56,6 +71,25 @@ public class XmlUserRepository {
                 log.error("Failed to save users on shutdown: {}", e.getMessage(), e);
             }
         }
+    }
+
+    private void schedulePeriodicSave() {
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    if (!usersCache.isEmpty()) {
+                        try {
+                            saveAll();
+                            log.debug("Users cache auto-saved to XML file");
+                        } catch (Exception e) {
+                            log.error("Failed to auto-save users cache: {}", e.getMessage(), e);
+                        }
+                    }
+                },
+                1,
+                1,
+                TimeUnit.MINUTES
+        );
+        log.info("Scheduled periodic users cache save every 1 minute");
     }
 
     /**
@@ -156,13 +190,6 @@ public class XmlUserRepository {
 
         usersCache.put(normalizedUsername, newAccount);
 
-        try {
-            saveAll();
-        } catch (Exception e) {
-            usersCache.remove(normalizedUsername);
-            throw new IllegalStateException("Failed to save user to XML file", e);
-        }
-
         log.info("Created user: {}", username);
         return newAccount;
     }
@@ -199,12 +226,6 @@ public class XmlUserRepository {
             existingAccount.setEnabled(enabled);
         }
 
-        try {
-            saveAll();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to save user to XML file", e);
-        }
-
         log.info("Updated user: {}", username);
         return Optional.of(existingAccount);
     }
@@ -221,13 +242,6 @@ public class XmlUserRepository {
         
         if (removed == null) {
             return false;
-        }
-
-        try {
-            saveAll();
-        } catch (Exception e) {
-            usersCache.put(normalizedUsername, removed);
-            throw new IllegalStateException("Failed to save user to XML file", e);
         }
 
         log.info("Deleted user: {}", username);
