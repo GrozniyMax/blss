@@ -6,7 +6,6 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
     <changeSet id="fix-location-typo-20260404-02" author="m.s.taranenko">
-        <comment>Fix typo: rename 'loction' to 'location' in orders table</comment>
         <preConditions>
             <tableExists tableName="orders"/>
         </preConditions>

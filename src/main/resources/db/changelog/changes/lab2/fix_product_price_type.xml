@@ -6,7 +6,6 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
     <changeSet id="fix-product-price-type-20260404-03" author="m.s.taranenko">
-        <comment>Change product.price from TEXT to DECIMAL(19,4) to match domain model BigDecimal</comment>
         <preConditions>
             <tableExists tableName="product"/>
         </preConditions>
