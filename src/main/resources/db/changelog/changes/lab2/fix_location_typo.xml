@@ -10,7 +10,7 @@
             <tableExists tableName="orders"/>
         </preConditions>
         <sql>
-            ALTER TABLE orders RENAME COLUMN loction TO location;
+            ALTER TABLE orders RENAME COLUMN localtion TO location;
         </sql>
     </changeSet>
 
