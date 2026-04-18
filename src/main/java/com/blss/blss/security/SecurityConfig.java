@@ -76,36 +76,30 @@ public class SecurityConfig {
         log.info("Configuring Spring Security with JAAS authentication");
         
         http
-            // Disable CSRF for stateless REST API
             .csrf(AbstractHttpConfigurer::disable)
-            
-            // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/blss/auth/register").permitAll()
 
                 // Order endpoints
-                // POST: USER (own orders), MANAGER, ADMIN
-                // GET: USER (own), CONSULTANT (view by ID), MANAGER, ADMIN
-                // PATCH: CONSULTANT (update status), MANAGER, ADMIN
                 .requestMatchers(HttpMethod.POST, "/blss/order/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/blss/order/**").hasAnyRole("USER", "CONSULTANT", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/blss/order/**").hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
 
-                // Inventory endpoints - MANAGER, ADMIN only
+                // Inventory endpoints
                 .requestMatchers(HttpMethod.POST, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/blss/inventory/**").hasAnyRole("MANAGER", "ADMIN")
 
-                // PVZ (Pickup Point) endpoints - WAREHOUSE, ADMIN
+                // PVZ (Pickup Point) endpoints
                 .requestMatchers("/blss/mark-delivered").hasAnyRole("WAREHOUSE", "ADMIN")
 
-                // User endpoints - ADMIN only
+                // User endpoints
                 .requestMatchers("/blss/users/**").hasRole("ADMIN")
 
-                // Delivery Points - MANAGER, ADMIN
+                // Delivery Points
                 .requestMatchers("/blss/delivery-points/**").hasAnyRole("MANAGER", "ADMIN")
 
                 // All other requests require authentication
@@ -117,12 +111,10 @@ public class SecurityConfig {
                 .realmName("BLSS API")
             )
             
-            // Stateless session management
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             
-            // Exception handling
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
