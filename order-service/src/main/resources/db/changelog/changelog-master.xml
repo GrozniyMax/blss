@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <include file="changes/lab1/add_product_table.xml" relativeToChangelogFile="true" />
+    <include file="changes/lab1/add_store_table.xml" relativeToChangelogFile="true" />
+    <include file="changes/lab1/add_delivery_point_table.xml" relativeToChangelogFile="true" />
+    <include file="changes/lab1/add_order_table.xml" relativeToChangelogFile="true" />
+    <include file="changes/lab1/add_order_item.xml" relativeToChangelogFile="true" />
+
+    <!-- Schema fixes -->
+    <include file="changes/lab2/fix_location_typo.xml" relativeToChangelogFile="true" />
+</databaseChangeLog>

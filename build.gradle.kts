@@ -2,14 +2,12 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     java
-    war
-    id("org.springframework.boot") version "3.3.5"
-    id("io.spring.dependency-management") version "1.1.7"
+    id("org.springframework.boot") version "3.3.5" apply false
+    id("io.spring.dependency-management") version "1.1.7" apply false
 }
 
 group = "com.blss"
 version = "0.0.1-SNAPSHOT"
-description = "blss"
 
 java {
     toolchain {
@@ -17,131 +15,111 @@ java {
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
+allprojects {
+    repositories {
+        mavenCentral()
     }
 }
 
-repositories {
-    mavenCentral()
-}
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "org.springframework.boot")
+    apply(plugin = "io.spring.dependency-management")
 
-dependencies {
-    //Starters
-    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("org.springframework.boot:spring-boot-starter-web") {
-        exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
-    }
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.liquibase:liquibase-core")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
-    compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+    group = "com.blss"
+    version = "0.0.1-SNAPSHOT"
 
-    //Libs
-    runtimeOnly("org.postgresql:postgresql")
-    implementation("com.fasterxml.jackson.core:jackson-databind")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-    implementation("jakarta.annotation:jakarta.annotation-api")
-    compileOnly("jakarta.transaction:jakarta.transaction-api:2.0.1")
-    implementation("org.mapstruct:mapstruct:1.6.3")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
-
-    // Lombok
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
-
-    //Test
-    testImplementation("org.springframework.boot:spring-boot-starter-data-jdbc-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.springframework.boot:spring-boot-testcontainers")
-    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
-    testImplementation("org.testcontainers:testcontainers-postgresql")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    enabled = false
-}
-
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootWar>("bootWar") {
-    enabled = true
-}
-
-tasks.processResources {
-    val envMap = System.getenv()
-
-    val srcResourcesDir = project.layout.projectDirectory.dir("src/main/resources")
-    val propertiesFiles: Set<File> = srcResourcesDir.asFileTree
-        .matching {
-            include("**/*.yaml")
-        }.files
-
-    val placeholderRegex = Regex("""\$\{([^}]+)}""")
-
-    val placeholdersByFile = mutableMapOf<File, Set<String>>()
-    val allPlaceholders = linkedSetOf<String>()
-
-    propertiesFiles.forEach { f ->
-        val content = f.readText(Charsets.UTF_8)
-        val found = placeholderRegex.findAll(content).map { it.groupValues[1] }.toSet()
-        if (found.isNotEmpty()) {
-            placeholdersByFile[f] = found
-            allPlaceholders.addAll(found)
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
         }
     }
 
-    // Базовое имя переменной — то, что до двоеточия (обрабатываем ${VAR:...})
-    val requiredVars = allPlaceholders
-        .filter { !it.contains(':') }
-        .map { it.substringBefore(':') }
-        .toSet()
+    configurations {
+        compileOnly {
+            extendsFrom(configurations.annotationProcessor.get())
+        }
+    }
 
-    // Инкрементальность: вносим требуемые env как inputs
-    inputs.properties(requiredVars.associateWith { envMap[it] ?: "" })
+    dependencies {
+        // Lombok
+        compileOnly("org.projectlombok:lombok")
+        annotationProcessor("org.projectlombok:lombok")
 
-    val missing = requiredVars.filter { envMap[it].isNullOrBlank() }.toSet()
-    if (missing.isNotEmpty()) {
-        val details = buildString {
-            appendLine("Отсутствуют значения для переменных окружения: ${missing.sorted().joinToString(", ")}")
-            appendLine("Использование по файлам:")
-            placeholdersByFile.forEach { (file, phs) ->
-                val here = phs.map { it.substringBefore(':') }.filter { it in missing }.toSet()
-                if (here.isNotEmpty()) appendLine("- ${project.relativePath(file)}: ${here.joinToString(", ")}")
+        // Test
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
+        testImplementation("org.springframework.boot:spring-boot-testcontainers")
+        testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+        testImplementation("org.testcontainers:testcontainers-postgresql")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+
+    tasks.processResources {
+        val envMap = System.getenv()
+
+        val srcResourcesDir = project.layout.projectDirectory.dir("src/main/resources")
+        val propertiesFiles: Set<File> = srcResourcesDir.asFileTree
+            .matching {
+                include("**/*.yaml")
+            }.files
+
+        val placeholderRegex = Regex("""\$\{([^}]+)}""")
+
+        val placeholdersByFile = mutableMapOf<File, Set<String>>()
+        val allPlaceholders = linkedSetOf<String>()
+
+        propertiesFiles.forEach { f ->
+            val content = f.readText(Charsets.UTF_8)
+            val found = placeholderRegex.findAll(content).map { it.groupValues[1] }.toSet()
+            if (found.isNotEmpty()) {
+                placeholdersByFile[f] = found
+                allPlaceholders.addAll(found)
             }
         }
-        throw GradleException(details)
-    }
 
-    // Готовим токены для замены:
-    // ключ — то, что внутри ${...} (включая ':default'), значение — из env по базовому имени
-    val tokensForReplace = allPlaceholders.associateWith { ph ->
-        val key = ph.substringBefore(':')
-        val defaultValue = ph.substringAfter(':', "")
-        envMap[key]
-            ?.takeIf { it.isNotBlank() }
-            ?: if (defaultValue.isNotEmpty()) {
-                defaultValue
-            } else {
-                throw GradleException("Missing environment variable: $key")
+        val requiredVars = allPlaceholders
+            .filter { !it.contains(':') }
+            .map { it.substringBefore(':') }
+            .toSet()
+
+        inputs.properties(requiredVars.associateWith { envMap[it] ?: "" })
+
+        val missing = requiredVars.filter { envMap[it].isNullOrBlank() }.toSet()
+        if (missing.isNotEmpty()) {
+            val details = buildString {
+                appendLine("Missing environment variables: ${missing.sorted().joinToString(", ")}")
+                appendLine("Usage by file:")
+                placeholdersByFile.forEach { (file, phs) ->
+                    val here = phs.map { it.substringBefore(':') }.filter { it in missing }.toSet()
+                    if (here.isNotEmpty()) appendLine("- ${project.relativePath(file)}: ${here.joinToString(", ")}")
+                }
             }
-    }
+            throw GradleException(details)
+        }
 
-    // Подставляем значения в .properties
-    filesMatching("**/*.yaml") {
-        filteringCharset = "UTF-8"
-        filter<ReplaceTokens>(
-            "tokens" to tokensForReplace,
-            "beginToken" to "\${",
-            "endToken" to "}"
-        )
+        val tokensForReplace = allPlaceholders.associateWith { ph ->
+            val key = ph.substringBefore(':')
+            val defaultValue = ph.substringAfter(':', "")
+            envMap[key]
+                ?.takeIf { it.isNotBlank() }
+                ?: if (defaultValue.isNotEmpty()) {
+                    defaultValue
+                } else {
+                    throw GradleException("Missing environment variable: $key")
+                }
+        }
+
+        filesMatching("**/*.yaml") {
+            filteringCharset = "UTF-8"
+            filter<ReplaceTokens>(
+                "tokens" to tokensForReplace,
+                "beginToken" to "\${",
+                "endToken" to "}"
+            )
+        }
     }
 }

@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:studs}
+    username: ${POSTGRES_USER:s408145}
+    password: ${POSTGRES_PASSWORD:JLzD%6772}
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+
+server:
+  port: 25103
+
+# User service URL for REST communication
+user:
+  service:
+    url: ${USER_SERVICE_URL:http://localhost:25104}
+
+security:
+  users:
+    xml-path: ${SECURITY_USERS_XML_PATH:./users.xml}

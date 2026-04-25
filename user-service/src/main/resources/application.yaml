@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: user-service
+
+server:
+  port: 25104
+
+security:
+  users:
+    xml-path: ${SECURITY_USERS_XML_PATH:./users.xml}
