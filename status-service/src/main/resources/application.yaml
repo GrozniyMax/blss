@@ -1,6 +1,6 @@
 spring:
   application:
-    name: order-service
+    name: status-service
   datasource:
     url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:studs}
     username: ${POSTGRES_USER:s408145}
@@ -14,12 +14,7 @@ spring:
     password: ${ARTEMIS_PASSWORD:artemis}
 
 server:
-  port: 25103
-
-# User service URL for REST communication
-user:
-  service:
-    url: ${USER_SERVICE_URL:http://localhost:25104}
+  port: 25105
 
 security:
   users:
@@ -29,3 +24,12 @@ security:
 jms:
   queue:
     order-status-changed: order.status.changed
+    notifications: status.notifications
+
+# Service URLs
+user:
+  service:
+    url: ${USER_SERVICE_URL:http://localhost:25104}
+order:
+  service:
+    url: ${ORDER_SERVICE_URL:http://localhost:25103}

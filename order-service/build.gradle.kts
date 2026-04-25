@@ -18,6 +18,9 @@ dependencies {
     // WebClient for service-to-service communication
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
+    // JMS for async messaging
+    implementation("org.springframework.boot:spring-boot-starter-artemis")
+
     // Database
     runtimeOnly("org.postgresql:postgresql")
 

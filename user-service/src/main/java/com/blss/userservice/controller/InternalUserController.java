@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Internal controller for service-to-service communication.
@@ -35,11 +37,16 @@ public class InternalUserController {
         log.info("Validating user: {}", username);
         return userRepository.findByUsername(username)
                 .map(user -> {
+                    List<String> roleNames = user.getRoles() != null
+                            ? user.getRoles().getRole().stream()
+                                .map(Role::name)
+                                .collect(Collectors.toList())
+                            : Collections.emptyList();
                     var response = new UserValidationResponse(
                             user.getUsername(),
                             true,
                             user.isEnabled(),
-                            user.getRoles() != null ? user.getRoles().getRole() : List.of()
+                            roleNames
                     );
                     return ResponseEntity.ok(response);
                 })
@@ -55,11 +62,16 @@ public class InternalUserController {
         return userRepository.findByUsername(request.username())
                 .filter(user -> user.isEnabled() && user.getPassword().equals(request.password()))
                 .map(user -> {
+                    List<String> roleNames = user.getRoles() != null
+                            ? user.getRoles().getRole().stream()
+                                .map(Role::name)
+                                .collect(Collectors.toList())
+                            : Collections.emptyList();
                     var response = new UserValidationResponse(
                             user.getUsername(),
                             true,
                             true,
-                            user.getRoles() != null ? user.getRoles().getRole() : List.of()
+                            roleNames
                     );
                     return ResponseEntity.ok(response);
                 })

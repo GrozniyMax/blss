@@ -35,9 +35,29 @@ services:
     networks:
       - BLSS-labs
 
+  artemis:
+    image: apache/activemq-artemis:latest
+    container_name: artemis-broker
+    ports:
+      - "61616:61616"  # JMS
+      - "8161:8161"    # Web console
+    environment:
+      ARTEMIS_USER: ${ARTEMIS_USER:-artemis}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-artemis}
+    volumes:
+      - artemis_data:/var/lib/artemis
+    networks:
+      - BLSS-labs
+    healthcheck:
+      test: ["CMD", "bash", "-c", "nc -z localhost 61616"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
 volumes:
   postgres_data:
   pgadmin_data:
+  artemis_data:
 
 networks:
   BLSS-labs:

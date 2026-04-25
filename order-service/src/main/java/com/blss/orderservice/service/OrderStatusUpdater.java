@@ -3,6 +3,7 @@ package com.blss.orderservice.service;
 import com.blss.orderservice.db.order.OrderItemRepo;
 import com.blss.orderservice.domain.order.Status;
 import com.blss.orderservice.exception.InvalidActionException;
+import com.blss.orderservice.jms.OrderStatusProducer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,11 +21,14 @@ public class OrderStatusUpdater {
 
     OrderService orderService;
 
+    OrderStatusProducer statusProducer;
+
     @Async
     public void updateStatusIfReady(UUID orderId) {
         if (orderService.getStatus(orderId) == Status.IN_DELIVERY
                 && orderItemRepo.countItemsWithoutYacheyka(orderId) == 0) {
             orderService.updateStatus(orderId, Status.READY_FOR_PICKUP);
+            statusProducer.sendStatusChange(orderId, Status.READY_FOR_PICKUP);
         }
     }
 
@@ -33,6 +37,7 @@ public class OrderStatusUpdater {
 
         if (next != null) {
             orderService.updateStatus(orderId, next);
+            statusProducer.sendStatusChange(orderId, next);
         } else {
             throw new InvalidActionException("Заказ уже в конечном статусе");
         }
@@ -43,6 +48,7 @@ public class OrderStatusUpdater {
         var current = orderService.getStatus(orderId);
         if (current != Status.DONE && current != Status.CANCELED) {
             orderService.updateStatus(orderId, Status.CANCELED);
+            statusProducer.sendStatusChange(orderId, Status.CANCELED);
         } else {
             throw new InvalidActionException("Заказ уже доставлен, его нельзя отменить");
         }
