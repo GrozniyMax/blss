@@ -23,12 +23,15 @@ public class OrderStatusUpdater {
 
     OrderStatusProducer statusProducer;
 
+    OrderDocumentSyncService orderDocumentSyncService;
+
     @Async
     public void updateStatusIfReady(UUID orderId) {
         if (orderService.getStatus(orderId) == Status.IN_DELIVERY
                 && orderItemRepo.countItemsWithoutYacheyka(orderId) == 0) {
             orderService.updateStatus(orderId, Status.READY_FOR_PICKUP);
             statusProducer.sendStatusChange(orderId, Status.READY_FOR_PICKUP);
+            orderDocumentSyncService.sendOrderDocument(orderId);
         }
     }
 
@@ -38,6 +41,7 @@ public class OrderStatusUpdater {
         if (next != null) {
             orderService.updateStatus(orderId, next);
             statusProducer.sendStatusChange(orderId, next);
+            orderDocumentSyncService.sendOrderDocument(orderId);
         } else {
             throw new InvalidActionException("Заказ уже в конечном статусе");
         }
@@ -49,6 +53,7 @@ public class OrderStatusUpdater {
         if (current != Status.DONE && current != Status.CANCELED) {
             orderService.updateStatus(orderId, Status.CANCELED);
             statusProducer.sendStatusChange(orderId, Status.CANCELED);
+            orderDocumentSyncService.sendOrderDocument(orderId);
         } else {
             throw new InvalidActionException("Заказ уже доставлен, его нельзя отменить");
         }

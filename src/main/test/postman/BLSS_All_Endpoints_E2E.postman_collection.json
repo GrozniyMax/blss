@@ -1,0 +1,409 @@
+{
+  "info": {
+    "name": "BLSS All Endpoints E2E",
+    "_postman_id": "2f7d6a79-68e3-46fe-8f37-8d5a0f78df17",
+    "description": "Full happy-path e2e scenario for all BLSS REST endpoints on WildFly.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:25102/blss" },
+    { "key": "adminUsername", "value": "admin" },
+    { "key": "adminPassword", "value": "admin123" },
+    { "key": "managerUsername", "value": "manager" },
+    { "key": "managerPassword", "value": "manager123" },
+    { "key": "consultantUsername", "value": "consultant" },
+    { "key": "consultantPassword", "value": "consultant123" },
+    { "key": "warehouseUsername", "value": "warehouse" },
+    { "key": "warehousePassword", "value": "warehouse123" },
+    { "key": "runId", "value": "" },
+    { "key": "e2eUsername", "value": "" },
+    { "key": "deliveryPointId", "value": "" },
+    { "key": "productId1", "value": "" },
+    { "key": "productId2", "value": "" },
+    { "key": "orderId1", "value": "" },
+    { "key": "orderItemId1", "value": "" },
+    { "key": "orderId2", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "00 Health",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "url": "{{baseUrl}}/actuator/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('health is 200', function () { pm.response.to.have.status(200); });",
+              "const runId = Date.now().toString();",
+              "pm.collectionVariables.set('runId', runId);",
+              "pm.collectionVariables.set('e2eUsername', 'e2e_user_' + runId);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 Users Create",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+            { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{e2eUsername}}\",\n  \"password\": \"e2e_pass_123\",\n  \"roles\": [\"USER\"]\n}"
+        },
+        "url": "{{baseUrl}}/users"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('user created', function () { pm.response.to.have.status(201); });"] } }]
+    },
+    {
+      "name": "02 Users List",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+            { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+          ]
+        },
+        "method": "GET",
+        "url": "{{baseUrl}}/users"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('users listed', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "03 Users Get By Username",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+            { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+          ]
+        },
+        "method": "GET",
+        "url": "{{baseUrl}}/users/{{e2eUsername}}"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('user fetched', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "04 Users Update",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+            { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+          ]
+        },
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"password\": \"e2e_pass_123\",\n  \"roles\": [\"USER\"],\n  \"enabled\": true\n}"
+        },
+        "url": "{{baseUrl}}/users/{{e2eUsername}}"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('user updated', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "05 Delivery Points Create",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"PVZ-{{runId}}\",\n  \"address\": \"Address-{{runId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/delivery-points"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('delivery point created', function () { pm.response.to.have.status(201); });",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('deliveryPointId', body.data.id);",
+              "pm.test('deliveryPointId captured', function () { pm.expect(pm.collectionVariables.get('deliveryPointId')).to.be.ok; });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Inventory Create Product 1",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Product-A-{{runId}}\",\n  \"price\": 100.50,\n  \"initialCount\": 10\n}"
+        },
+        "url": "{{baseUrl}}/inventory/products"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('product 1 created', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "pm.collectionVariables.set('productId1', body.data.product.id);"] } }]
+    },
+    {
+      "name": "07 Inventory Create Product 2",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Product-B-{{runId}}\",\n  \"price\": 250.00,\n  \"initialCount\": 20\n}"
+        },
+        "url": "{{baseUrl}}/inventory/products"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('product 2 created', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "pm.collectionVariables.set('productId2', body.data.product.id);"] } }]
+    },
+    {
+      "name": "08 Inventory Get All Products",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "GET",
+        "url": "{{baseUrl}}/inventory/products"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('products listed', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "09 Inventory Get Product By Id",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "GET",
+        "url": "{{baseUrl}}/inventory/products/{{productId1}}"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('product fetched', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "10 Inventory Get Product Count",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "GET",
+        "url": "{{baseUrl}}/inventory/products/{{productId1}}/count"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('count fetched', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "11 Inventory Update Product",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Product-A-Updated-{{runId}}\",\n  \"price\": 111.11\n}"
+        },
+        "url": "{{baseUrl}}/inventory/products/{{productId1}}"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('product updated', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "12 Inventory Change Count",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "PATCH",
+        "url": "{{baseUrl}}/inventory/products/{{productId1}}/count?change=5"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('count changed', function () { pm.response.to.have.status(200); });"] } }]
+    },
+    {
+      "name": "13 Order Create #1",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"owner\": \"admin\",\n  \"location\": \"{{deliveryPointId}}\",\n  \"productIds\": [\n    \"{{productId1}}\"\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/order/create"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('order 1 created', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "pm.collectionVariables.set('orderId1', body.data.orderId);"] } }]
+    },
+    {
+      "name": "14 Order Get #1",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+            { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+          ]
+        },
+        "method": "GET",
+        "url": "{{baseUrl}}/order/{{orderId1}}"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('order 1 fetched', function () { pm.response.to.have.status(200); });", "const body = pm.response.json();", "pm.collectionVariables.set('orderItemId1', body.data.positions[0].id);"] } }]
+    },
+    {
+      "name": "15 Order Status Next #1",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+            { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+          ]
+        },
+        "method": "PATCH",
+        "url": "{{baseUrl}}/order/{{orderId1}}/status/next"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status moved', function () { pm.response.to.have.status(204); });"] } }]
+    },
+    {
+      "name": "16 Order Status Next #2",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+            { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+          ]
+        },
+        "method": "PATCH",
+        "url": "{{baseUrl}}/order/{{orderId1}}/status/next"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status moved again', function () { pm.response.to.have.status(204); });"] } }]
+    },
+    {
+      "name": "17 Mark Delivered",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{warehouseUsername}}", "type": "string" },
+            { "key": "password", "value": "{{warehousePassword}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemId\": \"{{orderItemId1}}\",\n  \"yacheyka\": \"A-01\"\n}"
+        },
+        "url": "{{baseUrl}}/mark-delivered"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('item marked delivered', function () { pm.response.to.have.status(204); });"] } }]
+    },
+    {
+      "name": "18 Order Create #2",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+            { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"owner\": \"admin\",\n  \"location\": \"{{deliveryPointId}}\",\n  \"productIds\": [\n    \"{{productId2}}\"\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/order/create"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('order 2 created', function () { pm.response.to.have.status(201); });", "const body = pm.response.json();", "pm.collectionVariables.set('orderId2', body.data.orderId);"] } }]
+    },
+    {
+      "name": "19 Order Cancel #2",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+            { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+          ]
+        },
+        "method": "PATCH",
+        "url": "{{baseUrl}}/order/{{orderId2}}/status/cancel"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('order 2 cancelled', function () { pm.response.to.have.status(204); });"] } }]
+    },
+    {
+      "name": "20 Users Delete",
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+            { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+          ]
+        },
+        "method": "DELETE",
+        "url": "{{baseUrl}}/users/{{e2eUsername}}"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('e2e user deleted', function () { pm.response.to.have.status(204); });"] } }]
+    }
+  ]
+}

@@ -51,11 +51,13 @@ public class OrderService {
 
     TransactionExecutor transactionExecutor;
 
+    OrderDocumentSyncService orderDocumentSyncService;
+
     /**
      * Creates a new order.
      */
     public CreationOrderResponse createOrder(String owner, UUID location, List<UUID> productIds) {
-        return transactionExecutor.inTransaction(() -> {
+        var response = transactionExecutor.inTransaction(() -> {
             var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
 
             if (foundProduct.size() != productIds.size()) {
@@ -105,6 +107,8 @@ public class OrderService {
 
             return new CreationOrderResponse(orderId, ids);
         });
+        orderDocumentSyncService.sendOrderDocument(response.orderId());
+        return response;
     }
 
     public Status getStatus(UUID orderId) {

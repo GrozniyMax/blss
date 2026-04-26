@@ -1,0 +1,219 @@
+@baseUrl = http://127.0.0.1:25102/blss
+@adminAuth = Basic YWRtaW46YWRtaW4xMjM=
+@managerAuth = Basic bWFuYWdlcjptYW5hZ2VyMTIz
+@consultantAuth = Basic Y29uc3VsdGFudDpjb25zdWx0YW50MTIz
+@warehouseAuth = Basic d2FyZWhvdXNlOndhcmVob3VzZTEyMw==
+
+### 0) Health + generate unique run id
+GET {{baseUrl}}/actuator/health
+
+> {%
+  client.test("health is 200", function() {
+    client.assert(response.status === 200);
+  });
+  const runId = Date.now().toString();
+  client.global.set("runId", runId);
+  client.global.set("e2eUsername", "e2e_user_" + runId);
+%}
+
+### 1) USERS: create user (ADMIN)
+POST {{baseUrl}}/users
+Authorization: {{adminAuth}}
+Content-Type: application/json
+
+{
+  "username": "{{e2eUsername}}",
+  "password": "e2e_pass_123",
+  "roles": ["USER"]
+}
+
+> {% client.test("user created", function() { client.assert(response.status === 201); }); %}
+
+### 2) USERS: list users (ADMIN)
+GET {{baseUrl}}/users
+Authorization: {{adminAuth}}
+
+> {% client.test("users list returned", function() { client.assert(response.status === 200); }); %}
+
+### 3) USERS: get created user (ADMIN)
+GET {{baseUrl}}/users/{{e2eUsername}}
+Authorization: {{adminAuth}}
+
+> {% client.test("get created user", function() { client.assert(response.status === 200); }); %}
+
+### 4) USERS: update created user (ADMIN)
+PATCH {{baseUrl}}/users/{{e2eUsername}}
+Authorization: {{adminAuth}}
+Content-Type: application/json
+
+{
+  "password": "e2e_pass_123",
+  "roles": ["USER"],
+  "enabled": true
+}
+
+> {% client.test("user updated", function() { client.assert(response.status === 200); }); %}
+
+### 5) DELIVERY POINTS: create (MANAGER)
+POST {{baseUrl}}/delivery-points
+Authorization: {{managerAuth}}
+Content-Type: application/json
+
+{
+  "name": "PVZ-{{runId}}",
+  "address": "Address-{{runId}}"
+}
+
+> {%
+  client.test("delivery point created", function() { client.assert(response.status === 201); });
+  client.global.set("deliveryPointId", response.body.data.id);
+%}
+
+### 6) INVENTORY: create product #1 (MANAGER)
+POST {{baseUrl}}/inventory/products
+Authorization: {{managerAuth}}
+Content-Type: application/json
+
+{
+  "name": "Product-A-{{runId}}",
+  "price": 100.50,
+  "initialCount": 10
+}
+
+> {%
+  client.test("product #1 created", function() { client.assert(response.status === 201); });
+  client.global.set("productId1", response.body.data.product.id);
+%}
+
+### 7) INVENTORY: create product #2 (MANAGER)
+POST {{baseUrl}}/inventory/products
+Authorization: {{managerAuth}}
+Content-Type: application/json
+
+{
+  "name": "Product-B-{{runId}}",
+  "price": 250.00,
+  "initialCount": 20
+}
+
+> {%
+  client.test("product #2 created", function() { client.assert(response.status === 201); });
+  client.global.set("productId2", response.body.data.product.id);
+%}
+
+### 8) INVENTORY: get all products (MANAGER)
+GET {{baseUrl}}/inventory/products
+Authorization: {{managerAuth}}
+
+> {% client.test("all products returned", function() { client.assert(response.status === 200); }); %}
+
+### 9) INVENTORY: get product by id (MANAGER)
+GET {{baseUrl}}/inventory/products/{{productId1}}
+Authorization: {{managerAuth}}
+
+> {% client.test("product by id returned", function() { client.assert(response.status === 200); }); %}
+
+### 10) INVENTORY: get product count (MANAGER)
+GET {{baseUrl}}/inventory/products/{{productId1}}/count
+Authorization: {{managerAuth}}
+
+> {% client.test("product count returned", function() { client.assert(response.status === 200); }); %}
+
+### 11) INVENTORY: update product (MANAGER)
+PUT {{baseUrl}}/inventory/products/{{productId1}}
+Authorization: {{managerAuth}}
+Content-Type: application/json
+
+{
+  "name": "Product-A-Updated-{{runId}}",
+  "price": 111.11
+}
+
+> {% client.test("product updated", function() { client.assert(response.status === 200); }); %}
+
+### 12) INVENTORY: change product count (MANAGER)
+PATCH {{baseUrl}}/inventory/products/{{productId1}}/count?change=5
+Authorization: {{managerAuth}}
+
+> {% client.test("product count changed", function() { client.assert(response.status === 200); }); %}
+
+### 13) ORDER: create order #1 (MANAGER)
+POST {{baseUrl}}/order/create
+Authorization: {{managerAuth}}
+Content-Type: application/json
+
+{
+  "owner": "admin",
+  "location": "{{deliveryPointId}}",
+  "productIds": [
+    "{{productId1}}"
+  ]
+}
+
+> {%
+  client.test("order #1 created", function() { client.assert(response.status === 201); });
+  client.global.set("orderId1", response.body.data.orderId);
+%}
+
+### 14) ORDER: get order #1 and capture item id (CONSULTANT)
+GET {{baseUrl}}/order/{{orderId1}}
+Authorization: {{consultantAuth}}
+
+> {%
+  client.test("order #1 returned", function() { client.assert(response.status === 200); });
+  client.global.set("orderItemId1", response.body.data.positions[0].id);
+%}
+
+### 15) ORDER: next status (CONSULTANT)
+PATCH {{baseUrl}}/order/{{orderId1}}/status/next
+Authorization: {{consultantAuth}}
+
+> {% client.test("order #1 status moved", function() { client.assert(response.status === 204); }); %}
+
+### 16) ORDER: next status again (CONSULTANT)
+PATCH {{baseUrl}}/order/{{orderId1}}/status/next
+Authorization: {{consultantAuth}}
+
+> {% client.test("order #1 status moved again", function() { client.assert(response.status === 204); }); %}
+
+### 17) PVZ: mark delivered (WAREHOUSE)
+POST {{baseUrl}}/mark-delivered
+Authorization: {{warehouseAuth}}
+Content-Type: application/json
+
+{
+  "itemId": "{{orderItemId1}}",
+  "yacheyka": "A-01"
+}
+
+> {% client.test("item marked delivered", function() { client.assert(response.status === 204); }); %}
+
+### 18) ORDER: create order #2 for cancel flow (MANAGER)
+POST {{baseUrl}}/order/create
+Authorization: {{managerAuth}}
+Content-Type: application/json
+
+{
+  "owner": "admin",
+  "location": "{{deliveryPointId}}",
+  "productIds": [
+    "{{productId2}}"
+  ]
+}
+
+> {%
+  client.test("order #2 created", function() { client.assert(response.status === 201); });
+  client.global.set("orderId2", response.body.data.orderId);
+%}
+
+### 19) ORDER: cancel order #2 (CONSULTANT)
+PATCH {{baseUrl}}/order/{{orderId2}}/status/cancel
+Authorization: {{consultantAuth}}
+
+> {% client.test("order #2 cancelled", function() { client.assert(response.status === 204); }); %}
+
+### 20) USERS: delete created user (ADMIN)
+DELETE {{baseUrl}}/users/{{e2eUsername}}
+Authorization: {{adminAuth}}
+
+> {% client.test("created user deleted", function() { client.assert(response.status === 204); }); %}

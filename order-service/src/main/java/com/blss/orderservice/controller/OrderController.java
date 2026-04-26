@@ -5,6 +5,7 @@ import com.blss.orderservice.dto.input.OrderCreateRequestDTO;
 import com.blss.orderservice.dto.output.DtoMapper;
 import com.blss.orderservice.dto.output.GetOrderResponse;
 import com.blss.orderservice.dto.output.OrderCreationResponse;
+import com.blss.orderservice.service.OrderDocumentSyncService;
 import com.blss.orderservice.service.OrderService;
 import com.blss.orderservice.service.OrderStatusUpdater;
 import lombok.AccessLevel;
@@ -30,6 +31,8 @@ public class OrderController {
     OrderService orderService;
 
     OrderStatusUpdater orderStatusUpdater;
+
+    OrderDocumentSyncService orderDocumentSyncService;
 
     DtoMapper dtoMapper;
 
@@ -70,5 +73,14 @@ public class OrderController {
         log.info("Cancelling order: id={}", id);
         orderStatusUpdater.cancel(id);
         log.info("Order cancelled successfully: id={}", id);
+    }
+
+    @PostMapping("/{id}/bitrix-document")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAnyRole('CONSULTANT', 'MANAGER', 'ADMIN')")
+    public void syncOrderDocumentToBitrix(@PathVariable UUID id) {
+        log.info("Syncing order document to Bitrix24: id={}", id);
+        orderDocumentSyncService.sendOrderDocument(id);
+        log.info("Order document sync finished: id={}", id);
     }
 }
