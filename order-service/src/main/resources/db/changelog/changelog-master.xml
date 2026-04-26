@@ -13,4 +13,7 @@
 
     <!-- Schema fixes -->
     <include file="changes/lab2/fix_location_typo.xml" relativeToChangelogFile="true" />
+
+    <!-- Sold products tracking -->
+    <include file="changes/add_sold_products_table.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>

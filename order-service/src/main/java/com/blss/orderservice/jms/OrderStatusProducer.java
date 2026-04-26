@@ -1,7 +1,7 @@
 package com.blss.orderservice.jms;
 
 import com.blss.orderservice.domain.order.Status;
-import com.blss.orderservice.dto.OrderStatusChangedEvent;
+import com.blss.orderservice.jms.dto.OrderStatusChangedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JMS producer for sending order status change events.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -21,9 +24,23 @@ public class OrderStatusProducer {
     @Value("${jms.queue.order-status-changed}")
     private String queueName;
 
+    /**
+     * Sends order status change event to JMS queue.
+     *
+     * @param orderId Order ID
+     * @param status  New order status
+     */
     public void sendStatusChange(UUID orderId, Status status) {
-        var event = new OrderStatusChangedEvent(orderId, Instant.now(), status.name());
-        log.info("Sending order status event to {}: orderId={}, status={}", queueName, orderId, status);
+        log.info("Sending order status change event: orderId={}, status={}", orderId, status);
+
+        var event = new OrderStatusChangedEvent(
+                orderId,
+                Instant.now(),
+                status
+        );
+
         jmsTemplate.convertAndSend(queueName, event);
+
+        log.info("Order status change event sent: orderId={}", orderId);
     }
 }

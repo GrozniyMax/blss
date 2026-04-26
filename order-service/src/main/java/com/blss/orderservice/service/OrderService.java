@@ -51,6 +51,8 @@ public class OrderService {
 
     TransactionExecutor transactionExecutor;
 
+    SoldProductService soldProductService;
+
     OrderDocumentSyncService orderDocumentSyncService;
 
     /**
@@ -85,6 +87,13 @@ public class OrderService {
                     .build();
 
             storeRepo.decrementCount(productIds);
+
+            // Record sold products
+            var saleTime = Instant.now();
+            var prices = foundProduct.stream()
+                    .map(Product::price)
+                    .toList();
+            soldProductService.recordSales(productIds, prices, saleTime);
 
             order = orderRepo.create(order);
             var orderId = order.id();

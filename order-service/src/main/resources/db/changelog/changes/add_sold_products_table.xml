@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="add_sold_products_table" author="m.s.taranenko">
+        <sql>
+            CREATE TABLE sold_products
+            (
+                id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                product_id UUID        NOT NULL REFERENCES product (id),
+                price      TEXT        NOT NULL,
+                sold_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
+            CREATE INDEX idx_sold_products_product_id ON sold_products (product_id);
+            CREATE INDEX idx_sold_products_sold_at ON sold_products (sold_at);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
