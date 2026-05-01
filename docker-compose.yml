@@ -2,10 +2,8 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres-studs
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -41,9 +39,8 @@ services:
     ports:
       - "61616:61616"  # JMS
       - "8161:8161"    # Web console
-    environment:
-      ARTEMIS_USER: ${ARTEMIS_USER:-artemis}
-      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD:-artemis}
+    env_file:
+      - .env
     volumes:
       - artemis_data:/var/lib/artemis
     networks:
@@ -53,6 +50,80 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    env_file:
+      - .env
+    environment:
+      SERVER_PORT: 25104
+    ports:
+      - "25104:25104"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - BLSS-labs
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JMS_ARTEMIS_BROKER_URL: tcp://artemis:61616
+      SPRING_JMS_ARTEMIS_USER: ${ARTEMIS_USER}
+      SPRING_JMS_ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
+      USER_SERVICE_URL: http://user-service:25104
+      SERVER_PORT: 25103
+    ports:
+      - "25103:25103"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      artemis:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+    networks:
+      - BLSS-labs
+
+  status-service:
+    build:
+      context: ./status-service
+      dockerfile: Dockerfile
+    container_name: status-service
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JMS_ARTEMIS_BROKER_URL: tcp://artemis:61616
+      SPRING_JMS_ARTEMIS_USER: ${ARTEMIS_USER}
+      SPRING_JMS_ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
+      ORDER_SERVICE_URL: http://order-service:25103
+      USER_SERVICE_URL: http://user-service:25104
+      SERVER_PORT: 25105
+    ports:
+      - "25105:25105"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      artemis:
+        condition: service_healthy
+      order-service:
+        condition: service_started
+    networks:
+      - BLSS-labs
 
 volumes:
   postgres_data:

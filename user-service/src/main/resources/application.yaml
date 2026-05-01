@@ -1,20 +1,10 @@
 spring:
   application:
     name: user-service
-  artemis:
-    mode: native
-    broker-url: ${ARTEMIS_BROKER_URL:tcp://localhost:61616}
-    user: ${ARTEMIS_USER:artemis}
-    password: ${ARTEMIS_PASSWORD:artemis}
 
 server:
-  port: 25104
+  port: ${SERVER_PORT:25104}
 
 security:
   users:
     xml-path: ${SECURITY_USERS_XML_PATH:./users.xml}
-
-# JMS queue names
-jms:
-  queue:
-    order-status-changed: order.status.changed

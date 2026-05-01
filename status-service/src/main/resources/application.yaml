@@ -2,23 +2,19 @@ spring:
   application:
     name: status-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:studs}
-    username: ${POSTGRES_USER:s408145}
-    password: ${POSTGRES_PASSWORD:JLzD%6772}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/studs}
+    username: ${SPRING_DATASOURCE_USERNAME:s408145}
+    password: ${SPRING_DATASOURCE_PASSWORD:JLzD%6772}
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.xml
   artemis:
     mode: native
-    broker-url: ${ARTEMIS_BROKER_URL:tcp://localhost:61616}
-    user: ${ARTEMIS_USER:artemis}
-    password: ${ARTEMIS_PASSWORD:artemis}
+    broker-url: ${SPRING_JMS_ARTEMIS_BROKER_URL:tcp://localhost:61616}
+    user: ${SPRING_JMS_ARTEMIS_USER:artemis}
+    password: ${SPRING_JMS_ARTEMIS_PASSWORD:artemis}
 
 server:
-  port: 25105
-
-security:
-  users:
-    xml-path: ${SECURITY_USERS_XML_PATH:./users.xml}
+  port: ${SERVER_PORT:25105}
 
 # JMS queue names
 jms:
