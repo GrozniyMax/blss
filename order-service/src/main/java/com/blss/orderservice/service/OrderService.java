@@ -12,6 +12,7 @@ import com.blss.orderservice.domain.order.OrderItem;
 import com.blss.orderservice.domain.order.Status;
 import com.blss.orderservice.exception.InvalidOrderException;
 import com.blss.orderservice.exception.NotFoundException;
+import com.blss.orderservice.jms.OrderStatusProducer;
 import com.blss.orderservice.service.tx.TransactionExecutor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -51,9 +52,9 @@ public class OrderService {
 
     TransactionExecutor transactionExecutor;
 
-    SoldProductService soldProductService;
-
     OrderDocumentSyncService orderDocumentSyncService;
+
+    OrderStatusProducer orderStatusProducer;
 
     /**
      * Creates a new order.
@@ -88,13 +89,6 @@ public class OrderService {
 
             storeRepo.decrementCount(productIds);
 
-            // Record sold products
-            var saleTime = Instant.now();
-            var prices = foundProduct.stream()
-                    .map(Product::price)
-                    .toList();
-            soldProductService.recordSales(productIds, prices, saleTime);
-
             order = orderRepo.create(order);
             var orderId = order.id();
 
@@ -113,6 +107,8 @@ public class OrderService {
                     .map(orderItemRepo::create)
                     .map(OrderItem::id)
                     .toList();
+
+            orderStatusProducer.sendStatusChange(orderId, Status.CREATED);
 
             return new CreationOrderResponse(orderId, ids);
         });

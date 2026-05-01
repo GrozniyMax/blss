@@ -2,6 +2,7 @@ package com.blss.orderservice.client;
 
 import com.blss.orderservice.client.dto.UserAuthenticationRequest;
 import com.blss.orderservice.client.dto.UserValidationResponse;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,15 +30,23 @@ public class UserServiceClient {
      * @return Mono with UserValidationResponse
      */
     public Mono<UserValidationResponse> validateUser(String username) {
-        log.debug("Validating user {} via user-service", username);
-        return webClientBuilder.build()
+        log.info("Validating user {} via user-service", username);
+        return webClientBuilder
+                .baseUrl(userServiceUrl)
+                .build()
                 .get()
-                .uri("{baseUrl}/internal/users/{username}", 
-                        userServiceUrl, username)
+                .uri(uriBuilder -> uriBuilder
+                        .path("/internal/users/{username}")
+                        .build(username))
                 .retrieve()
                 .bodyToMono(UserValidationResponse.class)
                 .timeout(Duration.ofSeconds(5))
-                .onErrorReturn(new UserValidationResponse(username, false, false, java.util.List.of()));
+                .doOnSuccess(response -> log.info("User {} validation result: exists={}, enabled={}, roles={}", 
+                        username, response.exists(), response.enabled(), response.roles()))
+                .onErrorResume(e -> {
+                    log.error("Error validating user {}: {}", username, e.getMessage(), e);
+                    return Mono.just(new UserValidationResponse(username, false, false, java.util.List.of()));
+                });
     }
 
     /**
@@ -45,16 +54,25 @@ public class UserServiceClient {
      * @return Mono with UserValidationResponse
      */
     public Mono<UserValidationResponse> authenticateUser(String username, String password) {
-        log.debug("Authenticating user {} via user-service", username);
+        log.info("Authenticating user {} via user-service", username);
         var request = new UserAuthenticationRequest(username, password);
-        return webClientBuilder.build()
+        return webClientBuilder
+                .baseUrl(userServiceUrl)
+                .build()
                 .post()
-                .uri("{baseUrl}/internal/users/authenticate", userServiceUrl)
+                .uri(uriBuilder -> uriBuilder
+                        .path("/internal/users/authenticate")
+                        .build())
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(UserValidationResponse.class)
                 .timeout(Duration.ofSeconds(5))
-                .onErrorReturn(new UserValidationResponse(username, false, false, java.util.List.of()));
+                .doOnSuccess(response -> log.info("User {} authentication result: exists={}, enabled={}, roles={}", 
+                        username, response.exists(), response.enabled(), response.roles()))
+                .onErrorResume(e -> {
+                    log.error("Error authenticating user {}: {}", username, e.getMessage(), e);
+                    return Mono.just(new UserValidationResponse(username, false, false, java.util.List.of()));
+                });
     }
 
     /**
@@ -62,8 +80,11 @@ public class UserServiceClient {
      * @return true if user exists and is enabled
      */
     public boolean existsByUsername(String username) {
-        return validateUser(username)
+        log.info("Checking if user {} exists", username);
+        boolean exists = validateUser(username)
                 .map(response -> response.exists() && response.enabled())
                 .block(Duration.ofSeconds(5));
+        log.info("User {} exists check result: {}", username, exists);
+        return exists;
     }
 }

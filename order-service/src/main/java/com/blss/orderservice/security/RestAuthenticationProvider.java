@@ -37,6 +37,8 @@ public class RestAuthenticationProvider implements AuthenticationProvider {
         try {
             UserValidationResponse response = userServiceClient.authenticateUser(username, password).block();
 
+            log.info("Received response from user-service: {}", response);
+
             if (response == null || !response.exists() || !response.enabled()) {
                 log.debug("Authentication failed for user {}: user not found or disabled", username);
                 throw new BadCredentialsException("Invalid username or password");
