@@ -6,8 +6,8 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
     <changeSet id="fix-location-typo-20260404-02" author="m.s.taranenko">
-        <preConditions>
-            <tableExists tableName="orders"/>
+        <preConditions onFail="MARK_RAN">
+                <columnExists tableName="orders" columnName="localtion"/>
         </preConditions>
         <sql>
             ALTER TABLE orders RENAME COLUMN localtion TO location;
