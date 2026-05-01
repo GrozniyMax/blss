@@ -41,15 +41,19 @@ services:
       - "8161:8161"    # Web console
     env_file:
       - .env
+    environment:
+      - ARTEMIS_USER=${ARTEMIS_USER}
+      - ARTEMIS_PASSWORD=${ARTEMIS_PASSWORD}
     volumes:
       - artemis_data:/var/lib/artemis
     networks:
       - BLSS-labs
     healthcheck:
-      test: ["CMD", "bash", "-c", "nc -z localhost 61616"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
+      test: ["CMD-SHELL", "bash -c 'cat < /dev/null > /dev/tcp/localhost/61616'"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
 
   user-service:
     build:
