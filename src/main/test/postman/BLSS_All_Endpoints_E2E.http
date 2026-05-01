@@ -1,0 +1,292 @@
+# BLSS All Endpoints E2E
+
+###
+# @name 00 Health
+GET {{baseUrl}}/actuator/health
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('health is 200', function () { pm.response.to.have.status(200); });
+    // const runId = Date.now().toString();
+    // pm.collectionVariables.set('runId', runId);
+    // pm.collectionVariables.set('e2eUsername', 'e2e_user_' + runId);
+%}
+
+###
+# @name 01 Users Create
+POST {{baseUrl}}/users
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+Content-Type: application/json
+
+{
+  "username": "{{e2eUsername}}",
+  "password": "e2e_pass_123",
+  "roles": ["USER"]
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('user created', function () { pm.response.to.have.status(201); });
+%}
+
+###
+# @name 02 Users List
+GET {{baseUrl}}/users
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('users listed', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 03 Users Get By Username
+GET {{baseUrl}}/users/{{e2eUsername}}
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('user fetched', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 04 Users Update
+PATCH {{baseUrl}}/users/{{e2eUsername}}
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+Content-Type: application/json
+
+{
+  "password": "e2e_pass_123",
+  "roles": [
+    "USER"
+  ],
+  "enabled": true
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('user updated', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 05 Delivery Points Create
+POST {{baseUrl}}/delivery-points
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "PVZ-{{runId}}",
+  "address": "Address-{{runId}}"
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('delivery point created', function () { pm.response.to.have.status(201); });
+    // const body = pm.response.json();
+    // pm.collectionVariables.set('deliveryPointId', body.data.id);
+    // pm.test('deliveryPointId captured', function () { pm.expect(pm.collectionVariables.get('deliveryPointId')).to.be.ok; });
+%}
+
+###
+# @name 06 Inventory Create Product 1
+POST {{baseUrl}}/inventory/products
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "Product-A-{{runId}}",
+  "price": 100.50,
+  "initialCount": 10
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('product 1 created', function () { pm.response.to.have.status(201); });
+    // const body = pm.response.json();
+    // pm.collectionVariables.set('productId1', body.data.product.id);
+%}
+
+###
+# @name 07 Inventory Create Product 2
+POST {{baseUrl}}/inventory/products
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "Product-B-{{runId}}",
+  "price": 250.00,
+  "initialCount": 20
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('product 2 created', function () { pm.response.to.have.status(201); });
+    // const body = pm.response.json();
+    // pm.collectionVariables.set('productId2', body.data.product.id);
+%}
+
+###
+# @name 08 Inventory Get All Products
+GET {{baseUrl}}/inventory/products
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('products listed', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 09 Inventory Get Product By Id
+GET {{baseUrl}}/inventory/products/{{productId1}}
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('product fetched', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 10 Inventory Get Product Count
+GET {{baseUrl}}/inventory/products/{{productId1}}/count
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('count fetched', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 11 Inventory Update Product
+PUT {{baseUrl}}/inventory/products/{{productId1}}
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "Product-A-Updated-{{runId}}",
+  "price": 111.11
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('product updated', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 12 Inventory Change Count
+PATCH {{baseUrl}}/inventory/products/{{productId1}}/count?change=5
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('count changed', function () { pm.response.to.have.status(200); });
+%}
+
+###
+# @name 13 Order Create #1
+POST {{baseUrl}}/order/create
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "owner": "admin",
+  "location": "{{deliveryPointId}}",
+  "productIds": [
+    "{{productId1}}"
+  ]
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('order 1 created', function () { pm.response.to.have.status(201); });
+    // const body = pm.response.json();
+    // pm.collectionVariables.set('orderId1', body.data.orderId);
+%}
+
+###
+# @name 14 Order Get #1
+GET {{baseUrl}}/order/{{orderId1}}
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('order 1 fetched', function () { pm.response.to.have.status(200); });
+    // const body = pm.response.json();
+    // pm.collectionVariables.set('orderItemId1', body.data.positions[0].id);
+%}
+
+###
+# @name 15 Order Status Next #1
+PATCH {{baseUrl}}/order/{{orderId1}}/status/next
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('status moved', function () { pm.response.to.have.status(204); });
+%}
+
+###
+# @name 16 Order Status Next #2
+PATCH {{baseUrl}}/order/{{orderId1}}/status/next
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('status moved again', function () { pm.response.to.have.status(204); });
+%}
+
+###
+# @name 17 Mark Delivered
+POST {{baseUrl}}/mark-delivered
+Authorization: Basic {{warehouseUsername}}:{{warehousePassword}}
+Content-Type: application/json
+
+{
+  "itemId": "{{orderItemId1}}",
+  "yacheyka": "A-01"
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('item marked delivered', function () { pm.response.to.have.status(204); });
+%}
+
+###
+# @name 18 Order Create #2
+POST {{baseUrl}}/order/create
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "owner": "admin",
+  "location": "{{deliveryPointId}}",
+  "productIds": [
+    "{{productId2}}"
+  ]
+}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('order 2 created', function () { pm.response.to.have.status(201); });
+    // const body = pm.response.json();
+    // pm.collectionVariables.set('orderId2', body.data.orderId);
+%}
+
+###
+# @name 19 Order Cancel #2
+PATCH {{baseUrl}}/order/{{orderId2}}/status/cancel
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('order 2 cancelled', function () { pm.response.to.have.status(204); });
+%}
+
+###
+# @name 20 Users Delete
+DELETE {{baseUrl}}/users/{{e2eUsername}}
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+
+> {%
+    // TODO: migrate to HTTP Client Response handler API
+    // pm.test('e2e user deleted', function () { pm.response.to.have.status(204); });
+%}

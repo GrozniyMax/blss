@@ -15,11 +15,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.liquibase:liquibase-core")
 
-    // WebClient for service-to-service communication
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-
     // JMS for async messaging
     implementation("org.springframework.boot:spring-boot-starter-artemis")
+
+    // WebClient for user-service communication
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
@@ -31,6 +31,12 @@ dependencies {
     // Jakarta
     implementation("jakarta.annotation:jakarta.annotation-api")
     compileOnly("jakarta.transaction:jakarta.transaction-api:2.0.1")
+
+    // JCA (Jakarta Connector Architecture)
+    implementation("jakarta.resource:jakarta.resource-api:2.1.0")
+
+    // Bitrix24 JCA Connector
+    implementation(project(":bitrix-jca-connector"))
 
     // MapStruct
     implementation("org.mapstruct:mapstruct:1.6.3")

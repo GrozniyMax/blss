@@ -1,0 +1,341 @@
+### BLSS E2E Test Collection
+### IntelliJ IDEA HTTP Client format
+### Replace Postman collection for end-to-end testing
+### Services: user-service(25104), order-service(25103), status-service(25105)
+
+# @name health_check
+GET {{orderServiceUrl}}/actuator/health
+Content-Type: application/json
+
+> {%
+    const runId = Date.now().toString();
+    client.global.set("runId", runId);
+    client.global.set("e2eUsername", "e2e_user_" + runId);
+    client.test("health is 200", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name users_create
+POST {{userServiceUrl}}/users
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+Content-Type: application/json
+
+{
+  "username": "{{e2eUsername}}",
+  "password": "e2e_pass_123",
+  "roles": ["USER"]
+}
+
+> {%
+    client.test("user created", function() {
+        client.assert(response.status === 201, "Expected status 201");
+    });
+%}
+
+###
+
+# @name users_list
+GET {{userServiceUrl}}/users
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+
+> {%
+    client.test("users listed", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name users_get_by_username
+GET {{userServiceUrl}}/users/{{e2eUsername}}
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+
+> {%
+    client.test("user fetched", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name users_update
+PATCH {{userServiceUrl}}/users/{{e2eUsername}}
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+Content-Type: application/json
+
+{
+  "password": "e2e_pass_123",
+  "roles": ["USER"],
+  "enabled": true
+}
+
+> {%
+    client.test("user updated", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name delivery_points_create
+POST {{orderServiceUrl}}/delivery-points
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "PVZ-{{runId}}",
+  "address": "Address-{{runId}}"
+}
+
+> {%
+    client.test("delivery point created", function() {
+        client.assert(response.status === 201, "Expected status 201");
+        const body = response.body;
+        if (body && body.data && body.data.id) {
+            client.global.set("deliveryPointId", body.data.id);
+        }
+    });
+%}
+
+###
+
+# @name inventory_create_product_1
+POST {{orderServiceUrl}}/inventory/products
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "Product-A-{{runId}}",
+  "price": 100.50,
+  "initialCount": 10
+}
+
+> {%
+    client.test("product 1 created", function() {
+        client.assert(response.status === 201, "Expected status 201");
+        const body = response.body;
+        if (body && body.data && body.data.product && body.data.product.id) {
+            client.global.set("productId1", body.data.product.id);
+        }
+    });
+%}
+
+###
+
+# @name inventory_create_product_2
+POST {{orderServiceUrl}}/inventory/products
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "Product-B-{{runId}}",
+  "price": 250.00,
+  "initialCount": 20
+}
+
+> {%
+    client.test("product 2 created", function() {
+        client.assert(response.status === 201, "Expected status 201");
+        const body = response.body;
+        if (body && body.data && body.data.product && body.data.product.id) {
+            client.global.set("productId2", body.data.product.id);
+        }
+    });
+%}
+
+###
+
+# @name inventory_get_all_products
+GET {{orderServiceUrl}}/inventory/products
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    client.test("products listed", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name inventory_get_product_by_id
+GET {{orderServiceUrl}}/inventory/products/{{productId1}}
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    client.test("product fetched", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name inventory_get_product_count
+GET {{orderServiceUrl}}/inventory/products/{{productId1}}/count
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    client.test("count fetched", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name inventory_update_product
+PUT {{orderServiceUrl}}/inventory/products/{{productId1}}
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "name": "Product-A-Updated-{{runId}}",
+  "price": 111.11
+}
+
+> {%
+    client.test("product updated", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name inventory_change_count
+PATCH {{orderServiceUrl}}/inventory/products/{{productId1}}/count?change=5
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+
+> {%
+    client.test("count changed", function() {
+        client.assert(response.status === 200, "Expected status 200");
+    });
+%}
+
+###
+
+# @name order_create_1
+POST {{orderServiceUrl}}/order/create
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "owner": "admin",
+  "location": "{{deliveryPointId}}",
+  "productIds": ["{{productId1}}"]
+}
+
+> {%
+    client.test("order 1 created", function() {
+        client.assert(response.status === 201, "Expected status 201");
+        const body = response.body;
+        if (body && body.data && body.data.orderId) {
+            client.global.set("orderId1", body.data.orderId);
+        }
+    });
+%}
+
+###
+
+# @name order_get_1
+GET {{orderServiceUrl}}/order/{{orderId1}}
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    client.test("order 1 fetched", function() {
+        client.assert(response.status === 200, "Expected status 200");
+        const body = response.body;
+        if (body && body.data && body.data.positions && body.data.positions.length > 0) {
+            client.global.set("orderItemId1", body.data.positions[0].id);
+        }
+    });
+%}
+
+###
+
+# @name order_status_next_1
+PATCH {{orderServiceUrl}}/order/{{orderId1}}/status/next
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    client.test("status moved", function() {
+        client.assert(response.status === 204, "Expected status 204");
+    });
+%}
+
+###
+
+# @name order_status_next_2
+PATCH {{orderServiceUrl}}/order/{{orderId1}}/status/next
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    client.test("status moved again", function() {
+        client.assert(response.status === 204, "Expected status 204");
+    });
+%}
+
+###
+
+# @name mark_delivered
+POST {{orderServiceUrl}}/mark-delivered
+Authorization: Basic {{warehouseUsername}}:{{warehousePassword}}
+Content-Type: application/json
+
+{
+  "itemId": "{{orderItemId1}}",
+  "yacheyka": "A-01"
+}
+
+> {%
+    client.test("item marked delivered", function() {
+        client.assert(response.status === 204, "Expected status 204");
+    });
+%}
+
+###
+
+# @name order_create_2
+POST {{orderServiceUrl}}/order/create
+Authorization: Basic {{managerUsername}}:{{managerPassword}}
+Content-Type: application/json
+
+{
+  "owner": "admin",
+  "location": "{{deliveryPointId}}",
+  "productIds": ["{{productId2}}"]
+}
+
+> {%
+    client.test("order 2 created", function() {
+        client.assert(response.status === 201, "Expected status 201");
+        const body = response.body;
+        if (body && body.data && body.data.orderId) {
+            client.global.set("orderId2", body.data.orderId);
+        }
+    });
+%}
+
+###
+
+# @name order_cancel_2
+PATCH {{orderServiceUrl}}/order/{{orderId2}}/status/cancel
+Authorization: Basic {{consultantUsername}}:{{consultantPassword}}
+
+> {%
+    client.test("order 2 cancelled", function() {
+        client.assert(response.status === 204, "Expected status 204");
+    });
+%}
+
+###
+
+# @name users_delete
+DELETE {{userServiceUrl}}/users/{{e2eUsername}}
+Authorization: Basic {{adminUsername}}:{{adminPassword}}
+
+> {%
+    client.test("e2e user deleted", function() {
+        client.assert(response.status === 204, "Expected status 204");
+    });
+%}

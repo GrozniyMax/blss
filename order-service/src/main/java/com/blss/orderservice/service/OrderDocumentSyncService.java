@@ -1,8 +1,8 @@
 package com.blss.orderservice.service;
 
-import com.blss.orderservice.bitrix.BitrixOrderDocument;
-import com.blss.orderservice.bitrix.BitrixOrderDocumentClient;
-import com.blss.orderservice.bitrix.BitrixOrderDocumentItem;
+import com.blss.bitrixjca.api.BitrixConnection;
+import com.blss.bitrixjca.api.BitrixConnectionFactory;
+import com.blss.bitrixjca.api.BitrixOrderItem;
 import com.blss.orderservice.db.DeliveryPointRepo;
 import com.blss.orderservice.db.ProductRepo;
 import com.blss.orderservice.db.order.OrderItemRepo;
@@ -12,6 +12,7 @@ import com.blss.orderservice.domain.Product;
 import com.blss.orderservice.domain.order.Order;
 import com.blss.orderservice.domain.order.OrderItem;
 import com.blss.orderservice.exception.NotFoundException;
+import jakarta.resource.ResourceException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +29,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * Service for synchronizing order documents to Bitrix24 via JCA connector.
+ */
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -42,15 +46,22 @@ public class OrderDocumentSyncService {
 
     DeliveryPointRepo deliveryPointRepo;
 
-    BitrixOrderDocumentClient bitrixClient;
+    BitrixConnectionFactory connectionFactory;
 
+    /**
+     * Sends order document to Bitrix24.
+     *
+     * @param orderId Order ID to sync
+     */
     public void sendOrderDocument(UUID orderId) {
-        if (!bitrixClient.isEnabled()) {
-            log.info("Skipping Bitrix24 sync for order {} because integration is disabled", orderId);
-            return;
-        }
+        log.debug("Starting Bitrix24 sync for order {}", orderId);
 
-        try {
+        try (BitrixConnection connection = connectionFactory.getConnection()) {
+            if (!connection.isValid()) {
+                log.warn("Bitrix24 connection is not valid, skipping sync for order {}", orderId);
+                return;
+            }
+
             var order = orderRepo.findById(orderId)
                     .orElseThrow(() -> new NotFoundException(Order.class, orderId));
             var deliveryPoint = deliveryPointRepo.findById(order.location())
@@ -59,7 +70,7 @@ public class OrderDocumentSyncService {
             var products = loadProducts(items);
             var documentItems = buildDocumentItems(items, products);
 
-            bitrixClient.createOrderDocument(new BitrixOrderDocument(
+            String result = connection.createDocument(
                     orderId,
                     "Заказ " + orderId,
                     formatDocument(order, deliveryPoint, documentItems),
@@ -70,9 +81,11 @@ public class OrderDocumentSyncService {
                     deliveryPoint.name(),
                     deliveryPoint.address(),
                     documentItems
-            ));
-        } catch (RuntimeException ex) {
-            log.error("Bitrix24 sync failed for order {}: {}", orderId, ex.getMessage(), ex);
+            );
+
+            log.info("Bitrix24 sync completed for order {}: {}", orderId, result);
+        } catch (ResourceException e) {
+            log.error("Bitrix24 sync failed for order {}: {}", orderId, e.getMessage(), e);
         }
     }
 
@@ -84,7 +97,7 @@ public class OrderDocumentSyncService {
                 .collect(Collectors.toMap(Product::id, Function.identity()));
     }
 
-    private List<BitrixOrderDocumentItem> buildDocumentItems(
+    private List<BitrixOrderItem> buildDocumentItems(
             List<OrderItem> items,
             Map<UUID, Product> products
     ) {
@@ -92,7 +105,7 @@ public class OrderDocumentSyncService {
                 .sorted(Comparator.comparing(OrderItem::id))
                 .map(item -> {
                     Product product = products.get(item.productId());
-                    return new BitrixOrderDocumentItem(
+                    return new BitrixOrderItem(
                             item.id(),
                             item.productId(),
                             product != null ? product.name() : "Unknown product",
@@ -106,7 +119,7 @@ public class OrderDocumentSyncService {
     private String formatDocument(
             Order order,
             DeliveryPoint deliveryPoint,
-            List<BitrixOrderDocumentItem> items
+            List<BitrixOrderItem> items
     ) {
         var lines = items.stream()
                 .map(item -> {

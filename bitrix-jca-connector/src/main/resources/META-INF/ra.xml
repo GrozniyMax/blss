@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connector xmlns="https://jakarta.ee/xml/ns/jakartaee"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+           https://jakarta.ee/xml/ns/jakartaee/connector_2_1.xsd"
+           version="2.1">
+
+    <description>Bitrix24 REST API Connector - JCA Resource Adapter</description>
+    <display-name>Bitrix24 Connector</display-name>
+    <vendor-name>BLSS</vendor-name>
+    <resourceadapter-version>1.0.0</resourceadapter-version>
+    <eis-type>Bitrix24 REST API</eis-type>
+    <resourceadapter>
+        <resourceadapter-class>com.blss.bitrixjca.impl.BitrixResourceAdapter</resourceadapter-class>
+
+        <!-- Outbound Resource Adapter Configuration -->
+        <outbound-resourceadapter>
+            <connection-definition>
+                <managedconnectionfactory-class>
+                    com.blss.bitrixjca.impl.BitrixManagedConnectionFactory
+                </managedconnectionfactory-class>
+                <config-property>
+                    <config-property-name>webhookUrl</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <description>Bitrix24 webhook URL for REST API access</description>
+                </config-property>
+                <config-property>
+                    <config-property-name>documentTemplateId</config-property-name>
+                    <config-property-type>java.lang.Integer</config-property-type>
+                    <description>Document template ID for document generator (0 if not used)</description>
+                </config-property>
+                <config-property>
+                    <config-property-name>uploadToCrmFallback</config-property-name>
+                    <config-property-type>java.lang.Boolean</config-property-type>
+                    <description>Enable CRM deal creation as fallback (default: true)</description>
+                </config-property>
+                <config-property>
+                    <config-property-name>dealMethod</config-property-name>
+                    <config-property-type>java.lang.String</config-property-type>
+                    <description>CRM deal method name (default: crm.deal.add.json)</description>
+                </config-property>
+                <config-property>
+                    <config-property-name>assignedById</config-property-name>
+                    <config-property-type>java.lang.Long</config-property-type>
+                    <description>User ID to assign deals to (0 if not used)</description>
+                </config-property>
+                <config-property>
+                    <config-property-name>categoryId</config-property-name>
+                    <config-property-type>java.lang.Integer</config-property-type>
+                    <description>Category ID for deals (0 if not used)</description>
+                </config-property>
+
+                <connectionfactory-interface>
+                    com.blss.bitrixjca.api.BitrixConnectionFactory
+                </connectionfactory-interface>
+                <connectionfactory-impl-class>
+                    com.blss.bitrixjca.impl.BitrixConnectionFactoryImpl
+                </connectionfactory-impl-class>
+                <connection-interface>
+                    com.blss.bitrixjca.api.BitrixConnection
+                </connection-interface>
+                <connection-impl-class>
+                    com.blss.bitrixjca.impl.BitrixConnectionImpl
+                </connection-impl-class>
+            </connection-definition>
+
+            <transaction-support>NoTransaction</transaction-support>
+            <authentication-mechanism>
+                <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+                <credential-interface>
+                    javax.security.auth.Subject
+                </credential-interface>
+            </authentication-mechanism>
+            <reauthentication-support>false</reauthentication-support>
+        </outbound-resourceadapter>
+    </resourceadapter>
+</connector>

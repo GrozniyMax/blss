@@ -1,73 +1,51 @@
 package com.blss.orderservice.bitrix;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
+/**
+ * Configuration properties for Bitrix24 JCA connector.
+ * These properties are used to configure the JCA connection factory.
+ */
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "bitrix")
 public class BitrixProperties {
 
-    private boolean enabled;
+    /**
+     * Enable Bitrix24 integration (default: false)
+     */
+    private boolean enabled = false;
+
+    /**
+     * Bitrix24 webhook URL for REST API access
+     */
     private String webhookUrl;
-    private String dealMethod = "crm.deal.add.json";
-    private Long assignedById = 0L;
-    private Integer categoryId = 0;
+
+    /**
+     * Document template ID for document generator (0 if not used)
+     */
     private Integer documentTemplateId = 0;
-    private boolean uploadToCrmFallback = true;
 
-    public boolean isEnabled() {
-        return enabled;
-    }
+    /**
+     * Enable CRM deal creation as fallback (default: true)
+     */
+    private Boolean uploadToCrmFallback = true;
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+    /**
+     * CRM deal method name (default: crm.deal.add.json)
+     */
+    private String dealMethod = "crm.deal.add.json";
 
-    public String getWebhookUrl() {
-        return webhookUrl;
-    }
+    /**
+     * User ID to assign deals to (0 if not used)
+     */
+    private Long assignedById = 0L;
 
-    public void setWebhookUrl(String webhookUrl) {
-        this.webhookUrl = webhookUrl;
-    }
+    /**
+     * Category ID for deals (0 if not used)
+     */
+    private Integer categoryId = 0;
 
-    public String getDealMethod() {
-        return dealMethod;
-    }
-
-    public void setDealMethod(String dealMethod) {
-        this.dealMethod = dealMethod;
-    }
-
-    public Long getAssignedById() {
-        return assignedById;
-    }
-
-    public void setAssignedById(Long assignedById) {
-        this.assignedById = assignedById;
-    }
-
-    public Integer getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public Integer getDocumentTemplateId() {
-        return documentTemplateId;
-    }
-
-    public void setDocumentTemplateId(Integer documentTemplateId) {
-        this.documentTemplateId = documentTemplateId;
-    }
-
-    public boolean isUploadToCrmFallback() {
-        return uploadToCrmFallback;
-    }
-
-    public void setUploadToCrmFallback(boolean uploadToCrmFallback) {
-        this.uploadToCrmFallback = uploadToCrmFallback;
-    }
 }
