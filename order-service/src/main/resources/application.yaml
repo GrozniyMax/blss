@@ -25,3 +25,12 @@ user:
 jms:
   queue:
     order-status-changed: order.status.changed
+
+bitrix:
+  enabled: ${BITRIX_ENABLED:false}
+  webhook-url: ${BITRIX_WEBHOOK_URL:http://localhost/bitrix-disabled}
+  document-template-id: ${BITRIX_DOCUMENT_TEMPLATE_ID:0}
+  upload-to-crm-fallback: ${BITRIX_UPLOAD_TO_CRM_FALLBACK:true}
+  deal-method: ${BITRIX_DEAL_METHOD:crm.deal.add.json}
+  assigned-by-id: ${BITRIX_ASSIGNED_BY_ID:0}
+  category-id: ${BITRIX_CATEGORY_ID:0}
