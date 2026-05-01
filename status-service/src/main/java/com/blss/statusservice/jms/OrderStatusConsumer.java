@@ -30,7 +30,7 @@ public class OrderStatusConsumer {
                 event.timestamp());
 
         // Save status change to database
-        historyService.saveStatusChange(event.id(), event.status(), "SYSTEM");
+        historyService.saveStatusChange(event.id(), event.status());
 
         log.info("Order status change event processed: orderId={}", event.id());
     }

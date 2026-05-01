@@ -18,7 +18,7 @@
                 status        TEXT           NOT NULL,
                 owner         TEXT           NOT NULL,
                 location      UUID           NOT NULL REFERENCES delivery_point,
-                total_amount  DECIMAL(19, 4) NOT NULL,
+                total_amount  TEXT           NOT NULL,
                 creation_date TIMESTAMPTZ    NOT NULL,
                 last_edited   TIMESTAMPTZ
             );

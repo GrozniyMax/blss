@@ -49,8 +49,7 @@ public class OrderStatusHistoryService {
         List<StatusHistoryEntryDto> historyDto = history.stream()
                 .map(entry -> new StatusHistoryEntryDto(
                         entry.status(),
-                        entry.changedAt(),
-                        entry.changedBy()
+                        entry.changedAt()
                 ))
                 .toList();
 
@@ -63,17 +62,14 @@ public class OrderStatusHistoryService {
      *
      * @param orderId Order ID
      * @param status New status
-     * @param changedBy User who changed the status
      */
-    public void saveStatusChange(UUID orderId, String status, String changedBy) {
-        log.info("Saving status change: orderId={}, status={}, changedBy={}", orderId, status, changedBy);
+    public void saveStatusChange(UUID orderId, String status) {
+        log.info("Saving status change: orderId={}, status={}", orderId, status);
 
         OrderStatusHistory history = new OrderStatusHistory(
-                null,
                 orderId,
                 status,
-                Instant.now(),
-                changedBy != null ? changedBy : "SYSTEM"
+                Instant.now()
         );
 
         historyRepo.save(history);
