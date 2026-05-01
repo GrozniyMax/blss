@@ -53,8 +53,8 @@ services:
 
   user-service:
     build:
-      context: ./user-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: user-service/Dockerfile
     container_name: user-service
     env_file:
       - .env
@@ -70,8 +70,8 @@ services:
 
   order-service:
     build:
-      context: ./order-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: order-service/Dockerfile
     container_name: order-service
     env_file:
       - .env
@@ -98,8 +98,8 @@ services:
 
   status-service:
     build:
-      context: ./status-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: status-service/Dockerfile
     container_name: status-service
     env_file:
       - .env
