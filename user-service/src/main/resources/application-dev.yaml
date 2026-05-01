@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: user-service
+
+server:
+  port: 8080
+
+security:
+  users:
+    xml-path: /Users/m.s.taranenko/IdeaProjects/blss/user-service/users.xml
