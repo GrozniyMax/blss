@@ -4,17 +4,13 @@ import com.blss.userservice.config.SecurityUsersProperties;
 import com.blss.userservice.security.Role;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Repository;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +37,11 @@ public class XmlUserRepository {
     private volatile boolean initialized = false;
 
     public XmlUserRepository(SecurityUsersProperties properties) {
-        xmlFilePath = Paths.get(properties.getXmlPath());
+        this(properties != null ? properties.getXmlPath() : null);
+    }
+
+    public XmlUserRepository(String xmlPath) {
+        this.xmlFilePath = resolveXmlPath(xmlPath);
     }
 
     @PostConstruct
@@ -114,18 +114,22 @@ public class XmlUserRepository {
     }
 
     private XmlUser readXmlFile() throws Exception {
-        if (xmlFilePath == null || !Files.exists(xmlFilePath)) {
-            try (InputStream inputStream = new FileInputStream(xmlFilePath.toFile())) {
-                return xmlMapper.readValue(inputStream, XmlUser.class);
-            }
+        if (xmlFilePath == null) {
+            throw new IllegalStateException("XML user file path is not configured");
         }
-        return xmlMapper.readValue(xmlFilePath.toFile(), XmlUser.class);
+        if (!Files.exists(xmlFilePath)) {
+            throw new IllegalStateException("XML user file does not exist: " + xmlFilePath.toAbsolutePath());
+        }
+
+        try (InputStream inputStream = new FileInputStream(xmlFilePath.toFile())) {
+            return xmlMapper.readValue(inputStream, XmlUser.class);
+        }
     }
 
     private void writeXmlFile(XmlUser xmlUser) throws Exception {
-        File parentDir = xmlFilePath.getParent().toFile();
-        if (!parentDir.exists()) {
-            parentDir.mkdirs();
+        Path parentDir = xmlFilePath.getParent();
+        if (parentDir != null && !Files.exists(parentDir)) {
+            Files.createDirectories(parentDir);
         }
 
         xmlMapper.writeValue(xmlFilePath.toFile(), xmlUser);
@@ -260,5 +264,31 @@ public class XmlUserRepository {
      */
     public void reload() {
         loadUsers();
+    }
+
+    private Path resolveXmlPath(String xmlPath) {
+        String configuredPath = xmlPath;
+        if (configuredPath == null || configuredPath.isBlank()) {
+            configuredPath = System.getProperty("security.users.xml-path");
+        }
+        if (configuredPath == null || configuredPath.isBlank()) {
+            configuredPath = System.getenv("SECURITY_USERS_XML_PATH");
+        }
+        if (configuredPath == null || configuredPath.isBlank()) {
+            configuredPath = "./users.xml";
+        }
+
+        Path primaryPath = Paths.get(configuredPath).toAbsolutePath().normalize();
+        if (Files.exists(primaryPath)) {
+            return primaryPath;
+        }
+
+        Path moduleRelativePath = Paths.get("user-service", "users.xml").toAbsolutePath().normalize();
+        if (Files.exists(moduleRelativePath)) {
+            log.info("Configured users XML not found at {}, using fallback {}", primaryPath, moduleRelativePath);
+            return moduleRelativePath;
+        }
+
+        return primaryPath;
     }
 }

@@ -28,7 +28,9 @@ public class XmlLoginModule implements LoginModule {
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-        this.userRepository = new XmlUserRepository(null); // Will be initialized later
+        String xmlPath = options != null ? (String) options.get("xmlPath") : null;
+        this.userRepository = new XmlUserRepository(xmlPath);
+        this.userRepository.loadUsers();
     }
 
     @Override

@@ -2,21 +2,26 @@ package com.blss.userservice.xml;
 
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
+import java.util.HashMap;
 import java.util.Map;
 
 public class BlssJaasConfiguration extends Configuration {
 
     public static final String LOGIN_CONTEXT_NAME = "BLSS";
 
-    private static final AppConfigurationEntry[] APP_CONFIGURATION_ENTRY;
+    private final AppConfigurationEntry[] appConfigurationEntry;
 
-    static {
-        APP_CONFIGURATION_ENTRY = new AppConfigurationEntry[] {
-            new AppConfigurationEntry(
-                XmlLoginModule.class.getName(),
-                AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
-                Map.<String, String>of()
-            )
+    public BlssJaasConfiguration(String xmlPath) {
+        Map<String, String> options = new HashMap<>();
+        if (xmlPath != null && !xmlPath.isBlank()) {
+            options.put("xmlPath", xmlPath);
+        }
+        this.appConfigurationEntry = new AppConfigurationEntry[] {
+                new AppConfigurationEntry(
+                        XmlLoginModule.class.getName(),
+                        AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
+                        options
+                )
         };
     }
 
@@ -25,6 +30,6 @@ public class BlssJaasConfiguration extends Configuration {
         if (!LOGIN_CONTEXT_NAME.equals(name)) {
             return null;
         }
-        return APP_CONFIGURATION_ENTRY;
+        return appConfigurationEntry;
     }
 }
