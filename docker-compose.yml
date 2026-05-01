@@ -37,7 +37,7 @@ services:
     image: apache/activemq-artemis:latest
     container_name: artemis-broker
     ports:
-      - "61616:61616"  # JMS
+      - "61680:61616"  # JMS
       - "8161:8161"    # Web console
     env_file:
       - .env
@@ -83,9 +83,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_JMS_ARTEMIS_BROKER_URL: tcp://artemis:61616
-      SPRING_JMS_ARTEMIS_USER: ${ARTEMIS_USER}
-      SPRING_JMS_ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
+      ARTEMIS_BROKER_URL: tcp://artemis:61616
+      ARTEMIS_USER: ${ARTEMIS_USER}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
       USER_SERVICE_URL: http://user-service:25104
       SERVER_PORT: 25103
     ports:
@@ -111,9 +111,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_JMS_ARTEMIS_BROKER_URL: tcp://artemis:61616
-      SPRING_JMS_ARTEMIS_USER: ${ARTEMIS_USER}
-      SPRING_JMS_ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
+      ARTEMIS_BROKER_URL: tcp://artemis:61616
+      ARTEMIS_USER: ${ARTEMIS_USER}
+      ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
       ORDER_SERVICE_URL: http://order-service:25103
       USER_SERVICE_URL: http://user-service:25104
       SERVER_PORT: 25105

@@ -1,7 +1,7 @@
 package com.blss.orderservice.jms;
 
 import com.blss.orderservice.domain.order.Status;
-import com.blss.orderservice.jms.dto.OrderStatusChangedEvent;
+import com.blss.orderservice.dto.OrderStatusChangedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +36,7 @@ public class OrderStatusProducer {
         var event = new OrderStatusChangedEvent(
                 orderId,
                 Instant.now(),
-                status
+                status.name()
         );
 
         jmsTemplate.convertAndSend(queueName, event);
