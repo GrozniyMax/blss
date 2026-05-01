@@ -1,8 +1,7 @@
 package com.blss.userservice.security;
 
-import com.blss.userservice.xml.BlssJaasConfiguration;
-import com.blss.userservice.xml.RolePrincipalAuthorityGranter;
-import com.blss.userservice.config.SecurityUsersProperties;
+import com.blss.userservice.jaas.BlssJaasConfiguration;
+import com.blss.userservice.jaas.RolePrincipalAuthorityGranter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,14 +28,13 @@ public class SecurityConfig {
 
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
-    private final SecurityUsersProperties securityUsersProperties;
 
     /**
      * JAAS configuration bean.
      */
     @Bean
     public javax.security.auth.login.Configuration blssJaasConfiguration() {
-        return new BlssJaasConfiguration(securityUsersProperties.getXmlPath());
+        return new BlssJaasConfiguration();
     }
 
     /**

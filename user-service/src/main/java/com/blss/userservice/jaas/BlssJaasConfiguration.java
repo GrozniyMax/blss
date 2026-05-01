@@ -1,4 +1,4 @@
-package com.blss.userservice.xml;
+package com.blss.userservice.jaas;
 
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;

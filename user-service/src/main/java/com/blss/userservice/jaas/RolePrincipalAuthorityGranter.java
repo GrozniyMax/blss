@@ -1,4 +1,4 @@
-package com.blss.userservice.xml;
+package com.blss.userservice.jaas;
 
 import org.springframework.security.authentication.jaas.AuthorityGranter;
 

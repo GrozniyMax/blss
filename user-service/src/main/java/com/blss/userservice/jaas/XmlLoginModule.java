@@ -1,8 +1,8 @@
-package com.blss.userservice.xml;
+package com.blss.userservice.jaas;
 
 import com.blss.userservice.security.Role;
 import com.blss.userservice.xml.XmlUser.UserAccount;
-import lombok.extern.slf4j.Slf4j;
+import com.blss.userservice.xml.XmlUserRepository;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.*;
