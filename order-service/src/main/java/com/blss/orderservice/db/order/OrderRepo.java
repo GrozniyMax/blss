@@ -5,6 +5,8 @@ import com.blss.orderservice.domain.order.Status;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,4 +47,14 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
 
     @Query("UPDATE orders SET status = :#{#status.name()}, last_edited = NOW() WHERE id = :id RETURNING *")
     Optional<Order> updateStatus(UUID id, Status status);
+
+    @Query("""
+        SELECT *
+        FROM orders
+        WHERE creation_date >= CAST(:day AS timestamptz)
+          AND creation_date <  CAST(:day AS timestamptz) + INTERVAL '1 day'
+          AND id > :lastId
+        ORDER BY id ASC
+        LIMIT :batchSize""")
+    List<Order> findOrdersForDay(LocalDate day, UUID lastId, int batchSize);
 }
