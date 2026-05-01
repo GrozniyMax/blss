@@ -1,4 +1,5 @@
 HELP.md
+NESSY.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
