@@ -33,7 +33,7 @@ public class SecurityConfig {
      * JAAS configuration bean.
      */
     @Bean
-    public javax.security.auth.login.Configuration blssJaasConfiguration() {
+    public BlssJaasConfiguration blssJaasConfiguration() {
         return new BlssJaasConfiguration();
     }
 
@@ -41,9 +41,9 @@ public class SecurityConfig {
      * JAAS authentication provider using DefaultJaasAuthenticationProvider.
      */
     @Bean
-    public DefaultJaasAuthenticationProvider jaasAuthenticationProvider() {
+    public DefaultJaasAuthenticationProvider jaasAuthenticationProvider(BlssJaasConfiguration blssJaasConfiguration) {
         DefaultJaasAuthenticationProvider provider = new DefaultJaasAuthenticationProvider();
-        provider.setConfiguration(blssJaasConfiguration());
+        provider.setConfiguration(blssJaasConfiguration);
         provider.setLoginContextName(BlssJaasConfiguration.LOGIN_CONTEXT_NAME);
         provider.setAuthorityGranters(new RolePrincipalAuthorityGranter[] { new RolePrincipalAuthorityGranter() });
         return provider;
@@ -53,15 +53,15 @@ public class SecurityConfig {
      * Authentication manager using JAAS provider.
      */
     @Bean
-    public AuthenticationManager authenticationManager() {
-        return new ProviderManager(jaasAuthenticationProvider());
+    public AuthenticationManager authenticationManager(DefaultJaasAuthenticationProvider jaasAuthenticationProvider) {
+        return new ProviderManager(jaasAuthenticationProvider);
     }
 
     /**
      * Security filter chain configuration with HTTP Basic authentication.
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         log.info("Configuring Spring Security with JAAS authentication for user-service");
 
         http
@@ -74,6 +74,7 @@ public class SecurityConfig {
                 .requestMatchers("/users/**").hasAnyRole("ADMIN", "MANAGER")
                 .anyRequest().authenticated()
             )
+            .authenticationManager(authenticationManager)
             .httpBasic(basic -> basic.realmName("User Service API"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex

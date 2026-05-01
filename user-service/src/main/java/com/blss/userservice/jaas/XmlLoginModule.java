@@ -28,13 +28,12 @@ public class XmlLoginModule implements LoginModule {
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-        String xmlPath = options != null ? (String) options.get("xmlPath") : null;
-        this.userRepository = new XmlUserRepository(xmlPath);
-        this.userRepository.loadUsers();
     }
 
     @Override
     public boolean login() throws LoginException {
+        this.userRepository = JaasBridge.get().getUserRepository();
+
         if (callbackHandler == null) {
             throw new LoginException("No CallbackHandler available");
         }
