@@ -3,7 +3,6 @@ package com.blss.userservice.controller;
 import com.blss.userservice.dto.input.UserAuthenticationRequest;
 import com.blss.userservice.dto.output.UserValidationResponse;
 import com.blss.userservice.security.Role;
-import com.blss.userservice.xml.XmlUser;
 import com.blss.userservice.xml.XmlUserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

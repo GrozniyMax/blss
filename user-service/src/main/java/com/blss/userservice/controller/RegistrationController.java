@@ -1,9 +1,9 @@
 package com.blss.userservice.controller;
 
+import com.blss.userservice.xml.XmlUserRepository;
 import com.blss.userservice.dto.input.UserRegisterRequestDto;
 import com.blss.userservice.security.Role;
 import com.blss.userservice.xml.XmlUser;
-import com.blss.userservice.xml.XmlUserRepository;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
