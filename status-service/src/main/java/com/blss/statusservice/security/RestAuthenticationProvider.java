@@ -44,7 +44,7 @@ public class RestAuthenticationProvider implements AuthenticationProvider {
             }
 
             List<SimpleGrantedAuthority> authorities = response.roles().stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
                     .collect(Collectors.toList());
 
             log.debug("User {} authenticated successfully with roles: {}", username, authorities);

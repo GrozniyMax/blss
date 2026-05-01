@@ -46,7 +46,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/order/**/history").authenticated()
+                .requestMatchers("/order/**").authenticated()
                 .anyRequest().authenticated()
             )
             .httpBasic(basic -> basic.realmName("Status Service API"))

@@ -113,12 +113,10 @@ public class XmlUserRepository {
     }
 
     private XmlUser readXmlFile() throws Exception {
-        if (xmlFilePath == null || !Files.exists(xmlFilePath)) {
-            try (InputStream inputStream = new FileInputStream(xmlFilePath.toFile())) {
-                return xmlMapper.readValue(inputStream, XmlUser.class);
-            }
+        if (xmlFilePath != null && Files.exists(xmlFilePath)) {
+            return xmlMapper.readValue(xmlFilePath.toFile(), XmlUser.class);
         }
-        return xmlMapper.readValue(xmlFilePath.toFile(), XmlUser.class);
+        throw new IllegalStateException("XML users file not found: " + xmlFilePath);
     }
 
     private void writeXmlFile(XmlUser xmlUser) throws Exception {

@@ -1,14 +1,14 @@
 package com.blss.statusservice.client.dto;
 
+
+import com.blss.statusservice.security.Role;
+
 import java.util.List;
 
-/**
- * Response from user-service for user validation.
- */
 public record UserValidationResponse(
         String username,
         boolean exists,
         boolean enabled,
-        List<String> roles
+        List<Role> roles
 ) {
 }
