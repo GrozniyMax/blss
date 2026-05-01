@@ -12,9 +12,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
 
-    // JMS for async messaging
-    implementation("org.springframework.boot:spring-boot-starter-artemis")
-
     // Jackson for JSON and XML
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
