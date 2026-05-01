@@ -1,6 +1,7 @@
 package com.blss.statusservice.security;
 
 import com.blss.statusservice.client.UserServiceClient;
+import com.blss.statusservice.client.dto.UserValidationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -30,10 +31,12 @@ public class RestAuthenticationProvider implements AuthenticationProvider {
         String username = authentication.getName();
         String password = (String) authentication.getCredentials();
 
-        log.debug("Authenticating user {} via REST API to user-service", username);
+        log.debug("Authenticating user {} via REST API", username);
 
         try {
-            var response = userServiceClient.authenticateUser(username, password).block();
+            UserValidationResponse response = userServiceClient.authenticateUser(username, password).block();
+
+            log.info("Received response from user-service: {}", response);
 
             if (response == null || !response.exists() || !response.enabled()) {
                 log.debug("Authentication failed for user {}: user not found or disabled", username);
