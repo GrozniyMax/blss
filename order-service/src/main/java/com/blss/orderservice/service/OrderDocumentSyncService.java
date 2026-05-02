@@ -110,6 +110,7 @@ public class OrderDocumentSyncService {
                             item.productId(),
                             product != null ? product.name() : "Unknown product",
                             product != null ? product.price() : BigDecimal.ZERO,
+                            1, // Default quantity since OrderItem doesn't have quantity field
                             item.yacheyka()
                     );
                 })

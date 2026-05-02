@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.math.BigDecimal;
+
 /**
  * Configuration properties for Bitrix24 JCA connector.
  * These properties are used to configure the JCA connection factory.
@@ -68,6 +70,13 @@ public class BitrixProperties {
     private String defaultProductMeasureName = "шт";
     private String defaultTaxTitle = "Без НДС";
     private String defaultTaxRate = "Без НДС";
+    private BigDecimal defaultTaxValue = BigDecimal.ZERO;
     private String defaultClientPhone = "";
+    private String defaultClientInn = "";
+    private String defaultClientKpp = "";
+    private String defaultClientBankName = "";
+    private String defaultClientBik = "";
+    private String defaultClientAccNum = "";
+    private String defaultClientCorAccNum = "";
 
 }

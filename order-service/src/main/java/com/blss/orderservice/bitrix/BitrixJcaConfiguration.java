@@ -61,7 +61,14 @@ public class BitrixJcaConfiguration {
         mcf.setDefaultProductMeasureName(properties.getDefaultProductMeasureName());
         mcf.setDefaultTaxTitle(properties.getDefaultTaxTitle());
         mcf.setDefaultTaxRate(properties.getDefaultTaxRate());
+        mcf.setDefaultTaxValue(properties.getDefaultTaxValue());
         mcf.setDefaultClientPhone(properties.getDefaultClientPhone());
+        mcf.setDefaultClientInn(properties.getDefaultClientInn());
+        mcf.setDefaultClientKpp(properties.getDefaultClientKpp());
+        mcf.setDefaultClientBankName(properties.getDefaultClientBankName());
+        mcf.setDefaultClientBik(properties.getDefaultClientBik());
+        mcf.setDefaultClientAccNum(properties.getDefaultClientAccNum());
+        mcf.setDefaultClientCorAccNum(properties.getDefaultClientCorAccNum());
         return mcf;
     }
 

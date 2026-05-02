@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.security.auth.Subject;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Set;
 
@@ -42,7 +43,14 @@ public class BitrixManagedConnectionFactory implements ManagedConnectionFactory,
     private String defaultProductMeasureName = "шт";
     private String defaultTaxTitle = "Без НДС";
     private String defaultTaxRate = "Без НДС";
+    private BigDecimal defaultTaxValue = BigDecimal.ZERO;
     private String defaultClientPhone = "";
+    private String defaultClientInn = "";
+    private String defaultClientKpp = "";
+    private String defaultClientBankName = "";
+    private String defaultClientBik = "";
+    private String defaultClientAccNum = "";
+    private String defaultClientCorAccNum = "";
 
     private transient ConnectionManager connectionManager;
     private transient PrintWriter logWriter;
@@ -116,7 +124,14 @@ public class BitrixManagedConnectionFactory implements ManagedConnectionFactory,
                Objects.equals(defaultProductMeasureName, that.defaultProductMeasureName) &&
                Objects.equals(defaultTaxTitle, that.defaultTaxTitle) &&
                Objects.equals(defaultTaxRate, that.defaultTaxRate) &&
-               Objects.equals(defaultClientPhone, that.defaultClientPhone);
+               Objects.equals(defaultTaxValue, that.defaultTaxValue) &&
+               Objects.equals(defaultClientPhone, that.defaultClientPhone) &&
+               Objects.equals(defaultClientInn, that.defaultClientInn) &&
+               Objects.equals(defaultClientKpp, that.defaultClientKpp) &&
+               Objects.equals(defaultClientBankName, that.defaultClientBankName) &&
+               Objects.equals(defaultClientBik, that.defaultClientBik) &&
+               Objects.equals(defaultClientAccNum, that.defaultClientAccNum) &&
+               Objects.equals(defaultClientCorAccNum, that.defaultClientCorAccNum);
     }
 
     @Override
@@ -126,7 +141,9 @@ public class BitrixManagedConnectionFactory implements ManagedConnectionFactory,
                 dealMethod, assignedById, categoryId,
                 myCompanyName, myCompanyInn, myCompanyKpp, myCompanyAddress, myCompanyPhone,
                 myCompanyBankName, myCompanyBik, myCompanyAccNum, myCompanyCorAccNum, myCompanyDirector,
-                defaultProductMeasureName, defaultTaxTitle, defaultTaxRate, defaultClientPhone
+                defaultProductMeasureName, defaultTaxTitle, defaultTaxRate, defaultTaxValue,
+                defaultClientPhone, defaultClientInn, defaultClientKpp,
+                defaultClientBankName, defaultClientBik, defaultClientAccNum, defaultClientCorAccNum
         );
     }
 }

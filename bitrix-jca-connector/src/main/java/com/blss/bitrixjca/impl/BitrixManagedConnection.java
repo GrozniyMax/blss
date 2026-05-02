@@ -323,6 +323,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         String requisiteRegisteredAddressText = defaultString(deliveryPointAddress);
         String taxesTaxTitle = defaultString(managedConnectionFactory.getDefaultTaxTitle());
         String taxesTaxRate = defaultString(managedConnectionFactory.getDefaultTaxRate());
+        BigDecimal taxesTaxValue = total.multiply(managedConnectionFactory.getDefaultTaxValue());
 
         String myCompanyRequisiteRqCompanyName = defaultString(managedConnectionFactory.getMyCompanyName());
         String myCompanyRequisiteRqInn = defaultString(managedConnectionFactory.getMyCompanyInn());
@@ -351,23 +352,34 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         values.put("DocumentNumber", documentNumber);
         values.put("DocumentCreateTime", documentDate);
         values.put("ClientName", clientName);
-        values.put("ProductsIndex", productsIndex);
-        values.put("ProductsProductName", productsProductName);
-        values.put("ProductsProductQuantity", productsProductQuantity);
-        values.put("ProductsProductMeasureName", productsProductMeasureName);
-        values.put("ProductsProductPriceRaw", productsProductPriceRaw);
-        values.put("ProductsProductPriceRawSum", productsProductPriceRawSum);
+        
+        // First product values for single-row templates (backward compatibility)
+        if (!productsItems.isEmpty()) {
+            Map<String, Object> firstProduct = productsItems.get(0);
+            values.put("SingleProductIndex", firstProduct.get("SingleProductIndex"));
+            values.put("SingleProductName", firstProduct.get("SingleProductName"));
+            values.put("SingleProductQuantity", firstProduct.get("SingleProductQuantity"));
+            values.put("SingleProductMeasureName", firstProduct.get("SingleProductMeasureName"));
+            values.put("SingleProductPriceRaw", firstProduct.get("SingleProductPriceRaw"));
+            values.put("SingleProductPriceRawSum", firstProduct.get("SingleProductPriceRawSum"));
+        }
+        
+        // Products array for iteration
         values.put("Products", productsItems);
         values.put("PRODUCTS", productsItems);
+        
+        // Client (Customer) requisite fields - from order/delivery point data
         values.put("ClientPhone", clientPhone);
         values.put("RequisiteRegisteredAddressText", requisiteRegisteredAddressText);
-        values.put("RequisiteRqInn", "");
-        values.put("RequisiteRqKpp", "");
-        values.put("BankDetailRqBankName", "");
-        values.put("BankDetailRqBik", "");
-        values.put("BankDetailRqAccNum", "");
-        values.put("BankDetailRqCorAccNum", "");
+        // These should come from customer profile if available - for now use empty or configurable defaults
+        values.put("RequisiteRqInn", managedConnectionFactory.getDefaultClientInn() != null ? managedConnectionFactory.getDefaultClientInn() : "");
+        values.put("RequisiteRqKpp", managedConnectionFactory.getDefaultClientKpp() != null ? managedConnectionFactory.getDefaultClientKpp() : "");
+        values.put("BankDetailRqBankName", managedConnectionFactory.getDefaultClientBankName() != null ? managedConnectionFactory.getDefaultClientBankName() : "");
+        values.put("BankDetailRqBik", managedConnectionFactory.getDefaultClientBik() != null ? managedConnectionFactory.getDefaultClientBik() : "");
+        values.put("BankDetailRqAccNum", managedConnectionFactory.getDefaultClientAccNum() != null ? managedConnectionFactory.getDefaultClientAccNum() : "");
+        values.put("BankDetailRqCorAccNum", managedConnectionFactory.getDefaultClientCorAccNum() != null ? managedConnectionFactory.getDefaultClientCorAccNum() : "");
 
+        // My Company requisite fields
         values.put("MyCompanyRequisiteRqCompanyName", myCompanyRequisiteRqCompanyName);
         values.put("MyCompanyRequisiteRqInn", myCompanyRequisiteRqInn);
         values.put("MyCompanyRequisiteRqKpp", myCompanyRequisiteRqKpp);
@@ -379,12 +391,14 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         values.put("MyCompanyBankDetailRqCorAccNum", myCompanyBankDetailRqCorAccNum);
         values.put("MyCompanyRequisiteRqDirector", myCompanyRequisiteRqDirector);
 
+        // Totals and taxes
         values.put("TotalRaw", totalRaw);
         values.put("TotalSum", totalSum);
         values.put("TaxesTaxTitle", taxesTaxTitle);
         values.put("TaxesTaxRate", taxesTaxRate);
-        values.put("TaxesTaxValue", "0");
+        values.put("TaxesTaxValue", taxesTaxValue.toPlainString());
 
+        // Additional order metadata
         values.put("DocumentTitle", documentTitle);
         values.put("DocumentBody", documentBody);
         values.put("OrderId", orderId.toString());
@@ -416,49 +430,45 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         if (items == null || items.isEmpty()) {
             return List.of();
         }
-        BitrixOrderItem item = items.get(0);
-        BigDecimal price = item.price() != null ? item.price() : BigDecimal.ZERO;
+
+        List<Map<String, Object>> result = new ArrayList<>();
         int index = 1;
-        String productName = defaultString(item.productName());
-        int productQuantity = 1;
-        String productMeasureName = defaultString(managedConnectionFactory.getDefaultProductMeasureName());
-        BigDecimal productPriceRaw = price;
-        BigDecimal productPriceRawSum = price;
 
-        int productsIndex = 1;
-        String productsProductName = defaultString(item.productName());
-        int productsProductQuantity = 1;
-        String productsProductMeasureName = defaultString(managedConnectionFactory.getDefaultProductMeasureName());
-        BigDecimal productsProductPriceRaw = price;
-        BigDecimal productsProductPriceRawSum = price;
+        for (BitrixOrderItem item : items) {
+            BigDecimal price = item.price() != null ? item.price() : BigDecimal.ZERO;
+            String productName = defaultString(item.productName());
+            int productQuantity = item.quantity() != null ? item.quantity().intValue() : 1;
+            String productMeasureName = defaultString(managedConnectionFactory.getDefaultProductMeasureName());
+            BigDecimal productPriceRaw = price;
+            BigDecimal productPriceRawSum = price.multiply(BigDecimal.valueOf(productQuantity));
 
-        Map<String, Object> product = new LinkedHashMap<>();
-        product.put("NAME", productName);
-        product.put("MEASURE_NAME", productMeasureName);
+            Map<String, Object> map = new LinkedHashMap<>();
+            
+            // Keys matching template placeholders: SingleProductIndex, SingleProductName, etc.
+            map.put("SingleProductIndex", index);
+            map.put("SingleProductName", productName);
+            map.put("SingleProductQuantity", productQuantity);
+            map.put("SingleProductMeasureName", productMeasureName);
+            map.put("SingleProductPriceRaw", productPriceRaw);
+            map.put("SingleProductPriceRawSum", productPriceRawSum);
+            
+            // Also add with ~WZ=Y suffix variants (Bitrix24 supports both)
+            map.put("SingleProductPriceRaw~WZ=Y", productPriceRaw);
+            map.put("SingleProductPriceRawSum~WZ=Y", productPriceRawSum);
+            
+            // Legacy compatibility keys
+            map.put("Index", index);
+            map.put("ProductName", productName);
+            map.put("ProductQuantity", productQuantity);
+            map.put("ProductMeasureName", productMeasureName);
+            map.put("ProductPriceRaw", productPriceRaw);
+            map.put("ProductPriceRawSum", productPriceRawSum);
+            
+            result.add(map);
+            index++;
+        }
 
-        Map<String, Object> map = new LinkedHashMap<>();
-        // Native Document Generator structure for this.SOURCE.PRODUCTS.* fields
-        map.put("INDEX", "index");
-        map.put("PRODUCT", "product");
-        map.put("QUANTITY", productQuantity);
-        map.put("PRICE_RAW", productPriceRaw);
-        map.put("PRICE_RAW_SUM", productPriceRawSum);
-
-        // Aliases kept for compatibility with templates using direct row keys
-        map.put("Index", "index");
-        map.put("ProductName", "productName");
-        map.put("ProductQuantity", productQuantity);
-        map.put("ProductMeasureName", productMeasureName);
-        map.put("ProductPriceRaw", productPriceRaw);
-        map.put("ProductPriceRawSum", productPriceRawSum);
-        // Compatibility aliases for templates that use fully-qualified product keys.
-        map.put("ProductsIndex", productsIndex);
-        map.put("ProductsProductName", productsProductName);
-        map.put("ProductsProductQuantity", productsProductQuantity);
-        map.put("ProductsProductMeasureName", productsProductMeasureName);
-        map.put("ProductsProductPriceRaw", productsProductPriceRaw);
-        map.put("ProductsProductPriceRawSum", productsProductPriceRawSum);
-        return List.of(map);
+        return result;
     }
 
     private String defaultString(String value) {

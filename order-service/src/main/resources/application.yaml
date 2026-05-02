@@ -47,4 +47,11 @@ bitrix:
   default-product-measure-name: ${BITRIX_DEFAULT_PRODUCT_MEASURE_NAME:шт}
   default-tax-title: ${BITRIX_DEFAULT_TAX_TITLE:Без НДС}
   default-tax-rate: ${BITRIX_DEFAULT_TAX_RATE:Без НДС}
+  default-tax-value: ${BITRIX_DEFAULT_TAX_VALUE:0}
   default-client-phone: ${BITRIX_DEFAULT_CLIENT_PHONE:}
+  default-client-inn: ${BITRIX_DEFAULT_CLIENT_INN:}
+  default-client-kpp: ${BITRIX_DEFAULT_CLIENT_KPP:}
+  default-client-bank-name: ${BITRIX_DEFAULT_CLIENT_BANK_NAME:}
+  default-client-bik: ${BITRIX_DEFAULT_CLIENT_BIK:}
+  default-client-acc-num: ${BITRIX_DEFAULT_CLIENT_ACC_NUM:}
+  default-client-cor-acc-num: ${BITRIX_DEFAULT_CLIENT_COR_ACC_NUM:}
