@@ -8,6 +8,7 @@ import com.blss.statusservice.dto.output.StatusHistoryEntryDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,6 +21,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class OrderStatusHistoryService {
+
+    private static final String TX_PREPARED = "PREPARED";
+    private static final String TX_CONFIRMED = "CONFIRMED";
+    private static final String SYSTEM_USER = "SYSTEM";
 
     private final OrderStatusHistoryRepo historyRepo;
     private final UserServiceClient userServiceClient;
@@ -73,10 +78,91 @@ public class OrderStatusHistoryService {
                 orderId,
                 status,
                 Instant.now(),
-                changedBy != null ? changedBy : "SYSTEM"
+                normalizeChangedBy(changedBy),
+                null,
+                TX_CONFIRMED
         );
 
         historyRepo.save(history);
         log.info("Status change saved: orderId={}", orderId);
+    }
+
+    @Transactional
+    public void prepareStatusChange(UUID txId, UUID orderId, String status, String changedBy) {
+        if (txId == null || orderId == null || status == null || status.isBlank()) {
+            throw new IllegalArgumentException("txId, orderId and status are required");
+        }
+
+        OrderStatusHistory existing = historyRepo.findByTxId(txId);
+        if (existing != null) {
+            if (!TX_PREPARED.equals(existing.txState())) {
+                throw new IllegalStateException("Status transaction is already completed: " + txId);
+            }
+            log.info("Status transaction is already prepared: txId={}", txId);
+            return;
+        }
+
+        OrderStatusHistory history = new OrderStatusHistory(
+                UUID.randomUUID(),
+                orderId,
+                status,
+                Instant.now(),
+                normalizeChangedBy(changedBy),
+                txId,
+                TX_PREPARED
+        );
+
+        historyRepo.save(history);
+        log.info("Status transaction prepared: txId={}, orderId={}", txId, orderId);
+    }
+
+    @Transactional
+    public void confirmPreparedStatusChange(UUID txId) {
+        OrderStatusHistory prepared = getPreparedTransaction(txId);
+        historyRepo.save(new OrderStatusHistory(
+                prepared.id(),
+                prepared.orderId(),
+                prepared.status(),
+                prepared.changedAt(),
+                prepared.changedBy(),
+                prepared.txId(),
+                TX_CONFIRMED
+        ));
+        log.info("Status transaction confirmed: txId={}", txId);
+    }
+
+    @Transactional
+    public void rollbackPreparedStatusChange(UUID txId) {
+        OrderStatusHistory prepared = historyRepo.findByTxId(txId);
+        if (prepared == null) {
+            log.info("Status transaction is absent, rollback treated as completed: txId={}", txId);
+            return;
+        }
+        if (!TX_PREPARED.equals(prepared.txState())) {
+            log.info("Status transaction is not prepared, rollback skipped: txId={}, state={}", txId, prepared.txState());
+            return;
+        }
+
+        historyRepo.deleteById(prepared.id());
+        log.info("Status transaction rolled back: txId={}", txId);
+    }
+
+    private OrderStatusHistory getPreparedTransaction(UUID txId) {
+        if (txId == null) {
+            throw new IllegalArgumentException("txId is required");
+        }
+
+        OrderStatusHistory history = historyRepo.findByTxId(txId);
+        if (history == null) {
+            throw new IllegalArgumentException("Prepared status transaction not found: " + txId);
+        }
+        if (!TX_PREPARED.equals(history.txState())) {
+            throw new IllegalStateException("Status transaction is not prepared: " + txId);
+        }
+        return history;
+    }
+
+    private String normalizeChangedBy(String changedBy) {
+        return changedBy != null && !changedBy.isBlank() ? changedBy : SYSTEM_USER;
     }
 }

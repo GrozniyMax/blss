@@ -17,12 +17,21 @@ public interface OrderStatusHistoryRepo extends CrudRepository<OrderStatusHistor
     /**
      * Find all status changes for an order, ordered by timestamp.
      */
-    @Query("SELECT * FROM order_status_history WHERE order_id = :orderId ORDER BY changed_at ASC")
+    @Query("""
+            SELECT *
+            FROM order_status_history
+            WHERE order_id = :orderId
+              AND tx_state = 'CONFIRMED'
+            ORDER BY changed_at ASC
+            """)
     List<OrderStatusHistory> findByOrderId(UUID orderId);
 
     /**
      * Check if order has any history.
      */
-    @Query("SELECT EXISTS(SELECT 1 FROM order_status_history WHERE order_id = :orderId)")
+    @Query("SELECT EXISTS(SELECT 1 FROM order_status_history WHERE order_id = :orderId AND tx_state = 'CONFIRMED')")
     boolean existsByOrderId(UUID orderId);
+
+    @Query("SELECT * FROM order_status_history WHERE tx_id = :txId")
+    OrderStatusHistory findByTxId(UUID txId);
 }

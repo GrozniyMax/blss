@@ -21,6 +21,10 @@ public record OrderStatusHistory(
 
         Instant changedAt,
 
-        String changedBy
+        String changedBy,
+
+        UUID txId,
+
+        String txState
 ) {
 }

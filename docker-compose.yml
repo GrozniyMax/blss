@@ -87,6 +87,7 @@ services:
       ARTEMIS_USER: ${ARTEMIS_USER}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
       USER_SERVICE_URL: http://user-service:8080
+      STATUS_SERVICE_URL: http://status-service:8080
       JAVA_OPTS: "-Djava.net.preferIPv4Stack=true"
     ports:
       - "25103:8080"
