@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
 /**
  * Spring Security configuration for status-service with REST-based authentication.
  */
@@ -46,7 +48,9 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/order/**/history").authenticated()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/internal/**").permitAll()
+                .requestMatchers(antMatcher("/order/**/history")).authenticated()
                 .anyRequest().authenticated()
             )
             .httpBasic(basic -> basic.realmName("Status Service API"))

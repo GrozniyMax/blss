@@ -74,7 +74,7 @@ public class OrderStatusHistoryService {
         log.info("Saving status change: orderId={}, status={}, changedBy={}", orderId, status, changedBy);
 
         OrderStatusHistory history = new OrderStatusHistory(
-                UUID.randomUUID(),
+                null,
                 orderId,
                 status,
                 Instant.now(),
@@ -103,7 +103,7 @@ public class OrderStatusHistoryService {
         }
 
         OrderStatusHistory history = new OrderStatusHistory(
-                UUID.randomUUID(),
+                null,
                 orderId,
                 status,
                 Instant.now(),
