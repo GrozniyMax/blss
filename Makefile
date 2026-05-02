@@ -7,7 +7,7 @@ down-docker:
 clean: clean-java down-docker
 
 build-java:
-	./gradlew bootJar
+	./gradlew bootWar
 
 up-docker:
 	docker compose up -d --build

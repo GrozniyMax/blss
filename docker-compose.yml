@@ -63,9 +63,9 @@ services:
     env_file:
       - .env
     environment:
-      SERVER_PORT: 25104
+      JAVA_OPTS: "-Djava.net.preferIPv4Stack=true"
     ports:
-      - "25104:25104"
+      - "25104:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -86,10 +86,10 @@ services:
       ARTEMIS_BROKER_URL: tcp://artemis:61616
       ARTEMIS_USER: ${ARTEMIS_USER}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
-      USER_SERVICE_URL: http://user-service:25104
-      SERVER_PORT: 25103
+      USER_SERVICE_URL: http://user-service:8080
+      JAVA_OPTS: "-Djava.net.preferIPv4Stack=true"
     ports:
-      - "25103:25103"
+      - "25103:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,11 +114,11 @@ services:
       ARTEMIS_BROKER_URL: tcp://artemis:61616
       ARTEMIS_USER: ${ARTEMIS_USER}
       ARTEMIS_PASSWORD: ${ARTEMIS_PASSWORD}
-      ORDER_SERVICE_URL: http://order-service:25103
-      USER_SERVICE_URL: http://user-service:25104
-      SERVER_PORT: 25105
+      ORDER_SERVICE_URL: http://order-service:8080
+      USER_SERVICE_URL: http://user-service:8080
+      JAVA_OPTS: "-Djava.net.preferIPv4Stack=true"
     ports:
-      - "25105:25105"
+      - "25105:8080"
     depends_on:
       postgres:
         condition: service_healthy

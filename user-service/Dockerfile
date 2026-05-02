@@ -1,13 +1,10 @@
-FROM eclipse-temurin:17-jre
+FROM quay.io/wildfly/wildfly:37.0.0.Final-jdk17
 
-WORKDIR /app
+COPY user-service/build/libs/user-service.war /opt/jboss/wildfly/standalone/deployments/ROOT.war
+COPY user-service/users.xml /opt/jboss/wildfly/standalone/configuration/users.xml
 
-# Copy the built JAR
-COPY user-service/build/libs/user-service.jar ./app.jar
+ENV SECURITY_USERS_XML_PATH=/opt/jboss/wildfly/standalone/configuration/users.xml
 
-# Copy users.xml
-COPY user-service/users.xml ./users.xml
+EXPOSE 8080
 
-ENV SECURITY_USERS_XML_PATH=./users.xml
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]

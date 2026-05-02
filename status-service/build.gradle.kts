@@ -1,5 +1,6 @@
 plugins {
     java
+    war
     id("org.springframework.boot")
     id("io.spring.dependency-management")
 }
@@ -9,6 +10,7 @@ description = "Status Service - Order Status Tracking and Notifications"
 dependencies {
     // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")
+    providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
@@ -42,6 +44,10 @@ dependencies {
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    enabled = false
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootWar>("bootWar") {
     enabled = true
-    archiveFileName.set("status-service.jar")
+    archiveFileName.set("status-service.war")
 }

@@ -1,8 +1,7 @@
-FROM eclipse-temurin:17-jre
+FROM quay.io/wildfly/wildfly:37.0.0.Final-jdk17
 
-WORKDIR /app
+COPY status-service/build/libs/status-service.war /opt/jboss/wildfly/standalone/deployments/ROOT.war
 
-# Copy the built JAR
-COPY status-service/build/libs/status-service.jar ./app.jar
+EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]

@@ -1,5 +1,6 @@
 plugins {
     java
+    war
     id("org.springframework.boot")
     id("io.spring.dependency-management")
 }
@@ -9,6 +10,7 @@ description = "Order Service - Order Management"
 dependencies {
     // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")
+    providedRuntime("org.springframework.boot:spring-boot-starter-tomcat")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -48,6 +50,10 @@ dependencies {
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    enabled = false
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootWar>("bootWar") {
     enabled = true
-    archiveFileName.set("order-service.jar")
+    archiveFileName.set("order-service.war")
 }
