@@ -48,4 +48,26 @@ public class BitrixProperties {
      */
     private Integer categoryId = 0;
 
+    /**
+     * Default company details used by document templates.
+     */
+    private String myCompanyName = "";
+    private String myCompanyInn = "";
+    private String myCompanyKpp = "";
+    private String myCompanyAddress = "";
+    private String myCompanyPhone = "";
+    private String myCompanyBankName = "";
+    private String myCompanyBik = "";
+    private String myCompanyAccNum = "";
+    private String myCompanyCorAccNum = "";
+    private String myCompanyDirector = "";
+
+    /**
+     * Defaults for generated act line items.
+     */
+    private String defaultProductMeasureName = "шт";
+    private String defaultTaxTitle = "Без НДС";
+    private String defaultTaxRate = "Без НДС";
+    private String defaultClientPhone = "";
+
 }

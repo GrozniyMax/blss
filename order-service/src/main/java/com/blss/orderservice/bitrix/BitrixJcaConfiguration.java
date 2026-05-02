@@ -48,6 +48,20 @@ public class BitrixJcaConfiguration {
         mcf.setDealMethod(properties.getDealMethod());
         mcf.setAssignedById(properties.getAssignedById());
         mcf.setCategoryId(properties.getCategoryId());
+        mcf.setMyCompanyName(properties.getMyCompanyName());
+        mcf.setMyCompanyInn(properties.getMyCompanyInn());
+        mcf.setMyCompanyKpp(properties.getMyCompanyKpp());
+        mcf.setMyCompanyAddress(properties.getMyCompanyAddress());
+        mcf.setMyCompanyPhone(properties.getMyCompanyPhone());
+        mcf.setMyCompanyBankName(properties.getMyCompanyBankName());
+        mcf.setMyCompanyBik(properties.getMyCompanyBik());
+        mcf.setMyCompanyAccNum(properties.getMyCompanyAccNum());
+        mcf.setMyCompanyCorAccNum(properties.getMyCompanyCorAccNum());
+        mcf.setMyCompanyDirector(properties.getMyCompanyDirector());
+        mcf.setDefaultProductMeasureName(properties.getDefaultProductMeasureName());
+        mcf.setDefaultTaxTitle(properties.getDefaultTaxTitle());
+        mcf.setDefaultTaxRate(properties.getDefaultTaxRate());
+        mcf.setDefaultClientPhone(properties.getDefaultClientPhone());
         return mcf;
     }
 

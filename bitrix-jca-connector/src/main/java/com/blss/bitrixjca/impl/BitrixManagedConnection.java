@@ -19,6 +19,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -30,6 +32,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
 
     private static final int CONNECT_TIMEOUT = 10;
     private static final int READ_TIMEOUT = 30;
+    private static final DateTimeFormatter DOCUMENT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final BitrixManagedConnectionFactory managedConnectionFactory;
     private final HttpClient httpClient;
@@ -207,6 +210,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         }
 
         log.debug("Calling Bitrix24 method: {} with payload: {}", method, jsonPayload);
+        log.info("Outgoing Bitrix24 request: method={}, url={}, body={}", method, url, jsonPayload);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -272,6 +276,17 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
                 "templateId", managedConnectionFactory.getDocumentTemplateId(),
                 "values", values
         );
+        log.info(
+                "Bitrix document payload format: templateId={}, valuesType={}, productsCount={}",
+                managedConnectionFactory.getDocumentTemplateId(),
+                values.getClass().getSimpleName(),
+                values.get("Products") instanceof List<?> products ? products.size() : 0
+        );
+        try {
+            log.debug("Bitrix document payload JSON: {}", objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize Bitrix document payload for debug logging: {}", e.getMessage());
+        }
 
         Map<String, Object> response = callMethod("documentgenerator.document.add.json", payload);
         
@@ -291,19 +306,94 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
             String deliveryPointAddress,
             List<BitrixOrderItem> items
     ) {
+        String documentNumber = "ACT-" + orderId.toString().substring(0, 8).toUpperCase(Locale.ROOT);
+        String documentDate = DOCUMENT_DATE_FORMAT.format(createdAt.atZone(ZoneId.systemDefault()));
+        BigDecimal total = totalAmount != null ? totalAmount : BigDecimal.ZERO;
+        BitrixOrderItem firstItem = items != null && !items.isEmpty() ? items.get(0) : null;
+        BigDecimal firstPrice = firstItem != null && firstItem.price() != null ? firstItem.price() : BigDecimal.ZERO;
+        int productsIndex = 1;
+        String productsProductName = firstItem != null ? defaultString(firstItem.productName()) : "";
+        int productsProductQuantity = 1;
+        String productsProductMeasureName = defaultString(managedConnectionFactory.getDefaultProductMeasureName());
+        BigDecimal productsProductPriceRaw = firstPrice;
+        BigDecimal productsProductPriceRawSum = firstPrice;
+
+        String clientName = defaultString(owner);
+        String clientPhone = defaultString(managedConnectionFactory.getDefaultClientPhone());
+        String requisiteRegisteredAddressText = defaultString(deliveryPointAddress);
+        String taxesTaxTitle = defaultString(managedConnectionFactory.getDefaultTaxTitle());
+        String taxesTaxRate = defaultString(managedConnectionFactory.getDefaultTaxRate());
+
+        String myCompanyRequisiteRqCompanyName = defaultString(managedConnectionFactory.getMyCompanyName());
+        String myCompanyRequisiteRqInn = defaultString(managedConnectionFactory.getMyCompanyInn());
+        String myCompanyRequisiteRqKpp = defaultString(managedConnectionFactory.getMyCompanyKpp());
+        String myCompanyRequisiteRegisteredAddressText = defaultString(managedConnectionFactory.getMyCompanyAddress());
+        String myCompanyPhone = defaultString(managedConnectionFactory.getMyCompanyPhone());
+        String myCompanyBankDetailRqBankName = defaultString(managedConnectionFactory.getMyCompanyBankName());
+        String myCompanyBankDetailRqBik = defaultString(managedConnectionFactory.getMyCompanyBik());
+        String myCompanyBankDetailRqAccNum = defaultString(managedConnectionFactory.getMyCompanyAccNum());
+        String myCompanyBankDetailRqCorAccNum = defaultString(managedConnectionFactory.getMyCompanyCorAccNum());
+        String myCompanyRequisiteRqDirector = defaultString(managedConnectionFactory.getMyCompanyDirector());
+
+        String documentTitle = defaultString(title);
+        String documentBody = defaultString(body);
+        String orderStatus = defaultString(status);
+        String orderOwner = defaultString(owner);
+        String orderCreatedAt = createdAt.toString();
+        String orderTotalAmount = total.toPlainString();
+        String deliveryPointNameValue = defaultString(deliveryPointName);
+        String deliveryPointAddressValue = defaultString(deliveryPointAddress);
+        String totalRaw = total.toPlainString();
+        String totalSum = total.toPlainString();
+        List<Map<String, Object>> productsItems = buildProducts(items);
+
         Map<String, Object> values = new LinkedHashMap<>();
-        values.put("DocumentTitle", title);
-        values.put("DocumentBody", body);
+        values.put("DocumentNumber", documentNumber);
+        values.put("DocumentCreateTime", documentDate);
+        values.put("ClientName", clientName);
+        values.put("ProductsIndex", productsIndex);
+        values.put("ProductsProductName", productsProductName);
+        values.put("ProductsProductQuantity", productsProductQuantity);
+        values.put("ProductsProductMeasureName", productsProductMeasureName);
+        values.put("ProductsProductPriceRaw", productsProductPriceRaw);
+        values.put("ProductsProductPriceRawSum", productsProductPriceRawSum);
+        values.put("Products", productsItems);
+        values.put("PRODUCTS", productsItems);
+        values.put("ClientPhone", clientPhone);
+        values.put("RequisiteRegisteredAddressText", requisiteRegisteredAddressText);
+        values.put("RequisiteRqInn", "");
+        values.put("RequisiteRqKpp", "");
+        values.put("BankDetailRqBankName", "");
+        values.put("BankDetailRqBik", "");
+        values.put("BankDetailRqAccNum", "");
+        values.put("BankDetailRqCorAccNum", "");
+
+        values.put("MyCompanyRequisiteRqCompanyName", myCompanyRequisiteRqCompanyName);
+        values.put("MyCompanyRequisiteRqInn", myCompanyRequisiteRqInn);
+        values.put("MyCompanyRequisiteRqKpp", myCompanyRequisiteRqKpp);
+        values.put("MyCompanyRequisiteRegisteredAddressText", myCompanyRequisiteRegisteredAddressText);
+        values.put("MyCompanyPhone", myCompanyPhone);
+        values.put("MyCompanyBankDetailRqBankName", myCompanyBankDetailRqBankName);
+        values.put("MyCompanyBankDetailRqBik", myCompanyBankDetailRqBik);
+        values.put("MyCompanyBankDetailRqAccNum", myCompanyBankDetailRqAccNum);
+        values.put("MyCompanyBankDetailRqCorAccNum", myCompanyBankDetailRqCorAccNum);
+        values.put("MyCompanyRequisiteRqDirector", myCompanyRequisiteRqDirector);
+
+        values.put("TotalRaw", totalRaw);
+        values.put("TotalSum", totalSum);
+        values.put("TaxesTaxTitle", taxesTaxTitle);
+        values.put("TaxesTaxRate", taxesTaxRate);
+        values.put("TaxesTaxValue", "0");
+
+        values.put("DocumentTitle", documentTitle);
+        values.put("DocumentBody", documentBody);
         values.put("OrderId", orderId.toString());
-        values.put("OrderNumber", "ORDER-" + orderId);
-        values.put("OrderStatus", status);
-        values.put("OrderOwner", owner);
-        values.put("OrderCreatedAt", createdAt.toString());
-        values.put("OrderTotalAmount", totalAmount.toPlainString());
-        values.put("DeliveryPointName", deliveryPointName);
-        values.put("DeliveryPointAddress", deliveryPointAddress);
-        values.put("OrderItemsTable", buildItemsTable(items));
-        values.put("OrderItemsJson", buildItemsJson(items));
+        values.put("OrderStatus", orderStatus);
+        values.put("OrderOwner", orderOwner);
+        values.put("OrderCreatedAt", orderCreatedAt);
+        values.put("OrderTotalAmount", orderTotalAmount);
+        values.put("DeliveryPointName", deliveryPointNameValue);
+        values.put("DeliveryPointAddress", deliveryPointAddressValue);
         return values;
     }
 
@@ -322,18 +412,57 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         return String.join(System.lineSeparator(), lines);
     }
 
-    private List<Map<String, Object>> buildItemsJson(List<BitrixOrderItem> items) {
-        return items.stream()
-                .map(item -> {
-                    Map<String, Object> map = new LinkedHashMap<>();
-                    map.put("itemId", item.itemId().toString());
-                    map.put("productId", item.productId().toString());
-                    map.put("productName", item.productName());
-                    map.put("price", item.price().toPlainString());
-                    map.put("yacheyka", Objects.toString(item.yacheyka(), ""));
-                    return map;
-                })
-                .toList();
+    private List<Map<String, Object>> buildProducts(List<BitrixOrderItem> items) {
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        BitrixOrderItem item = items.get(0);
+        BigDecimal price = item.price() != null ? item.price() : BigDecimal.ZERO;
+        int index = 1;
+        String productName = defaultString(item.productName());
+        int productQuantity = 1;
+        String productMeasureName = defaultString(managedConnectionFactory.getDefaultProductMeasureName());
+        BigDecimal productPriceRaw = price;
+        BigDecimal productPriceRawSum = price;
+
+        int productsIndex = 1;
+        String productsProductName = defaultString(item.productName());
+        int productsProductQuantity = 1;
+        String productsProductMeasureName = defaultString(managedConnectionFactory.getDefaultProductMeasureName());
+        BigDecimal productsProductPriceRaw = price;
+        BigDecimal productsProductPriceRawSum = price;
+
+        Map<String, Object> product = new LinkedHashMap<>();
+        product.put("NAME", productName);
+        product.put("MEASURE_NAME", productMeasureName);
+
+        Map<String, Object> map = new LinkedHashMap<>();
+        // Native Document Generator structure for this.SOURCE.PRODUCTS.* fields
+        map.put("INDEX", "index");
+        map.put("PRODUCT", "product");
+        map.put("QUANTITY", productQuantity);
+        map.put("PRICE_RAW", productPriceRaw);
+        map.put("PRICE_RAW_SUM", productPriceRawSum);
+
+        // Aliases kept for compatibility with templates using direct row keys
+        map.put("Index", "index");
+        map.put("ProductName", "productName");
+        map.put("ProductQuantity", productQuantity);
+        map.put("ProductMeasureName", productMeasureName);
+        map.put("ProductPriceRaw", productPriceRaw);
+        map.put("ProductPriceRawSum", productPriceRawSum);
+        // Compatibility aliases for templates that use fully-qualified product keys.
+        map.put("ProductsIndex", productsIndex);
+        map.put("ProductsProductName", productsProductName);
+        map.put("ProductsProductQuantity", productsProductQuantity);
+        map.put("ProductsProductMeasureName", productsProductMeasureName);
+        map.put("ProductsProductPriceRaw", productsProductPriceRaw);
+        map.put("ProductsProductPriceRawSum", productsProductPriceRawSum);
+        return List.of(map);
+    }
+
+    private String defaultString(String value) {
+        return value == null ? "" : value;
     }
 
     private String buildMethodUrl(String method) {

@@ -34,3 +34,17 @@ bitrix:
   deal-method: ${BITRIX_DEAL_METHOD:crm.deal.add.json}
   assigned-by-id: ${BITRIX_ASSIGNED_BY_ID:0}
   category-id: ${BITRIX_CATEGORY_ID:0}
+  my-company-name: ${BITRIX_MY_COMPANY_NAME:}
+  my-company-inn: ${BITRIX_MY_COMPANY_INN:}
+  my-company-kpp: ${BITRIX_MY_COMPANY_KPP:}
+  my-company-address: ${BITRIX_MY_COMPANY_ADDRESS:}
+  my-company-phone: ${BITRIX_MY_COMPANY_PHONE:}
+  my-company-bank-name: ${BITRIX_MY_COMPANY_BANK_NAME:}
+  my-company-bik: ${BITRIX_MY_COMPANY_BIK:}
+  my-company-acc-num: ${BITRIX_MY_COMPANY_ACC_NUM:}
+  my-company-cor-acc-num: ${BITRIX_MY_COMPANY_COR_ACC_NUM:}
+  my-company-director: ${BITRIX_MY_COMPANY_DIRECTOR:}
+  default-product-measure-name: ${BITRIX_DEFAULT_PRODUCT_MEASURE_NAME:шт}
+  default-tax-title: ${BITRIX_DEFAULT_TAX_TITLE:Без НДС}
+  default-tax-rate: ${BITRIX_DEFAULT_TAX_RATE:Без НДС}
+  default-client-phone: ${BITRIX_DEFAULT_CLIENT_PHONE:}

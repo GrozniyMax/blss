@@ -29,6 +29,20 @@ public class BitrixManagedConnectionFactory implements ManagedConnectionFactory,
     private String dealMethod = "crm.deal.add.json";
     private Long assignedById = 0L;
     private Integer categoryId = 0;
+    private String myCompanyName = "";
+    private String myCompanyInn = "";
+    private String myCompanyKpp = "";
+    private String myCompanyAddress = "";
+    private String myCompanyPhone = "";
+    private String myCompanyBankName = "";
+    private String myCompanyBik = "";
+    private String myCompanyAccNum = "";
+    private String myCompanyCorAccNum = "";
+    private String myCompanyDirector = "";
+    private String defaultProductMeasureName = "шт";
+    private String defaultTaxTitle = "Без НДС";
+    private String defaultTaxRate = "Без НДС";
+    private String defaultClientPhone = "";
 
     private transient ConnectionManager connectionManager;
     private transient PrintWriter logWriter;
@@ -88,14 +102,31 @@ public class BitrixManagedConnectionFactory implements ManagedConnectionFactory,
                Objects.equals(uploadToCrmFallback, that.uploadToCrmFallback) &&
                Objects.equals(dealMethod, that.dealMethod) &&
                Objects.equals(assignedById, that.assignedById) &&
-               Objects.equals(categoryId, that.categoryId);
+               Objects.equals(categoryId, that.categoryId) &&
+               Objects.equals(myCompanyName, that.myCompanyName) &&
+               Objects.equals(myCompanyInn, that.myCompanyInn) &&
+               Objects.equals(myCompanyKpp, that.myCompanyKpp) &&
+               Objects.equals(myCompanyAddress, that.myCompanyAddress) &&
+               Objects.equals(myCompanyPhone, that.myCompanyPhone) &&
+               Objects.equals(myCompanyBankName, that.myCompanyBankName) &&
+               Objects.equals(myCompanyBik, that.myCompanyBik) &&
+               Objects.equals(myCompanyAccNum, that.myCompanyAccNum) &&
+               Objects.equals(myCompanyCorAccNum, that.myCompanyCorAccNum) &&
+               Objects.equals(myCompanyDirector, that.myCompanyDirector) &&
+               Objects.equals(defaultProductMeasureName, that.defaultProductMeasureName) &&
+               Objects.equals(defaultTaxTitle, that.defaultTaxTitle) &&
+               Objects.equals(defaultTaxRate, that.defaultTaxRate) &&
+               Objects.equals(defaultClientPhone, that.defaultClientPhone);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
                 webhookUrl, documentTemplateId, uploadToCrmFallback,
-                dealMethod, assignedById, categoryId
+                dealMethod, assignedById, categoryId,
+                myCompanyName, myCompanyInn, myCompanyKpp, myCompanyAddress, myCompanyPhone,
+                myCompanyBankName, myCompanyBik, myCompanyAccNum, myCompanyCorAccNum, myCompanyDirector,
+                defaultProductMeasureName, defaultTaxTitle, defaultTaxRate, defaultClientPhone
         );
     }
 }
