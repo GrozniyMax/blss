@@ -20,6 +20,7 @@ dependencies {
 
     // WebClient for user-service communication
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-quartz")
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
