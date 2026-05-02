@@ -19,13 +19,21 @@ public record OrderStatusHistory(
 
         String status,
 
-        Instant changedAt
+        Instant changedAt,
+
+        UUID txId,
+
+        String txState
 ) {
     /**
      * Create a new entity without an ID (for new records).
      * Spring Data JDBC will generate the ID on save.
      */
     public OrderStatusHistory(UUID orderId, String status, Instant changedAt) {
-        this(null, orderId, status, changedAt);
+        this(null, orderId, status, changedAt, null, "CONFIRMED");
+    }
+
+    public OrderStatusHistory(UUID orderId, String status, Instant changedAt, UUID txId, String txState) {
+        this(null, orderId, status, changedAt, txId, txState);
     }
 }

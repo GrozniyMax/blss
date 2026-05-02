@@ -6,5 +6,6 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
     <include file="changes/add_order_status_history_table.xml" relativeToChangelogFile="true"/>
+    <include file="changes/add_order_status_history_transaction_state.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
