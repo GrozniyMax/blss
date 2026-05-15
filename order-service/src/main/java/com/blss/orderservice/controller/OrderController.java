@@ -1,13 +1,12 @@
 package com.blss.orderservice.controller;
 
-import com.blss.orderservice.domain.order.Status;
 import com.blss.orderservice.dto.input.OrderCreateRequestDTO;
 import com.blss.orderservice.dto.output.DtoMapper;
 import com.blss.orderservice.dto.output.GetOrderResponse;
 import com.blss.orderservice.dto.output.OrderCreationResponse;
-import com.blss.orderservice.service.OrderDocumentSyncService;
-import com.blss.orderservice.service.OrderService;
-import com.blss.orderservice.service.OrderStatusUpdater;
+import com.blss.orderservice.service.order.OrderDocumentSyncService;
+import com.blss.orderservice.service.order.OrderService;
+import com.blss.orderservice.service.order.OrderStatusUpdater;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

@@ -3,6 +3,7 @@ package com.blss.orderservice.service;
 import com.blss.orderservice.db.order.OrderItemRepo;
 import com.blss.orderservice.domain.order.OrderItem;
 import com.blss.orderservice.exception.NotFoundException;
+import com.blss.orderservice.service.order.OrderStatusUpdater;
 import com.blss.orderservice.service.tx.TransactionExecutor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

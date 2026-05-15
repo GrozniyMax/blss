@@ -1,6 +1,6 @@
 package com.blss.statusservice.controller;
 
-import com.blss.statusservice.dto.output.OrderStatusHistoryResponse;
+import com.blss.statusservice.dto.OrderStatusHistoryResponse;
 import com.blss.statusservice.service.OrderStatusHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
