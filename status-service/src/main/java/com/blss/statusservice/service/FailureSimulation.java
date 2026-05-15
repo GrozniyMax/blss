@@ -5,13 +5,23 @@ import org.springframework.stereotype.Component;
 @Component
 public class FailureSimulation {
 
-    private boolean shouldFail = false;
+    private boolean failInTryCatch = false;
 
-    public void setShouldFail(boolean shouldFail) {
-        this.shouldFail = shouldFail;
+    private boolean failInMethod = false;
+
+    public void setFailInTryCatch(boolean failInTryCatch) {
+        this.failInTryCatch = failInTryCatch;
     }
 
-    public boolean shouldFail() {
-        return shouldFail;
+    public boolean failInTryCatch() {
+        return failInTryCatch;
+    }
+
+    public boolean isFailInMethod() {
+        return failInMethod;
+    }
+
+    public void setFailInMethod(boolean failInMethod) {
+        this.failInMethod = failInMethod;
     }
 }

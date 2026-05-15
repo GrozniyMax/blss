@@ -18,8 +18,12 @@ public class TestController {
     private FailureSimulation failureSimulation;
 
     @GetMapping("/fail")
-    public String fail(@RequestParam boolean shouldFail) {
-        failureSimulation.setShouldFail(shouldFail);
-        return "Failure simulation set to " + (shouldFail ? "enabled" : "disabled");
+    public String fail(@RequestParam boolean failInTryCatch, @RequestParam boolean failInMethod) {
+        failureSimulation.setFailInTryCatch(failInTryCatch);
+        failureSimulation.setFailInMethod(failInMethod);
+
+        return "Failure simulation parameters set to: failInTryCatch=" + failInTryCatch +
+                ", failInMethod=" + failInMethod;
+        
     }
 }

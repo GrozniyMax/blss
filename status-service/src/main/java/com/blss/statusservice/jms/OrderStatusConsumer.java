@@ -27,9 +27,13 @@ public class OrderStatusConsumer {
                 event.status(),
                 event.timestamp());
 
+        if (failureSimulation.isFailInMethod()) {
+            throw new RuntimeException("Simulated failure");
+        }
+
         try {
-            if (failureSimulation.shouldFail()) {
-                throw new RuntimeException("Simulated failure");
+            if (failureSimulation.failInTryCatch()) {
+                throw new RuntimeException("Simulated failure it try-catch");
             }
             historyService.saveStatusChange(event.id(), event.status());
             log.info("Order status change event processed: orderId={}", event.id());

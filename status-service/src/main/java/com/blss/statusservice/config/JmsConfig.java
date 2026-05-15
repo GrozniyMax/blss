@@ -3,13 +3,18 @@ package com.blss.statusservice.config;
 import com.blss.statusservice.dto.OrderStatusChangedEvent;
 import com.blss.statusservice.dto.OrderStatusRevertEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.jms.ConnectionFactory;
+import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 
 import java.util.Map;
 
+@Slf4j
 @Configuration
 public class JmsConfig {
 
@@ -24,5 +29,20 @@ public class JmsConfig {
                 "orderStatusRevertEvent", OrderStatusRevertEvent.class
         ));
         return converter;
+    }
+
+    @Bean
+    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
+            ConnectionFactory connectionFactory,
+            MappingJackson2MessageConverter messageConverter) {
+
+        var factory = new DefaultJmsListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(messageConverter);
+        factory.setSessionTransacted(true);
+        factory.setErrorHandler(t ->
+                log.error("JMS listener error, message will be redelivered", t)
+        );
+        return factory;
     }
 }
