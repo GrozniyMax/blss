@@ -39,8 +39,6 @@ public class ReportService {
         }
 
         return statistic;
-
-        //TODO либо вызов API либо ручная генерация отчета
     }
 
     public Stream<Order> streamOrdersForDay(LocalDate day) {

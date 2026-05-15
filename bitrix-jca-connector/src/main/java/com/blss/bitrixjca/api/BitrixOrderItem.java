@@ -4,13 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Represents an order item for Bitrix24 document generation.
- *
- * @param itemId     Order item ID
- * @param productId  Product ID
- * @param productName Product name
- * @param price      Product price
- * @param yacheyka   Cell/location identifier (optional)
+ * Позиция заказа для документа Bitrix24.
  */
 public record BitrixOrderItem(
         UUID itemId,

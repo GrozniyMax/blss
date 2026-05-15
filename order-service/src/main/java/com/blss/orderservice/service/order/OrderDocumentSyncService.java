@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Service for synchronizing order documents to Bitrix24 via JCA connector.
+ * Синхронизация документов заказов с Bitrix24.
  */
 @Service
 @RequiredArgsConstructor
@@ -48,11 +48,6 @@ public class OrderDocumentSyncService {
 
     BitrixConnectionFactory connectionFactory;
 
-    /**
-     * Sends order document to Bitrix24.
-     *
-     * @param orderId Order ID to sync
-     */
     public void sendOrderDocument(UUID orderId) {
         log.debug("Starting Bitrix24 sync for order {}", orderId);
 

@@ -6,12 +6,7 @@ import org.springframework.jms.annotation.EnableJms;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
- * Status Service Application.
- * 
- * Responsible for:
- * - Tracking order status changes
- * - Sending notifications to users
- * - Status history and analytics
+ * Сервис статусов заказов.
  */
 @SpringBootApplication
 @EnableJms

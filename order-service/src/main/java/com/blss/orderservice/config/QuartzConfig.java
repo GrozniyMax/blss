@@ -13,8 +13,7 @@ import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 import java.util.Properties;
 
 /**
- * Quartz scheduler configuration.
- * Uses RAM job store (no database tables required).
+ * Конфигурация Quartz scheduler.
  */
 @Slf4j
 @Configuration
@@ -53,9 +52,6 @@ public class QuartzConfig {
         return factory;
     }
 
-    /**
-     * JobDetail for report generation - uses Spring bean.
-     */
     @Bean
     public JobDetail reportJobDetail() {
         log.info("Creating ReportJob JobDetail");
@@ -66,15 +62,12 @@ public class QuartzConfig {
                 .build();
     }
 
-    /**
-     * Trigger for report generation - every minute.
-     */
     @Bean
     public Trigger reportTrigger() {
         log.info("Creating report trigger with cron: 0 * * * * ? (every minute)");
         CronScheduleBuilder scheduleBuilder = CronScheduleBuilder.cronSchedule("0 0 0 * * ?")
                 .withMisfireHandlingInstructionFireAndProceed();
-        
+
         return TriggerBuilder.newTrigger()
                 .forJob(reportJobDetail())
                 .withIdentity("reportTrigger", "reporting")
@@ -83,11 +76,8 @@ public class QuartzConfig {
                 .build();
     }
 
-    /**
-     * Custom JobFactory that gets job instances from Spring context.
-     */
     public static class AutowiringSpringBeanJobFactory extends SpringBeanJobFactory {
-        
+
         private final ApplicationContext applicationContext;
 
         public AutowiringSpringBeanJobFactory(ApplicationContext applicationContext) {
@@ -96,7 +86,6 @@ public class QuartzConfig {
 
         @Override
         protected Object createJobInstance(TriggerFiredBundle bundle) throws Exception {
-            // Get job bean from Spring context (supports constructor injection)
             return applicationContext.getBean(bundle.getJobDetail().getJobClass());
         }
     }

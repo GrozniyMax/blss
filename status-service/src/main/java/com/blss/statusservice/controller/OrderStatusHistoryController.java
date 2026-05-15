@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 /**
- * Controller for order status history.
+ * История статусов заказов.
  */
 @RestController
 @RequestMapping("/order")
@@ -24,14 +24,6 @@ public class OrderStatusHistoryController {
 
     private final OrderStatusHistoryService historyService;
 
-    /**
-     * Get status history for an order.
-     * Requires authentication.
-     *
-     * @param id Order ID
-     * @param username Authenticated username
-     * @return Status history response
-     */
     @GetMapping("/{id}/history")
     public ResponseEntity<OrderStatusHistoryResponse> getOrderHistory(
             @PathVariable UUID id,

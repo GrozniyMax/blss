@@ -7,7 +7,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * JMS producer for sending status-related events.
+ * Отправляет уведомления в JMS.
  */
 @Component
 @RequiredArgsConstructor
@@ -20,11 +20,6 @@ public class StatusNotificationProducer {
     @Value("${jms.queue.notifications}")
     private String queueName;
 
-    /**
-     * Sends notification event to JMS queue.
-     *
-     * @param message Message to send
-     */
     public void sendNotification(String message) {
         log.info("Sending notification to queue {}: {}", queueName, message);
         jmsTemplate.convertAndSend(queueName, message);

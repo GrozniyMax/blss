@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Health check and info controller for status-service.
+ * Health check и информация о сервисе.
  */
 @RestController
 @RequestMapping("/actuator")

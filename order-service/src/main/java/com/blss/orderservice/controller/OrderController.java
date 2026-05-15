@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 /**
- * Controller for order management.
+ * Управление заказами.
  */
 @RestController
 @RequestMapping("/order")

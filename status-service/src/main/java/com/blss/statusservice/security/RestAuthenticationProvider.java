@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Authentication provider that validates credentials against user-service via REST API.
+ * Аутентификация через user-service по REST API.
  */
 @Component
 @RequiredArgsConstructor

@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Managed connection implementation for Bitrix24 REST API.
+ * Управляемое соединение с Bitrix24.
  */
 @Slf4j
 public class BitrixManagedConnection implements ManagedConnection, BitrixConnection {

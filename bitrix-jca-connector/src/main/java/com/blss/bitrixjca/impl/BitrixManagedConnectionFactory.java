@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Managed connection factory for creating Bitrix24 connections.
+ * Фабрика управляемых соединений.
  */
 @Slf4j
 @Getter

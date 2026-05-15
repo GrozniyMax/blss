@@ -11,8 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.Serializable;
 
 /**
- * Resource adapter for Bitrix24 REST API integration.
- * This is an outbound-only adapter.
+ * Ресурс-адаптер Bitrix24.
  */
 @Slf4j
 @Connector(

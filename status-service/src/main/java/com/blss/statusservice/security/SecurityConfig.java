@@ -14,7 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Spring Security configuration for status-service with REST-based authentication.
+ * Конфигурация безопасности для status-service.
  */
 @Slf4j
 @Configuration
@@ -27,17 +27,11 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    /**
-     * Authentication manager using REST provider.
-     */
     @Bean
     public AuthenticationManager authenticationManager() {
         return new ProviderManager(restAuthenticationProvider);
     }
 
-    /**
-     * Security filter chain configuration with HTTP Basic authentication.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.info("Configuring Spring Security with REST authentication for status-service");

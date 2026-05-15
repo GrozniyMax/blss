@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Global exception handler for status-service.
+ * Обработка исключений.
  */
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -94,9 +94,6 @@ public class ApiExceptionHandler {
         return error.getField() + ": " + details;
     }
 
-    /**
-     * Exception for resource not found.
-     */
     public static class NotFoundException extends RuntimeException {
         public NotFoundException(String message) {
             super(message);
