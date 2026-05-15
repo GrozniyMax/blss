@@ -1,4 +1,4 @@
-package com.blss.orderservice.service;
+package com.blss.orderservice.service.order;
 
 import com.blss.orderservice.db.order.OrderItemRepo;
 import com.blss.orderservice.domain.order.Status;
@@ -7,11 +7,13 @@ import com.blss.orderservice.jms.OrderStatusProducer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -48,6 +50,23 @@ public class OrderStatusUpdater {
 
     }
 
+
+    public void revertStatus(UUID orderId, Status revertFrom) {
+        var previous = revert(revertFrom);
+
+        var current = orderService.getStatus(orderId);
+
+        if (previous != null && current == revertFrom) {
+            orderService.updateStatus(orderId, previous);
+            statusProducer.sendStatusChange(orderId, previous);
+            orderDocumentSyncService.sendOrderDocument(orderId);
+            return;
+        }
+
+        log.error("Failed to revert status: orderId={}, currentStatus={}, revertFrom={}",
+                orderId, current, revertFrom);
+    }
+
     public void cancel(UUID orderId) {
         var current = orderService.getStatus(orderId);
         if (current != Status.DONE && current != Status.CANCELED) {
@@ -66,6 +85,16 @@ public class OrderStatusUpdater {
             case IN_DELIVERY -> Status.READY_FOR_PICKUP;
             case READY_FOR_PICKUP -> Status.DONE;
             case CANCELED, DONE -> null;
+        };
+    }
+
+    private Status revert(Status status) {
+        return switch (status) {
+            case CREATED -> null;
+            case PROCESSING -> Status.CREATED;
+            case IN_DELIVERY -> Status.PROCESSING;
+            case READY_FOR_PICKUP -> Status.IN_DELIVERY;
+            case CANCELED, DONE -> Status.READY_FOR_PICKUP;
         };
     }
 }

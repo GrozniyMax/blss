@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Implementation of BitrixConnectionFactory.
+ * Реализация фабрики соединений.
  */
 @Slf4j
 @RequiredArgsConstructor

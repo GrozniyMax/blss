@@ -8,8 +8,7 @@ import org.quartz.JobExecutionException;
 import org.springframework.stereotype.Component;
 
 /**
- * Quartz job for generating daily reports.
- * Runs daily at midnight and generates report for the previous day.
+ * Задача генерации ежедневных отчетов.
  */
 @Slf4j
 @Component

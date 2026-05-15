@@ -13,8 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Spring configuration for Bitrix24 JCA connector.
- * Creates and configures the JCA connection factory for Bitrix24 REST API integration.
+ * Конфигурация Bitrix24 JCA коннектора.
  */
 @Slf4j
 @Configuration
@@ -24,19 +23,12 @@ public class BitrixJcaConfiguration {
 
     private final BitrixProperties properties;
 
-    /**
-     * Creates the Bitrix24 resource adapter.
-     */
     @Bean
     public BitrixResourceAdapter bitrixResourceAdapter() {
         log.info("Creating Bitrix24 Resource Adapter");
         return new BitrixResourceAdapter();
     }
 
-    /**
-     * Creates the managed connection factory for Bitrix24.
-     * Configured with properties from application.yaml.
-     */
     @Bean
     @ConditionalOnProperty(prefix = "bitrix", name = "webhook-url")
     public BitrixManagedConnectionFactory bitrixManagedConnectionFactory() {
@@ -65,10 +57,6 @@ public class BitrixJcaConfiguration {
         return mcf;
     }
 
-    /**
-     * Creates the connection factory for Bitrix24.
-     * This is the main bean that application code uses to obtain connections.
-     */
     @Bean
     @ConditionalOnProperty(prefix = "bitrix", name = "webhook-url")
     public BitrixConnectionFactory bitrixConnectionFactory(
@@ -78,10 +66,6 @@ public class BitrixJcaConfiguration {
         return (BitrixConnectionFactory) managedConnectionFactory.createConnectionFactory();
     }
 
-    /**
-     * Creates a connection to Bitrix24.
-     * This is a prototype-scoped bean that provides a connection handle.
-     */
     @Bean
     @ConditionalOnProperty(prefix = "bitrix", name = {"webhook-url", "enabled"}, havingValue = "true")
     public BitrixConnection bitrixConnection(

@@ -2,7 +2,6 @@ package com.blss.orderservice.client;
 
 import com.blss.orderservice.client.dto.UserAuthenticationRequest;
 import com.blss.orderservice.client.dto.UserValidationResponse;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

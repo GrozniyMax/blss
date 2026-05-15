@@ -1,4 +1,4 @@
-package com.blss.orderservice.service;
+package com.blss.orderservice.service.order;
 
 import com.blss.orderservice.client.UserServiceClient;
 import com.blss.orderservice.db.DeliveryPointRepo;
@@ -17,6 +17,7 @@ import com.blss.orderservice.service.tx.TransactionExecutor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,6 +28,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -56,9 +58,6 @@ public class OrderService {
 
     OrderStatusProducer orderStatusProducer;
 
-    /**
-     * Creates a new order.
-     */
     public CreationOrderResponse createOrder(String owner, UUID location, List<UUID> productIds) {
         var response = transactionExecutor.inTransaction(() -> {
             var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
@@ -124,6 +123,20 @@ public class OrderService {
         transactionExecutor.inTransaction(() ->
                 orderRepo.updateStatus(id, status).orElseThrow(() -> new NotFoundException(Order.class, id))
         );
+    }
+
+    public void revertStatus(UUID orderId, String reason) {
+        log.info("Reverting order status: orderId={}, reason={}", orderId, reason);
+
+        transactionExecutor.inTransaction(() -> {
+            var order = orderRepo.findById(orderId)
+                    .orElseThrow(() -> new NotFoundException(Order.class, orderId));
+
+            orderRepo.updateStatus(orderId, Status.CREATED)
+                    .orElseThrow(() -> new NotFoundException(Order.class, orderId));
+
+            log.info("Order status reverted to CREATED: orderId={}", orderId);
+        });
     }
 
     public FullOrder getOrderContentById(UUID id) {

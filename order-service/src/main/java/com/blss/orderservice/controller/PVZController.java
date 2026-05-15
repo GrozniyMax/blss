@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller for PVZ (pickup point) operations.
+ * Операции с ПВЗ.
  */
 @RestController
 @RequiredArgsConstructor

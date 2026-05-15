@@ -1,5 +1,8 @@
 package com.blss.orderservice.domain.order;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum Status {
     /**
      * Заказ создан
@@ -28,4 +31,13 @@ public enum Status {
      */
     DONE;
 
+    @JsonValue
+    public String toJson() {
+        return name();
+    }
+
+    @JsonCreator
+    public static Status fromJson(String value) {
+        return valueOf(value.toUpperCase());
+    }
 }

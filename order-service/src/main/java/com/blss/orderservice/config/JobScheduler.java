@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 /**
- * Component to schedule Quartz jobs after application startup.
+ * Планировщик Quartz-задач.
  */
 @Slf4j
 @Component

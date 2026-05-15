@@ -11,9 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Connection handle implementation for Bitrix24.
- * This is the object that application code interacts with.
- * It delegates all operations to the underlying managed connection.
+ * Реализация соединения с Bitrix24.
  */
 public class BitrixConnectionImpl implements BitrixConnection {
 

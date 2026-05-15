@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 
 /**
- * Controller for report generation.
+ * Генерация отчетов.
  */
 @RestController
 @RequestMapping("/reports")

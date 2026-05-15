@@ -14,15 +14,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Spring Security configuration for order-service with REST-based authentication.
+ * Конфигурация безопасности для order-service.
  *
- * Role-based access control:
+ * Роли:
  * <ul>
- *     <li><b>ADMIN</b> — полный доступ ко всем функциям системы</li>
- *     <li><b>MANAGER</b> — управление заказами, складскими операциями, создание ПВЗ</li>
- *     <li><b>CONSULTANT</b> — выдача заказов: просмотр по ID, обновление статуса</li>
- *     <li><b>WAREHOUSE</b> — только отметка доставки ({@code /mark-delivered})</li>
- *     <li><b>USER</b> — создание заказов, просмотр только своих заказов</li>
+ *     <li><b>ADMIN</b> — полный доступ</li>
+ *     <li><b>MANAGER</b> — управление заказами, складом, ПВЗ</li>
+ *     <li><b>CONSULTANT</b> — выдача заказов</li>
+ *     <li><b>WAREHOUSE</b> — отметка доставки</li>
+ *     <li><b>USER</b> — создание заказов</li>
  * </ul>
  */
 @Slf4j
@@ -36,17 +36,11 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    /**
-     * Authentication manager using REST provider.
-     */
     @Bean
     public AuthenticationManager authenticationManager() {
         return new ProviderManager(restAuthenticationProvider);
     }
 
-    /**
-     * Security filter chain configuration with HTTP Basic authentication.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.info("Configuring Spring Security with REST authentication for order-service");

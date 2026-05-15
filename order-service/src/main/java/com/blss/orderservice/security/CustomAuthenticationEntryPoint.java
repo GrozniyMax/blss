@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * Custom authentication entry point that returns JSON response on 401 Unauthorized.
+ * Точка входа аутентификации (401).
  */
 @Component
 @RequiredArgsConstructor

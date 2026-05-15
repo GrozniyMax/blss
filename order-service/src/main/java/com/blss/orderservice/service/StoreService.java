@@ -20,9 +20,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-/**
- * Сервис отвечающий за логику
- */
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -34,9 +31,6 @@ public class StoreService {
 
     TransactionExecutor transactionExecutor;
 
-    /**
-     * Создание товара в магазине (на главном складе)
-     */
     public UUID createProduct(Product product) {
         return createProduct(product, 1);
     }
@@ -87,11 +81,6 @@ public class StoreService {
                 .orElseThrow(() -> new NotFoundException(StoreItem.class, productId));
     }
 
-    /**
-     * Обновление количества товара на складе
-     * @param productId товар
-     * @param change количество для изменения (может быть любого знака)
-     */
     public void updateItemsCount(UUID productId, Integer change) {
         transactionExecutor.inTransaction(() -> {
             try {

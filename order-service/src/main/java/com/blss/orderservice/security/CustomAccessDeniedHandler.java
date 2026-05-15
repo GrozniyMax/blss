@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * Custom access denied handler that returns JSON response on 403 Forbidden.
+ * Обработка доступа запрещён (403).
  */
 @Component
 @RequiredArgsConstructor

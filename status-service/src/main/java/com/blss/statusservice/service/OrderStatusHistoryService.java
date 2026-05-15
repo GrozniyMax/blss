@@ -3,8 +3,8 @@ package com.blss.statusservice.service;
 import com.blss.statusservice.client.UserServiceClient;
 import com.blss.statusservice.db.OrderStatusHistoryRepo;
 import com.blss.statusservice.domain.OrderStatusHistory;
-import com.blss.statusservice.dto.output.OrderStatusHistoryResponse;
-import com.blss.statusservice.dto.output.StatusHistoryEntryDto;
+import com.blss.statusservice.dto.OrderStatusHistoryResponse;
+import com.blss.statusservice.dto.StatusHistoryEntryDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Service for order status history management.
+ * История изменений статусов заказов.
  */
 @Service
 @RequiredArgsConstructor
@@ -27,19 +27,9 @@ public class OrderStatusHistoryService {
     private final OrderStatusHistoryRepo historyRepo;
     private final UserServiceClient userServiceClient;
 
-    /**
-     * Get status history for an order.
-     * Validates that the user exists before returning history.
-     *
-     * @param orderId Order ID
-     * @param username Username requesting the history
-     * @return Order status history response
-     * @throws IllegalArgumentException if user doesn't exist
-     */
     public OrderStatusHistoryResponse getStatusHistory(UUID orderId, String username) {
         log.info("Getting status history for order: {}, user: {}", orderId, username);
 
-        // Validate user exists via REST call to user-service
         if (!userServiceClient.existsByUsername(username)) {
             log.warn("User not found: {}", username);
             throw new IllegalArgumentException("User not found: " + username);
@@ -59,13 +49,6 @@ public class OrderStatusHistoryService {
         return new OrderStatusHistoryResponse(orderId, historyDto);
     }
 
-    /**
-     * Save status change to history.
-     * Called when order status changes.
-     *
-     * @param orderId Order ID
-     * @param status New status
-     */
     public void saveStatusChange(UUID orderId, String status) {
         log.info("Saving status change: orderId={}, status={}", orderId, status);
 

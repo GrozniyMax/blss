@@ -1,6 +1,7 @@
 package com.blss.statusservice.jms;
 
 import com.blss.statusservice.dto.OrderStatusChangedEvent;
+import com.blss.statusservice.service.FailureSimulation;
 import com.blss.statusservice.service.OrderStatusHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,7 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
 /**
- * JMS consumer for receiving order status change events from order-service.
+ * Слушает изменения статусов из order-service.
  */
 @Component
 @RequiredArgsConstructor
@@ -16,12 +17,9 @@ import org.springframework.stereotype.Component;
 public class OrderStatusConsumer {
 
     private final OrderStatusHistoryService historyService;
+    private final OrderStatusRevertProducer revertProducer;
+    private final FailureSimulation failureSimulation;
 
-    /**
-     * Listens for order status change events from order-service.
-     *
-     * @param event Order status changed event
-     */
     @JmsListener(destination = "${jms.queue.order-status-changed}")
     public void onOrderStatusChanged(OrderStatusChangedEvent event) {
         log.info("Received order status change event: orderId={}, status={}, timestamp={}",
@@ -29,9 +27,16 @@ public class OrderStatusConsumer {
                 event.status(),
                 event.timestamp());
 
-        // Save status change to database
-        historyService.saveStatusChange(event.id(), event.status());
-
-        log.info("Order status change event processed: orderId={}", event.id());
+        try {
+            if (failureSimulation.shouldFail()) {
+                throw new RuntimeException("Simulated failure");
+            }
+            historyService.saveStatusChange(event.id(), event.status());
+            log.info("Order status change event processed: orderId={}", event.id());
+        } catch (Exception e) {
+            log.error("Failed to process status change: orderId={}, status={}, error={}",
+                    event.id(), event.status(), e.getMessage(), e);
+            revertProducer.sendRevertRequest(event, e.getMessage());
+        }
     }
 }

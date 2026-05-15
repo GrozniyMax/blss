@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * JMS producer for sending order status change events.
+ * Отправляет события об изменении статуса заказа.
  */
 @Component
 @RequiredArgsConstructor
@@ -24,12 +24,6 @@ public class OrderStatusProducer {
     @Value("${jms.queue.order-status-changed}")
     private String queueName;
 
-    /**
-     * Sends order status change event to JMS queue.
-     *
-     * @param orderId Order ID
-     * @param status  New order status
-     */
     public void sendStatusChange(UUID orderId, Status status) {
         log.info("Sending order status change event: orderId={}, status={}", orderId, status);
 

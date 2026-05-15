@@ -1,7 +1,7 @@
 package com.blss.orderservice.dto.output;
 
 import com.blss.orderservice.domain.order.Status;
-import com.blss.orderservice.service.OrderService;
+import com.blss.orderservice.service.order.OrderService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
