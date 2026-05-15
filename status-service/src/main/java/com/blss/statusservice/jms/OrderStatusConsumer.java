@@ -9,7 +9,7 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
 /**
- * JMS consumer for receiving order status change events from order-service.
+ * Слушает изменения статусов из order-service.
  */
 @Component
 @RequiredArgsConstructor
@@ -20,9 +20,6 @@ public class OrderStatusConsumer {
     private final OrderStatusRevertProducer revertProducer;
     private final FailureSimulation failureSimulation;
 
-    /**
-     * Обрабатывает входящие сообщения. При проблемах шлет в revert-топик
-     */
     @JmsListener(destination = "${jms.queue.order-status-changed}")
     public void onOrderStatusChanged(OrderStatusChangedEvent event) {
         log.info("Received order status change event: orderId={}, status={}, timestamp={}",

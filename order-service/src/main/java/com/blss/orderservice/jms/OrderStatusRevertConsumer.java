@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * Получает запросы на откат статуса.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j

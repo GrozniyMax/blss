@@ -58,9 +58,6 @@ public class OrderService {
 
     OrderStatusProducer orderStatusProducer;
 
-    /**
-     * Creates a new order.
-     */
     public CreationOrderResponse createOrder(String owner, UUID location, List<UUID> productIds) {
         var response = transactionExecutor.inTransaction(() -> {
             var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
@@ -128,25 +125,16 @@ public class OrderService {
         );
     }
 
-    /**
-     * Reverts order status when status-service fails to process a status change.
-     * Moves the order back to CREATED status to allow reprocessing.
-     *
-     * @param orderId Order ID to revert
-     * @param reason  Reason for revert (error message from status-service)
-     */
     public void revertStatus(UUID orderId, String reason) {
         log.info("Reverting order status: orderId={}, reason={}", orderId, reason);
-        
+
         transactionExecutor.inTransaction(() -> {
             var order = orderRepo.findById(orderId)
                     .orElseThrow(() -> new NotFoundException(Order.class, orderId));
-            
-            // Revert to CREATED status to allow reprocessing
-            // In production, you might want more sophisticated logic based on current status
+
             orderRepo.updateStatus(orderId, Status.CREATED)
                     .orElseThrow(() -> new NotFoundException(Order.class, orderId));
-            
+
             log.info("Order status reverted to CREATED: orderId={}", orderId);
         });
     }
