@@ -16,11 +16,10 @@ import org.springframework.stereotype.Component;
 public class OrderStatusConsumer {
 
     private final OrderStatusHistoryService historyService;
+    private final OrderStatusRevertProducer revertProducer;
 
     /**
-     * Listens for order status change events from order-service.
-     *
-     * @param event Order status changed event
+     * Обрабатывает входящие сообщения. При проблемах шлет в revert-топик
      */
     @JmsListener(destination = "${jms.queue.order-status-changed}")
     public void onOrderStatusChanged(OrderStatusChangedEvent event) {
@@ -29,9 +28,13 @@ public class OrderStatusConsumer {
                 event.status(),
                 event.timestamp());
 
-        // Save status change to database
-        historyService.saveStatusChange(event.id(), event.status());
-
-        log.info("Order status change event processed: orderId={}", event.id());
+        try {
+            historyService.saveStatusChange(event.id(), event.status());
+            log.info("Order status change event processed: orderId={}", event.id());
+        } catch (Exception e) {
+            log.error("Failed to process status change: orderId={}, status={}, error={}",
+                    event.id(), event.status(), e.getMessage(), e);
+            revertProducer.sendRevertRequest(event, e.getMessage());
+        }
     }
 }

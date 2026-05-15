@@ -1,6 +1,7 @@
 package com.blss.orderservice.config;
 
 import com.blss.orderservice.dto.OrderStatusChangedEvent;
+import com.blss.orderservice.jms.dto.OrderStatusRevertEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +19,8 @@ public class JmsConfig {
         converter.setTargetType(MessageType.TEXT);
         converter.setTypeIdPropertyName("_type");
         converter.setObjectMapper(objectMapper);
-        converter.setTypeIdMappings(Map.of("orderStatusChangedEvent", OrderStatusChangedEvent.class));
+        converter.setTypeIdMappings(Map.of("orderStatusChangedEvent", OrderStatusChangedEvent.class,
+                "orderStatusRevertEvent", OrderStatusRevertEvent.class));
         return converter;
     }
 }

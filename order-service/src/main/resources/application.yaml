@@ -25,7 +25,7 @@ user:
 jms:
   queue:
     order-status-changed: order.status.changed
-    order-status-retry: order.status.retry
+    order-status-revert: order.status.revert
 
 bitrix:
   enabled: ${BITRIX_ENABLED:false}
