@@ -21,6 +21,7 @@ jms:
   queue:
     order-status-changed: order.status.changed
     notifications: status.notifications
+    order-status-retry: order.status.retry
 
 # Service URLs
 user:
