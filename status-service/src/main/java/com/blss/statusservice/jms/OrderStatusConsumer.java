@@ -1,6 +1,7 @@
 package com.blss.statusservice.jms;
 
 import com.blss.statusservice.dto.OrderStatusChangedEvent;
+import com.blss.statusservice.service.FailureSimulation;
 import com.blss.statusservice.service.OrderStatusHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ public class OrderStatusConsumer {
 
     private final OrderStatusHistoryService historyService;
     private final OrderStatusRevertProducer revertProducer;
+    private final FailureSimulation failureSimulation;
 
     /**
      * Обрабатывает входящие сообщения. При проблемах шлет в revert-топик
@@ -29,6 +31,9 @@ public class OrderStatusConsumer {
                 event.timestamp());
 
         try {
+            if (failureSimulation.shouldFail()) {
+                throw new RuntimeException("Simulated failure");
+            }
             historyService.saveStatusChange(event.id(), event.status());
             log.info("Order status change event processed: orderId={}", event.id());
         } catch (Exception e) {
