@@ -1,4 +1,4 @@
-package com.blss.statusservice.dto.output;
+package com.blss.statusservice.dto;
 
 import java.util.List;
 import java.util.UUID;

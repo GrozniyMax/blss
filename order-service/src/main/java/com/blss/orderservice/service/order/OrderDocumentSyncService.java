@@ -1,4 +1,4 @@
-package com.blss.orderservice.service;
+package com.blss.orderservice.service.order;
 
 import com.blss.bitrixjca.api.BitrixConnection;
 import com.blss.bitrixjca.api.BitrixConnectionFactory;
