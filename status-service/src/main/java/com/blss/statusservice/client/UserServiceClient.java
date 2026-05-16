@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Client for calling user-service REST API.
@@ -44,7 +45,7 @@ public class UserServiceClient {
                         username, response.exists(), response.enabled(), response.roles()))
                 .onErrorResume(e -> {
                     log.error("Error validating user {}: {}", username, e.getMessage(), e);
-                    return Mono.just(new UserValidationResponse(username, false, false, java.util.List.of()));
+                    return Mono.just(new UserValidationResponse(username, false, false, List.of()));
                 });
     }
 
@@ -66,11 +67,11 @@ public class UserServiceClient {
                 .retrieve()
                 .bodyToMono(UserValidationResponse.class)
                 .timeout(Duration.ofSeconds(5))
-                .doOnSuccess(response -> log.info("User {} authentication result: exists={}, enabled={}, roles={}", 
+                .doOnSuccess(response -> log.info("User {} authentication result: exists={}, enabled={}, roles={}",
                         username, response.exists(), response.enabled(), response.roles()))
                 .onErrorResume(e -> {
                     log.error("Error authenticating user {}: {}", username, e.getMessage(), e);
-                    return Mono.just(new UserValidationResponse(username, false, false, java.util.List.of()));
+                    return Mono.just(new UserValidationResponse(username, false, false, List.of()));
                 });
     }
 

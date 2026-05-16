@@ -65,7 +65,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
     }
 
     @Override
-    public void destroy() throws ResourceException {
+    public void destroy() {
         log.debug("Destroying Bitrix24 managed connection");
         valid = false;
         connectionHandles.clear();
@@ -73,7 +73,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
     }
 
     @Override
-    public void cleanup() throws ResourceException {
+    public void cleanup() {
         log.debug("Cleaning up Bitrix24 managed connection");
         ConnectionEvent event = new ConnectionEvent(this, ConnectionEvent.CONNECTION_CLOSED);
         for (ConnectionEventListener listener : connectionEventListeners) {
@@ -82,7 +82,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
     }
 
     @Override
-    public void associateConnection(Object connection) throws ResourceException {
+    public void associateConnection(Object connection) {
         log.debug("Associating connection handle with managed connection");
         if (connection instanceof BitrixConnectionImpl handle) {
             handle.associateWith(this);
@@ -100,31 +100,27 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
     }
 
     @Override
-    public PrintWriter getLogWriter() throws ResourceException {
+    public PrintWriter getLogWriter() {
         return logWriter;
     }
 
     @Override
-    public void setLogWriter(PrintWriter printWriter) throws ResourceException {
+    public void setLogWriter(PrintWriter printWriter) {
         this.logWriter = printWriter;
     }
 
     @Override
-    public ManagedConnectionMetaData getMetaData() throws ResourceException {
+    public ManagedConnectionMetaData getMetaData() {
         return new BitrixConnectionMetaData();
     }
 
-    public BitrixManagedConnectionFactory getManagedConnectionFactory() {
-        return managedConnectionFactory;
-    }
-
     @Override
-    public javax.transaction.xa.XAResource getXAResource() throws ResourceException {
+    public javax.transaction.xa.XAResource getXAResource() {
         return null;
     }
 
     @Override
-    public LocalTransaction getLocalTransaction() throws ResourceException {
+    public LocalTransaction getLocalTransaction() {
         return null;
     }
 
@@ -336,7 +332,6 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                @SuppressWarnings("unchecked")
                 Map<String, Object> result = objectMapper.readValue(
                         response.body(), 
                         Map.class
@@ -351,7 +346,6 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
             log.error("Failed to call Bitrix24 API", e);
             throw new ResourceException("Failed to call Bitrix24 API", e);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw new ResourceException("Bitrix24 API call interrupted", e);
         }
     }
@@ -362,7 +356,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
     }
 
     @Override
-    public void close() throws ResourceException {
+    public void close() {
         log.debug("Closing Bitrix24 connection handle");
     }
 

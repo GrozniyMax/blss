@@ -21,7 +21,7 @@ public class OrderStatusConsumer {
     private final FailureSimulation failureSimulation;
 
     @JmsListener(destination = "${jms.queue.order-status-changed}")
-    public void onOrderStatusChanged(OrderStatusChangedEvent event) {
+public void onOrderStatusChanged(OrderStatusChangedEvent event) {
         log.info("Received order status change event: orderId={}, status={}, timestamp={}",
                 event.id(),
                 event.status(),

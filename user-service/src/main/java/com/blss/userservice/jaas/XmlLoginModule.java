@@ -11,12 +11,15 @@ import javax.security.auth.spi.LoginModule;
 import java.security.Principal;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * JAAS LoginModule that authenticates users against XML user repository.
  */
 public class XmlLoginModule implements LoginModule {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(XmlLoginModule.class);
+    private static final Logger log = LoggerFactory.getLogger(XmlLoginModule.class);
 
     private Subject subject;
     private CallbackHandler callbackHandler;

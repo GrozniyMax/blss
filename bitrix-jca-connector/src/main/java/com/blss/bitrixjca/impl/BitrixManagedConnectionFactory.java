@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Фабрика управляемых соединений.
@@ -89,8 +90,8 @@ public class BitrixManagedConnectionFactory implements ManagedConnectionFactory,
         this.logWriter = printWriter;
     }
 
-    public java.util.logging.Logger getParentLogger() {
-        return java.util.logging.Logger.getLogger(BitrixManagedConnectionFactory.class.getName());
+    public Logger getParentLogger() {
+        return Logger.getLogger(BitrixManagedConnectionFactory.class.getName());
     }
 
     @Override

@@ -7,6 +7,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 /**
  * Задача генерации ежедневных отчетов.
  */
@@ -21,7 +23,7 @@ public class ReportJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         try {
             log.info("Executing scheduled report generation job");
-            java.time.LocalDate date = java.time.LocalDate.now().minusDays(1);
+            LocalDate date = LocalDate.now().minusDays(1);
             reportService.generateReport(date);
             log.info("Report generation completed successfully for date: {}", date);
         } catch (Exception e) {

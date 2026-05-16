@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Отправляет уведомления в JMS.
  */
@@ -13,7 +16,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StatusNotificationProducer {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StatusNotificationProducer.class);
+    private static final Logger log = LoggerFactory.getLogger(StatusNotificationProducer.class);
 
     private final JmsTemplate jmsTemplate;
 

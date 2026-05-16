@@ -9,6 +9,7 @@ import jakarta.resource.spi.endpoint.MessageEndpointFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
+import javax.transaction.xa.XAResource;
 
 /**
  * Ресурс-адаптер Bitrix24.
@@ -50,7 +51,7 @@ public class BitrixResourceAdapter implements ResourceAdapter, Serializable {
     }
 
     @Override
-    public javax.transaction.xa.XAResource[] getXAResources(ActivationSpec[] specs) {
-        return new javax.transaction.xa.XAResource[0];
+    public XAResource[] getXAResources(ActivationSpec[] specs) {
+        return new XAResource[0];
     }
 }
