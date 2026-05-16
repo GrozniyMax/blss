@@ -10,9 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Реализация соединения с Bitrix24.
- */
 public class BitrixConnectionImpl implements BitrixConnection {
 
     private BitrixManagedConnection managedConnection;

@@ -13,9 +13,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * Конфигурация безопасности для status-service.
- */
 @Slf4j
 @Configuration
 @EnableWebSecurity

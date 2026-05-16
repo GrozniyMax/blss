@@ -10,9 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-/**
- * Отправляет запрос на откат статуса в order-service.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j

@@ -7,9 +7,6 @@ import org.quartz.*;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-/**
- * Планировщик Quartz-задач.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -25,10 +25,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * Repository for loading and caching user accounts from XML configuration file.
- * Loads users into cache at startup and persists changes to file on shutdown and every minute.
- */
 @Slf4j
 @Repository
 public class XmlUserRepository {
@@ -91,9 +87,6 @@ public class XmlUserRepository {
         log.info("Scheduled periodic users cache save every 1 minute");
     }
 
-    /**
-     * Loads user accounts from XML file into cache.
-     */
     public void loadUsers() {
         try {
             XmlUser xmlUser = readXmlFile();
@@ -129,46 +122,20 @@ public class XmlUserRepository {
         log.info("Saved {} users to XML file", xmlUser.getUsers() != null ? xmlUser.getUsers().size() : 0);
     }
 
-    /**
-     * Finds a user account by username.
-     *
-     * @param username the username to search for
-     * @return Optional containing the user account if found
-     */
     public Optional<XmlUser.UserAccount> findByUsername(String username) {
         return Optional.ofNullable(usersCache.get(username.toLowerCase()));
     }
 
-    /**
-     * Checks if a user exists by username.
-     *
-     * @param username the username to check
-     * @return true if user exists
-     */
     public boolean existsByUsername(String username) {
         return usersCache.containsKey(username.toLowerCase());
     }
 
-    /**
-     * Gets all usernames.
-     *
-     * @return list of all usernames
-     */
     public List<String> getAllUsernames() {
         return Collections.unmodifiableList(
                 usersCache.keySet().stream().collect(Collectors.toList())
         );
     }
 
-    /**
-     * Creates a new user account.
-     *
-     * @param username the username
-     * @param password the plain text password
-     * @param roles the list of roles
-     * @return the created user account
-     * @throws IllegalArgumentException if user already exists
-     */
     public XmlUser.UserAccount create(String username, String password, List<Role> roles) {
         String normalizedUsername = username.toLowerCase();
 
@@ -191,16 +158,6 @@ public class XmlUserRepository {
         return newAccount;
     }
 
-    /**
-     * Updates an existing user account.
-     *
-     * @param username the username to update
-     * @param newPassword the new plain text password (null to keep unchanged)
-     * @param newRoles the new list of roles (null to keep unchanged)
-     * @param enabled the new enabled status (null to keep unchanged)
-     * @return the updated user account
-     * @throws IllegalArgumentException if user does not exist
-     */
     public Optional<XmlUser.UserAccount> update(String username, String newPassword, List<Role> newRoles, Boolean enabled) {
         String normalizedUsername = username.toLowerCase();
         XmlUser.UserAccount existingAccount = usersCache.get(normalizedUsername);
@@ -227,12 +184,6 @@ public class XmlUserRepository {
         return Optional.of(existingAccount);
     }
 
-    /**
-     * Deletes a user account.
-     *
-     * @param username the username to delete
-     * @return true if user was deleted, false if user did not exist
-     */
     public boolean delete(String username) {
         String normalizedUsername = username.toLowerCase();
         XmlUser.UserAccount removed = usersCache.remove(normalizedUsername);
@@ -252,9 +203,6 @@ public class XmlUserRepository {
         writeXmlFile(xmlUser);
     }
 
-    /**
-     * Reloads users from XML file (useful for runtime updates).
-     */
     public void reload() {
         loadUsers();
     }

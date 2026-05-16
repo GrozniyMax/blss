@@ -13,9 +13,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * История изменений статусов заказов.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j

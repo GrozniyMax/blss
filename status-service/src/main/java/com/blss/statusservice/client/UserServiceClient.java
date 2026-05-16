@@ -12,9 +12,6 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 
-/**
- * Client for calling user-service REST API.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -25,10 +22,6 @@ public class UserServiceClient {
     @Value("${user.service.url:http://localhost:25104}")
     private String userServiceUrl;
 
-    /**
-     * Validate user by username.
-     * @return Mono with UserValidationResponse
-     */
     public Mono<UserValidationResponse> validateUser(String username) {
         log.info("Validating user {} via user-service", username);
         return webClientBuilder
@@ -49,10 +42,6 @@ public class UserServiceClient {
                 });
     }
 
-    /**
-     * Authenticate user with password.
-     * @return Mono with UserValidationResponse
-     */
     public Mono<UserValidationResponse> authenticateUser(String username, String password) {
         log.info("Authenticating user {} via user-service", username);
         var request = new UserAuthenticationRequest(username, password);
@@ -75,10 +64,6 @@ public class UserServiceClient {
                 });
     }
 
-    /**
-     * Check if user exists.
-     * @return true if user exists and is enabled
-     */
     public boolean existsByUsername(String username) {
         log.info("Checking if user {} exists", username);
         boolean exists = validateUser(username)

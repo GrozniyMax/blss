@@ -5,10 +5,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-/**
- * Bridge between Spring context and JAAS LoginModule.
- * Provides Spring-managed beans to JAAS which is instantiated outside of Spring context.
- */
 @Component
 @RequiredArgsConstructor
 public class JaasBridge {
@@ -22,12 +18,6 @@ public class JaasBridge {
         instance = this;
     }
 
-    /**
-     * Get the singleton instance of JaasBridge.
-     *
-     * @return the JaasBridge instance
-     * @throws IllegalStateException if the bridge is not yet initialized
-     */
     public static JaasBridge get() {
         if (instance == null) {
             throw new IllegalStateException(

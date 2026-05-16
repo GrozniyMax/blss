@@ -11,8 +11,5 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "security.users")
 public class SecurityUsersProperties {
 
-    /**
-     * Path to the XML file containing user accounts.
-     */
     private String xmlPath = "./users.xml";
 }

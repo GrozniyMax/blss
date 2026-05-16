@@ -14,9 +14,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * JAAS LoginModule that authenticates users against XML user repository.
- */
 public class XmlLoginModule implements LoginModule {
 
     private static final Logger log = LoggerFactory.getLogger(XmlLoginModule.class);

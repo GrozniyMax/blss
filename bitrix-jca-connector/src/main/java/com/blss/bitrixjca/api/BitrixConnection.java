@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Соединение с Bitrix24 API.
- */
 public interface BitrixConnection extends AutoCloseable {
 
     String createDocument(

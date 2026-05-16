@@ -15,9 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-/**
- * Custom authentication entry point that returns JSON response on 401 Unauthorized.
- */
 @Component
 @RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {

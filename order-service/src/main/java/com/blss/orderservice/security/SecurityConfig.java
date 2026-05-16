@@ -13,18 +13,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * Конфигурация безопасности для order-service.
- *
- * Роли:
- * <ul>
- *     <li><b>ADMIN</b> — полный доступ</li>
- *     <li><b>MANAGER</b> — управление заказами, складом, ПВЗ</li>
- *     <li><b>CONSULTANT</b> — выдача заказов</li>
- *     <li><b>WAREHOUSE</b> — отметка доставки</li>
- *     <li><b>USER</b> — создание заказов</li>
- * </ul>
- */
 @Slf4j
 @Configuration
 @EnableWebSecurity

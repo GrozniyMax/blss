@@ -8,9 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
-/**
- * Слушает изменения статусов из order-service.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j

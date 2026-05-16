@@ -9,9 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 
-/**
- * Задача генерации ежедневных отчетов.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -5,9 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-/**
- * Сервис статусов заказов.
- */
 @SpringBootApplication
 @EnableJms
 @EnableAsync

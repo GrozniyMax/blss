@@ -8,9 +8,6 @@ import jakarta.resource.spi.ConnectionRequestInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Реализация фабрики соединений.
- */
 @Slf4j
 @RequiredArgsConstructor
 public class BitrixConnectionFactoryImpl implements BitrixConnectionFactory {

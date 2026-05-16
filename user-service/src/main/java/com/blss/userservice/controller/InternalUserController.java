@@ -15,10 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Internal controller for service-to-service communication.
- * Should be secured with internal API key in production.
- */
 @RestController
 @RequestMapping("/internal")
 @RequiredArgsConstructor
@@ -28,9 +24,6 @@ public class InternalUserController {
 
     XmlUserRepository userRepository;
 
-    /**
-     * Validate user by username (for order-service to check if user exists)
-     */
     @GetMapping("/users/{username}")
     public ResponseEntity<UserValidationResponse> validateUser(@PathVariable String username) {
         log.info("Validating user: {}", username);
@@ -52,9 +45,6 @@ public class InternalUserController {
                 .orElse(ResponseEntity.ok(new UserValidationResponse(username, false, false, List.of())));
     }
 
-    /**
-     * Authenticate user with password (for order-service JAAS alternative)
-     */
     @PostMapping("/users/authenticate")
     public ResponseEntity<UserValidationResponse> authenticateUser(@RequestBody UserAuthenticationRequest request) {
         log.info("Authenticating user: {}", request.username());

@@ -24,9 +24,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Управляемое соединение с ебучи Bitrix24.
- */
 @Slf4j
 public class BitrixManagedConnection implements ManagedConnection, BitrixConnection {
 

@@ -16,9 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Аутентификация через user-service по REST API.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j

@@ -14,9 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-/**
- * Custom access denied handler that returns JSON response on 403 Forbidden.
- */
 @Component
 @RequiredArgsConstructor
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {

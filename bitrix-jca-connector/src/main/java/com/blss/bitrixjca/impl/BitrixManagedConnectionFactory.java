@@ -16,9 +16,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
-/**
- * Фабрика управляемых соединений.
- */
 @Slf4j
 @Getter
 @Setter

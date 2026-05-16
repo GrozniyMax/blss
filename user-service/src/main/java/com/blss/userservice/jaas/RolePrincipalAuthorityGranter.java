@@ -6,10 +6,6 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Set;
 
-/**
- * Преобразует Principal роли в Spring Security Authority.
- * Добавляет префикс "ROLE_" к имени роли для совместимости с Spring Security.
- */
 public class RolePrincipalAuthorityGranter implements AuthorityGranter {
 
     @Override

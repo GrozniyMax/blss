@@ -18,9 +18,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Spring Security configuration with JAAS integration for user-service.
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
@@ -32,17 +29,11 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    /**
-     * JAAS configuration bean.
-     */
     @Bean
     public BlssJaasConfiguration blssJaasConfiguration() {
         return new BlssJaasConfiguration();
     }
 
-    /**
-     * JAAS authentication provider using DefaultJaasAuthenticationProvider.
-     */
     @Bean
     public DefaultJaasAuthenticationProvider jaasAuthenticationProvider(BlssJaasConfiguration blssJaasConfiguration) {
         DefaultJaasAuthenticationProvider provider = new DefaultJaasAuthenticationProvider();
@@ -52,17 +43,11 @@ public class SecurityConfig {
         return provider;
     }
 
-    /**
-     * Authentication manager using JAAS provider.
-     */
     @Bean
     public AuthenticationManager authenticationManager(DefaultJaasAuthenticationProvider jaasAuthenticationProvider) {
         return new ProviderManager(jaasAuthenticationProvider);
     }
 
-    /**
-     * Security filter chain configuration with HTTP Basic authentication.
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authenticationManager) throws Exception {
         log.info("Configuring Spring Security with JAAS authentication for user-service");

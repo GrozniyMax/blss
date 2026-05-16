@@ -9,9 +9,6 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Отправляет уведомления в JMS.
- */
 @Component
 @RequiredArgsConstructor
 public class StatusNotificationProducer {

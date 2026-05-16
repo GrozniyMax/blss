@@ -7,13 +7,6 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.UUID;
 
-/**
- * Описание элемента заказа
- *
- * @param orderId   идентификатор заказа (ссылается на {@link Order})
- * @param productId идентификатор продукта (ссылается на {@link com.blss.orderservice.domain.Product}
- * @param yacheyka  описание ячейки
- */
 @With
 @Table("order_item")
 public record OrderItem(
@@ -22,9 +15,6 @@ public record OrderItem(
         UUID id,
         UUID orderId,
         UUID productId,
-        /**
-         * Адрес ячейки. Может быть null
-         */
         String yacheyka
 ) {
 }

@@ -12,9 +12,6 @@ import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 
 import java.util.Properties;
 
-/**
- * Конфигурация Quartz scheduler.
- */
 @Slf4j
 @Configuration
 public class QuartzConfig {

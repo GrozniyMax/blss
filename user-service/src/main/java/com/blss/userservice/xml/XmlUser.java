@@ -9,9 +9,6 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Represents a user account loaded from XML configuration.
- */
 @Data
 @JacksonXmlRootElement(localName = "users")
 public class XmlUser {

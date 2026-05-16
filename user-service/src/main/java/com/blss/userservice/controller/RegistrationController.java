@@ -19,10 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.List;
 
-/**
- * Controller for user registration.
- * Creates a user with basic USER role.
- */
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor

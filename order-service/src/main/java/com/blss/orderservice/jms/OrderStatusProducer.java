@@ -11,9 +11,6 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Отправляет события об изменении статуса заказа.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j

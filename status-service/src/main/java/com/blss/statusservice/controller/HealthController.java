@@ -11,9 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.Map;
 
-/**
- * Health check и информация о сервисе.
- */
 @RestController
 @RequestMapping("/actuator")
 @RequiredArgsConstructor
