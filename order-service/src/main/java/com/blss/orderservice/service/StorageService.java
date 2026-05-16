@@ -31,8 +31,4 @@ public class StorageService {
         );
         updater.updateStatusIfReady(item.orderId());
     }
-
-    public List<OrderItem> getAllByOrderId(UUID orderId) {
-        return orderItemRepo.findAllByOrderId(orderId);
-    }
 }

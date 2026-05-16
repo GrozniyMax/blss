@@ -125,20 +125,6 @@ public class OrderService {
         );
     }
 
-    public void revertStatus(UUID orderId, String reason) {
-        log.info("Reverting order status: orderId={}, reason={}", orderId, reason);
-
-        transactionExecutor.inTransaction(() -> {
-            var order = orderRepo.findById(orderId)
-                    .orElseThrow(() -> new NotFoundException(Order.class, orderId));
-
-            orderRepo.updateStatus(orderId, Status.CREATED)
-                    .orElseThrow(() -> new NotFoundException(Order.class, orderId));
-
-            log.info("Order status reverted to CREATED: orderId={}", orderId);
-        });
-    }
-
     public FullOrder getOrderContentById(UUID id) {
         var order = orderRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException(Order.class, id));

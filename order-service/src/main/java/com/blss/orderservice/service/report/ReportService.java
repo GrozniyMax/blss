@@ -41,11 +41,11 @@ public class ReportService {
         return statistic;
     }
 
-    public Stream<Order> streamOrdersForDay(LocalDate day) {
+    private Stream<Order> streamOrdersForDay(LocalDate day) {
         return streamOrdersForDay(day, BATCH_SIZE);
     }
 
-    public Stream<Order> streamOrdersForDay(LocalDate day, int batchSize) {
+    private Stream<Order> streamOrdersForDay(LocalDate day, int batchSize) {
         Iterator<Order> iterator = new Iterator<>() {
             private UUID lastId = ZERO_UUID;
             private Iterator<Order> current = List.<Order>of().iterator();
