@@ -6,6 +6,7 @@ import com.blss.orderservice.domain.order.Status;
 import com.blss.orderservice.exception.InvalidActionException;
 import com.blss.orderservice.exception.NotFoundException;
 import com.blss.orderservice.jms.OrderStatusProducer;
+import com.blss.orderservice.service.order.OrderDocumentSyncService;
 import com.blss.orderservice.service.order.OrderService;
 import jakarta.resource.ResourceException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class BitrixDealStatusSyncService {
     private final OrderService orderService;
     private final OrderStatusProducer orderStatusProducer;
     private final BitrixProperties bitrixProperties;
+    private final OrderDocumentSyncService orderDocumentSyncService;
 
     public void syncOrderStatusFromDeal(String dealId) {
         if (dealId == null || dealId.isBlank()) {
@@ -89,6 +91,8 @@ public class BitrixDealStatusSyncService {
 
             orderService.updateStatus(orderId.get(), status.get());
             orderStatusProducer.sendStatusChange(orderId.get(), status.get());
+            orderDocumentSyncService.sendOrderDocument(orderId.get());
+
             log.info("Order status synced from Bitrix polling: dealId={}, orderId={}, {} -> {}",
                     dealId, orderId.get(), current, status.get());
             return true;
