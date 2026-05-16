@@ -619,8 +619,6 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         }
     }
 
-    // ========== Connection Metadata ==========
-
     private static class BitrixConnectionMetaData implements ManagedConnectionMetaData {
 
         @Override

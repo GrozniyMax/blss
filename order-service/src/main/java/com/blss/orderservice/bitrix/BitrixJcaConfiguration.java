@@ -12,9 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Конфигурация Bitrix24 JCA коннектора.
- */
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
