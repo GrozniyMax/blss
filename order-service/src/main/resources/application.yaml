@@ -49,3 +49,6 @@ bitrix:
   default-tax-title: ${BITRIX_DEFAULT_TAX_TITLE:Без НДС}
   default-tax-rate: ${BITRIX_DEFAULT_TAX_RATE:Без НДС}
   default-client-phone: ${BITRIX_DEFAULT_CLIENT_PHONE:}
+  inbound-webhook-token: ${BITRIX_INBOUND_WEBHOOK_TOKEN:}
+  polling-enabled: ${BITRIX_POLLING_ENABLED:true}
+  polling-fixed-delay: ${BITRIX_POLLING_FIXED_DELAY:30000}

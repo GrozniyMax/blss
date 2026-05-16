@@ -49,6 +49,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/bitrix/webhook/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/order/*/bitrix-document")
                     .hasAnyRole("CONSULTANT", "MANAGER", "ADMIN")
                 

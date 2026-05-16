@@ -4,9 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Настройки Bitrix24 JCA коннектора.
- */
+
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "bitrix")
@@ -41,5 +39,11 @@ public class BitrixProperties {
     private String defaultTaxTitle = "Без НДС";
     private String defaultTaxRate = "Без НДС";
     private String defaultClientPhone = "";
+
+    private String inboundWebhookToken = "";
+
+    private boolean pollingEnabled = true;
+
+    private long pollingFixedDelay = 30000L;
 
 }

@@ -152,7 +152,7 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         }
 
         if (Boolean.TRUE.equals(managedConnectionFactory.getUploadToCrmFallback())) {
-            return createCrmDeal(title, body, totalAmount, 
+            return syncCrmDeal(orderId, title, body, totalAmount, status,
                     managedConnectionFactory.getAssignedById(),
                     managedConnectionFactory.getCategoryId());
         }
@@ -190,6 +190,123 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
 
         log.info("Bitrix24 CRM deal created: {}", response);
         return extractIdFromResponse(response);
+    }
+
+    private String syncCrmDeal(
+            UUID orderId,
+            String title,
+            String comments,
+            BigDecimal amount,
+            String status,
+            Long assignedById,
+            Integer categoryId
+    ) throws ResourceException {
+        String stageId = resolveDealStageId(status, categoryId);
+        Optional<String> existingDealId = findDealIdByTitle(title);
+
+        if (existingDealId.isPresent()) {
+            updateCrmDeal(existingDealId.get(), title, comments, amount, stageId, assignedById, categoryId);
+            log.info("Bitrix24 CRM deal updated for order {}: dealId={}, stageId={}", orderId, existingDealId.get(), stageId);
+            return existingDealId.get();
+        }
+
+        return createCrmDeal(title, comments, amount, stageId, assignedById, categoryId);
+    }
+
+    private String createCrmDeal(
+            String title,
+            String comments,
+            BigDecimal amount,
+            String stageId,
+            Long assignedById,
+            Integer categoryId
+    ) throws ResourceException {
+        log.info("Creating Bitrix24 CRM deal: {}, stageId={}", title, stageId);
+
+        Map<String, Object> fields = buildDealFields(title, comments, amount, stageId, assignedById, categoryId);
+        Map<String, Object> response = callMethod(managedConnectionFactory.getDealMethod(), Map.of("fields", fields));
+        String dealId = extractResultId(response);
+
+        log.info("Bitrix24 CRM deal created: dealId={}, response={}", dealId, response);
+        return dealId;
+    }
+
+    private void updateCrmDeal(
+            String dealId,
+            String title,
+            String comments,
+            BigDecimal amount,
+            String stageId,
+            Long assignedById,
+            Integer categoryId
+    ) throws ResourceException {
+        Map<String, Object> payload = Map.of(
+                "id", dealId,
+                "fields", buildDealFields(title, comments, amount, stageId, assignedById, categoryId)
+        );
+
+        callMethod("crm.deal.update.json", payload);
+    }
+
+    private Optional<String> findDealIdByTitle(String title) throws ResourceException {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("filter", Map.of("TITLE", title));
+        payload.put("select", List.of("ID"));
+        payload.put("order", Map.of("ID", "DESC"));
+
+        Map<String, Object> response = callMethod("crm.deal.list.json", payload);
+        Object result = response.get("result");
+        if (!(result instanceof List<?> deals) || deals.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Object firstDeal = deals.get(0);
+        if (!(firstDeal instanceof Map<?, ?> deal)) {
+            return Optional.empty();
+        }
+
+        Object id = deal.get("ID");
+        return id == null ? Optional.empty() : Optional.of(id.toString());
+    }
+
+    private Map<String, Object> buildDealFields(
+            String title,
+            String comments,
+            BigDecimal amount,
+            String stageId,
+            Long assignedById,
+            Integer categoryId
+    ) {
+        Map<String, Object> fields = new LinkedHashMap<>();
+        fields.put("TITLE", title);
+        fields.put("COMMENTS", comments);
+        fields.put("OPPORTUNITY", amount != null ? amount.toPlainString() : BigDecimal.ZERO.toPlainString());
+        fields.put("STAGE_ID", stageId);
+
+        if (assignedById != null && assignedById > 0) {
+            fields.put("ASSIGNED_BY_ID", assignedById);
+        }
+        if (categoryId != null && categoryId > 0) {
+            fields.put("CATEGORY_ID", categoryId);
+        }
+        return fields;
+    }
+
+    private String resolveDealStageId(String status, Integer categoryId) {
+        String stage = switch (defaultString(status)) {
+            case "CREATED" -> "NEW";
+            case "PROCESSING" -> "PREPARATION";
+            case "IN_DELIVERY" -> "EXECUTING";
+            case "READY_FOR_PICKUP" -> "FINAL_INVOICE";
+            case "DONE" -> "WON";
+            case "CANCELED" -> "LOSE";
+            default -> "NEW";
+        };
+
+        if (categoryId == null || categoryId <= 0) {
+            return stage;
+        }
+        return "C" + categoryId + ":" + stage;
     }
 
     @Override
@@ -469,6 +586,15 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         }
         Object result = response.get("result");
         return result != null ? result.toString() : response.toString();
+    }
+
+    private String extractResultId(Map<String, Object> response) {
+        if (response == null) {
+            return null;
+        }
+
+        Object result = response.get("result");
+        return result == null ? response.toString() : result.toString();
     }
 
     private String extractIdFromResponse(String response) {
