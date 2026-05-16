@@ -29,18 +29,6 @@ public class QuartzConfig {
 
         factory.setJobFactory(new AutowiringSpringBeanJobFactory(applicationContext));
 
-        Properties quartzProps = new Properties();
-        quartzProps.setProperty("org.quartz.scheduler.instanceName", "OrderServiceScheduler");
-        quartzProps.setProperty("org.quartz.scheduler.instanceId", "AUTO");
-
-        quartzProps.setProperty("org.quartz.threadPool.threadCount", "5");
-        quartzProps.setProperty("org.quartz.threadPool.threadPriority", "5");
-        quartzProps.setProperty("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-
-        quartzProps.setProperty("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
-        quartzProps.setProperty("org.quartz.jobStore.misfireThreshold", "60000");
-
-        factory.setQuartzProperties(quartzProps);
         factory.setWaitForJobsToCompleteOnShutdown(true);
         factory.setOverwriteExistingJobs(true);
         factory.setAutoStartup(false);

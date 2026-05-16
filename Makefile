@@ -16,7 +16,7 @@ up: build-java up-docker
 
 down: down-docker
 
-rebuild: down clean-java up
+rebuild: down-docker clean-java up
 
 restart:
 	docker compose down -v

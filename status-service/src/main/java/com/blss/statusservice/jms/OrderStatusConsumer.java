@@ -35,7 +35,7 @@ public class OrderStatusConsumer {
             if (failureSimulation.failInTryCatch()) {
                 throw new RuntimeException("Simulated failure it try-catch");
             }
-            historyService.saveStatusChange(event.id(), event.status());
+            historyService.saveStatusChange(event.id(), event.status(), event.timestamp());
             log.info("Order status change event processed: orderId={}", event.id());
         } catch (Exception e) {
             log.error("Failed to process status change: orderId={}, status={}, error={}",

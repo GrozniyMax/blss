@@ -15,13 +15,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JobScheduler {
 
-    @Lazy
     private final Scheduler scheduler;
     
-    @Lazy
     private final JobDetail reportJobDetail;
     
-    @Lazy
     private final Trigger reportTrigger;
 
     @PostConstruct
