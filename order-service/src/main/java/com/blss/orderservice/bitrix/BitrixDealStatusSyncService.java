@@ -10,6 +10,7 @@ import com.blss.orderservice.service.order.OrderDocumentSyncService;
 import com.blss.orderservice.service.order.OrderService;
 import jakarta.resource.ResourceException;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -22,42 +23,21 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class BitrixDealStatusSyncService {
 
     private static final Pattern UUID_PATTERN = Pattern.compile(
             "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
     );
 
-    private final BitrixConnectionFactory connectionFactory;
-    private final OrderService orderService;
-    private final OrderStatusProducer orderStatusProducer;
-    private final BitrixProperties bitrixProperties;
-    private final OrderDocumentSyncService orderDocumentSyncService;
-
-    public void syncOrderStatusFromDeal(String dealId) {
-        if (dealId == null || dealId.isBlank()) {
-            throw new InvalidActionException("Bitrix deal id is required");
-        }
-
-        Map<String, Object> deal = loadDeal(dealId.trim());
-        UUID orderId = extractOrderId(deal)
-                .orElseThrow(() -> new InvalidActionException("Cannot find order id in Bitrix deal " + dealId));
-        Status status = extractStatus(deal)
-                .orElseThrow(() -> new InvalidActionException("Unsupported Bitrix deal stage for deal " + dealId));
-
-        Status current = orderService.getStatus(orderId);
-        if (current == status) {
-            log.info("Order status is already synced from Bitrix: orderId={}, status={}", orderId, status);
-            return;
-        }
-
-        orderService.updateStatus(orderId, status);
-        orderStatusProducer.sendStatusChange(orderId, status);
-        log.info("Order status synced from Bitrix: dealId={}, orderId={}, {} -> {}", dealId, orderId, current, status);
-    }
+    BitrixConnectionFactory connectionFactory;
+    OrderService orderService;
+    OrderStatusProducer orderStatusProducer;
+    BitrixProperties bitrixProperties;
+    OrderDocumentSyncService orderDocumentSyncService;
 
     public void syncOrderStatusesFromDeals() {
         int checked = 0;
@@ -119,7 +99,6 @@ public class BitrixDealStatusSyncService {
                 payload.put("start", start);
 
                 Map<String, Object> response = connection.callMethod("crm.deal.list.json", payload);
-                @SuppressWarnings("unchecked")
                 List<Map<String, Object>> deals = (List<Map<String, Object>>) response.get("result");
                 if (deals != null) {
                     allDeals.addAll(deals);
@@ -131,22 +110,6 @@ public class BitrixDealStatusSyncService {
             return allDeals;
         } catch (ResourceException e) {
             throw new InvalidActionException("Failed to load Bitrix deals: " + e.getMessage());
-        }
-    }
-
-    private Map<String, Object> loadDeal(String dealId) {
-        try (BitrixConnection connection = connectionFactory.getConnection()) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> deal = (Map<String, Object>) connection
-                    .callMethod("crm.deal.get.json", Map.of("id", dealId))
-                    .get("result");
-
-            if (deal == null) {
-                throw new InvalidActionException("Bitrix deal not found: " + dealId);
-            }
-            return deal;
-        } catch (ResourceException e) {
-            throw new InvalidActionException("Failed to load Bitrix deal " + dealId + ": " + e.getMessage());
         }
     }
 
