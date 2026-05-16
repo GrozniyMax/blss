@@ -28,12 +28,10 @@ public class JobScheduler {
     public void scheduleJobs() throws SchedulerException {
         log.info("Scheduling Quartz jobs");
 
-        // Schedule the job
         scheduler.scheduleJob(reportJobDetail, reportTrigger);
         log.info("Scheduled job: {} with trigger: {}", 
                 reportJobDetail.getKey(), reportTrigger.getKey());
 
-        // Start scheduler if not already started
         if (!scheduler.isStarted()) {
             scheduler.start();
             log.info("Quartz scheduler started");

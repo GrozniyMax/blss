@@ -86,10 +86,8 @@ public class XmlLoginModule implements LoginModule {
 
         UserAccount user = userOpt.get();
 
-        // Add username principal
         subject.getPrincipals().add(new UsernamePrincipal(username));
 
-        // Add role principals
         if (user.getRoles() != null && user.getRoles().getRole() != null) {
             for (Role role : user.getRoles().getRole()) {
                 subject.getPrincipals().add(new RolePrincipal(role.name()));
@@ -116,9 +114,6 @@ public class XmlLoginModule implements LoginModule {
         return true;
     }
 
-    /**
-     * Principal representing a username.
-     */
     public static class UsernamePrincipal implements Principal {
         private final String username;
 
@@ -137,9 +132,6 @@ public class XmlLoginModule implements LoginModule {
         }
     }
 
-    /**
-     * Principal representing a role.
-     */
     public static class RolePrincipal implements Principal {
         private final String roleName;
 

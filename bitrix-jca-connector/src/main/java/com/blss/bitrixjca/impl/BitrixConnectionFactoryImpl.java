@@ -23,13 +23,11 @@ public class BitrixConnectionFactoryImpl implements BitrixConnectionFactory {
         log.debug("Obtaining Bitrix24 connection");
         
         if (connectionManager != null) {
-            // Managed mode - use connection pooling
             return (BitrixConnection) connectionManager.allocateConnection(
                     managedConnectionFactory,
                     null
             );
         } else {
-            // Standalone mode - create direct connection
             BitrixManagedConnection mc = managedConnectionFactory.createManagedConnection(null, null);
             return (BitrixConnection) mc.getConnection(null, null);
         }

@@ -41,13 +41,12 @@ public class BitrixResourceAdapter implements ResourceAdapter, Serializable {
 
     @Override
     public void endpointActivation(MessageEndpointFactory endpointFactory, ActivationSpec spec) {
-        // Outbound-only adapter - inbound activation not supported
         throw new UnsupportedOperationException("Bitrix24 adapter is outbound-only");
     }
 
     @Override
     public void endpointDeactivation(MessageEndpointFactory endpointFactory, ActivationSpec spec) {
-        // Outbound-only adapter - no-op
+        throw new UnsupportedOperationException("Bitrix24 adapter is outbound-only");
     }
 
     @Override

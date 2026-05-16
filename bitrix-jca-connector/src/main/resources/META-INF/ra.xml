@@ -13,7 +13,6 @@
     <resourceadapter>
         <resourceadapter-class>com.blss.bitrixjca.impl.BitrixResourceAdapter</resourceadapter-class>
 
-        <!-- Outbound Resource Adapter Configuration -->
         <outbound-resourceadapter>
             <connection-definition>
                 <managedconnectionfactory-class>

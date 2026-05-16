@@ -76,7 +76,7 @@ public class BitrixManagedConnectionFactory implements ManagedConnectionFactory,
             ConnectionRequestInfo connectionRequestInfo
     ) throws ResourceException {
         log.debug("Matching managed connections");
-        return null; // Let container handle pooling
+        return null;
     }
 
     @Override

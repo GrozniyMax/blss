@@ -26,21 +26,17 @@ public class QuartzConfig {
         log.info("Creating Quartz SchedulerFactoryBean");
         
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
-        
-        // Use custom job factory with Spring autowiring
+
         factory.setJobFactory(new AutowiringSpringBeanJobFactory(applicationContext));
 
-        // Quartz properties
         Properties quartzProps = new Properties();
         quartzProps.setProperty("org.quartz.scheduler.instanceName", "OrderServiceScheduler");
         quartzProps.setProperty("org.quartz.scheduler.instanceId", "AUTO");
 
-        // Thread pool
         quartzProps.setProperty("org.quartz.threadPool.threadCount", "5");
         quartzProps.setProperty("org.quartz.threadPool.threadPriority", "5");
         quartzProps.setProperty("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
 
-        // RAM JobStore - no database required
         quartzProps.setProperty("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
         quartzProps.setProperty("org.quartz.jobStore.misfireThreshold", "60000");
 

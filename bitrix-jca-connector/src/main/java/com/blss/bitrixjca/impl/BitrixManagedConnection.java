@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Управляемое соединение с Bitrix24.
+ * Управляемое соединение с ебучи Bitrix24.
  */
 @Slf4j
 public class BitrixManagedConnection implements ManagedConnection, BitrixConnection {
@@ -120,17 +120,13 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
 
     @Override
     public javax.transaction.xa.XAResource getXAResource() throws ResourceException {
-        // This adapter does not support XA transactions
         return null;
     }
 
     @Override
     public LocalTransaction getLocalTransaction() throws ResourceException {
-        // This adapter does not support local transactions
         return null;
     }
-
-    // ========== BitrixConnection Implementation ==========
 
     @Override
     public String createDocument(
@@ -252,8 +248,6 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
     public void close() throws ResourceException {
         log.debug("Closing Bitrix24 connection handle");
     }
-
-    // ========== Private Methods ==========
 
     private String createBitrixGeneratedDocument(
             UUID orderId,
@@ -437,21 +431,18 @@ public class BitrixManagedConnection implements ManagedConnection, BitrixConnect
         product.put("MEASURE_NAME", productMeasureName);
 
         Map<String, Object> map = new LinkedHashMap<>();
-        // Native Document Generator structure for this.SOURCE.PRODUCTS.* fields
         map.put("INDEX", "index");
         map.put("PRODUCT", "product");
         map.put("QUANTITY", productQuantity);
         map.put("PRICE_RAW", productPriceRaw);
         map.put("PRICE_RAW_SUM", productPriceRawSum);
 
-        // Aliases kept for compatibility with templates using direct row keys
         map.put("Index", "index");
         map.put("ProductName", "productName");
         map.put("ProductQuantity", productQuantity);
         map.put("ProductMeasureName", productMeasureName);
         map.put("ProductPriceRaw", productPriceRaw);
         map.put("ProductPriceRawSum", productPriceRawSum);
-        // Compatibility aliases for templates that use fully-qualified product keys.
         map.put("ProductsIndex", productsIndex);
         map.put("ProductsProductName", productsProductName);
         map.put("ProductsProductQuantity", productsProductQuantity);

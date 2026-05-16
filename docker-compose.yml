@@ -37,7 +37,7 @@ services:
     image: apache/activemq-artemis:latest
     container_name: artemis-broker
     ports:
-      - "61680:61616"  # JMS
+      - "${ARTEMIS_JMS_PORT:-62616}:61616"  # JMS
       - "8161:8161"    # Web console
     env_file:
       - .env
