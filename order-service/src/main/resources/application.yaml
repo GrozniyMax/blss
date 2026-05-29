@@ -18,9 +18,7 @@ spring:
     job:
       enabled: false
   quartz:
-    job-store-type: jdbc
-    jdbc:
-      initialize-schema: always
+    job-store-type: memory
 
 server:
   port: ${SERVER_PORT:25103}
