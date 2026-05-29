@@ -11,7 +11,7 @@ import java.util.UUID;
 @Repository
 public interface OrderStatusHistoryRepo extends CrudRepository<OrderStatusHistory, UUID> {
 
-    @Query("SELECT * FROM order_status_history WHERE order_id = :orderId AND tx_state = 'CONFIRMED' ORDER BY changed_at ASC")
+    @Query("SELECT * FROM order_status_history WHERE order_id = :orderId ORDER BY changed_at ASC")
     List<OrderStatusHistory> findByOrderId(UUID orderId);
 
 }
