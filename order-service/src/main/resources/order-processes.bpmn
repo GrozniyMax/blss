@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="blss-order-workflows"
+                  targetNamespace="http://blss.com/order">
+
+  <bpmn:process id="order-create-process" name="Create order" isExecutable="true" camunda:candidateStarterGroups="USER,MANAGER,ADMIN" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="create-start" name="Create request">
+      <bpmn:outgoing>create-to-create-order</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="create-order" name="Validate, reserve stock and persist order" camunda:expression="${orderWorkflowActions.createOrder(execution)}">
+      <bpmn:incoming>create-to-create-order</bpmn:incoming>
+      <bpmn:outgoing>create-to-send-document</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="create-send-document" name="Send order document asynchronously" camunda:asyncBefore="true" camunda:expression="${orderWorkflowActions.sendOrderDocument(execution)}">
+      <bpmn:incoming>create-to-send-document</bpmn:incoming>
+      <bpmn:outgoing>create-to-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="create-end" name="Order created">
+      <bpmn:incoming>create-to-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="create-to-create-order" sourceRef="create-start" targetRef="create-order"/>
+    <bpmn:sequenceFlow id="create-to-send-document" sourceRef="create-order" targetRef="create-send-document"/>
+    <bpmn:sequenceFlow id="create-to-end" sourceRef="create-send-document" targetRef="create-end"/>
+  </bpmn:process>
+
+  <bpmn:process id="order-status-advance-process" name="Advance order status" isExecutable="true" camunda:candidateStarterGroups="CONSULTANT,MANAGER,ADMIN" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="advance-start">
+      <bpmn:outgoing>advance-to-load</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="advance-load-status" name="Load current status" camunda:expression="${orderWorkflowActions.loadStatus(execution)}">
+      <bpmn:incoming>advance-to-load</bpmn:incoming>
+      <bpmn:outgoing>advance-to-gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="advance-status-gateway" name="Current status">
+      <bpmn:incoming>advance-to-gateway</bpmn:incoming>
+      <bpmn:outgoing>advance-created</bpmn:outgoing>
+      <bpmn:outgoing>advance-processing</bpmn:outgoing>
+      <bpmn:outgoing>advance-in-delivery</bpmn:outgoing>
+      <bpmn:outgoing>advance-ready</bpmn:outgoing>
+      <bpmn:outgoing>advance-terminal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="advance-set-processing" name="Set PROCESSING" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'PROCESSING')}">
+      <bpmn:incoming>advance-created</bpmn:incoming>
+      <bpmn:outgoing>advance-processing-end-flow</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="advance-set-in-delivery" name="Set IN_DELIVERY" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'IN_DELIVERY')}">
+      <bpmn:incoming>advance-processing</bpmn:incoming>
+      <bpmn:outgoing>advance-in-delivery-end-flow</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="advance-set-ready" name="Set READY_FOR_PICKUP" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'READY_FOR_PICKUP')}">
+      <bpmn:incoming>advance-in-delivery</bpmn:incoming>
+      <bpmn:outgoing>advance-ready-end-flow</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="advance-set-done" name="Set DONE" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'DONE')}">
+      <bpmn:incoming>advance-ready</bpmn:incoming>
+      <bpmn:outgoing>advance-done-end-flow</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="advance-reject-terminal" name="Reject terminal transition" camunda:expression="${orderWorkflowActions.rejectTerminalNext(execution)}">
+      <bpmn:incoming>advance-terminal</bpmn:incoming>
+      <bpmn:outgoing>advance-terminal-end-flow</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="advance-end">
+      <bpmn:incoming>advance-processing-end-flow</bpmn:incoming>
+      <bpmn:incoming>advance-in-delivery-end-flow</bpmn:incoming>
+      <bpmn:incoming>advance-ready-end-flow</bpmn:incoming>
+      <bpmn:incoming>advance-done-end-flow</bpmn:incoming>
+      <bpmn:incoming>advance-terminal-end-flow</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="advance-to-load" sourceRef="advance-start" targetRef="advance-load-status"/>
+    <bpmn:sequenceFlow id="advance-to-gateway" sourceRef="advance-load-status" targetRef="advance-status-gateway"/>
+    <bpmn:sequenceFlow id="advance-created" sourceRef="advance-status-gateway" targetRef="advance-set-processing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == 'CREATED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="advance-processing" sourceRef="advance-status-gateway" targetRef="advance-set-in-delivery">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == 'PROCESSING'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="advance-in-delivery" sourceRef="advance-status-gateway" targetRef="advance-set-ready">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == 'IN_DELIVERY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="advance-ready" sourceRef="advance-status-gateway" targetRef="advance-set-done">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == 'READY_FOR_PICKUP'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="advance-terminal" sourceRef="advance-status-gateway" targetRef="advance-reject-terminal">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == 'DONE' || currentStatus == 'CANCELED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="advance-processing-end-flow" sourceRef="advance-set-processing" targetRef="advance-end"/>
+    <bpmn:sequenceFlow id="advance-in-delivery-end-flow" sourceRef="advance-set-in-delivery" targetRef="advance-end"/>
+    <bpmn:sequenceFlow id="advance-ready-end-flow" sourceRef="advance-set-ready" targetRef="advance-end"/>
+    <bpmn:sequenceFlow id="advance-done-end-flow" sourceRef="advance-set-done" targetRef="advance-end"/>
+    <bpmn:sequenceFlow id="advance-terminal-end-flow" sourceRef="advance-reject-terminal" targetRef="advance-end"/>
+  </bpmn:process>
+
+  <bpmn:process id="order-cancel-process" name="Cancel order" isExecutable="true" camunda:candidateStarterGroups="CONSULTANT,MANAGER,ADMIN" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="cancel-start">
+      <bpmn:outgoing>cancel-to-load</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="cancel-load-status" name="Load current status" camunda:expression="${orderWorkflowActions.loadStatus(execution)}">
+      <bpmn:incoming>cancel-to-load</bpmn:incoming>
+      <bpmn:outgoing>cancel-to-gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="cancel-gateway" name="Can cancel">
+      <bpmn:incoming>cancel-to-gateway</bpmn:incoming>
+      <bpmn:outgoing>cancel-allowed</bpmn:outgoing>
+      <bpmn:outgoing>cancel-denied</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="cancel-set-canceled" name="Set CANCELED" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'CANCELED')}">
+      <bpmn:incoming>cancel-allowed</bpmn:incoming>
+      <bpmn:outgoing>cancel-to-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="cancel-reject" name="Reject cancel" camunda:expression="${orderWorkflowActions.rejectTerminalCancel(execution)}">
+      <bpmn:incoming>cancel-denied</bpmn:incoming>
+      <bpmn:outgoing>cancel-reject-to-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="cancel-end">
+      <bpmn:incoming>cancel-to-end</bpmn:incoming>
+      <bpmn:incoming>cancel-reject-to-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="cancel-to-load" sourceRef="cancel-start" targetRef="cancel-load-status"/>
+    <bpmn:sequenceFlow id="cancel-to-gateway" sourceRef="cancel-load-status" targetRef="cancel-gateway"/>
+    <bpmn:sequenceFlow id="cancel-allowed" sourceRef="cancel-gateway" targetRef="cancel-set-canceled">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus != 'DONE' &amp;&amp; currentStatus != 'CANCELED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="cancel-denied" sourceRef="cancel-gateway" targetRef="cancel-reject">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == 'DONE' || currentStatus == 'CANCELED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="cancel-to-end" sourceRef="cancel-set-canceled" targetRef="cancel-end"/>
+    <bpmn:sequenceFlow id="cancel-reject-to-end" sourceRef="cancel-reject" targetRef="cancel-end"/>
+  </bpmn:process>
+
+  <bpmn:process id="order-status-revert-process" name="Revert order status" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="revert-start">
+      <bpmn:outgoing>revert-to-load</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="revert-load-status" name="Load current status" camunda:expression="${orderWorkflowActions.loadStatus(execution)}">
+      <bpmn:incoming>revert-to-load</bpmn:incoming>
+      <bpmn:outgoing>revert-to-gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="revert-gateway" name="Failed status">
+      <bpmn:incoming>revert-to-gateway</bpmn:incoming>
+      <bpmn:outgoing>revert-processing</bpmn:outgoing>
+      <bpmn:outgoing>revert-in-delivery</bpmn:outgoing>
+      <bpmn:outgoing>revert-ready</bpmn:outgoing>
+      <bpmn:outgoing>revert-terminal</bpmn:outgoing>
+      <bpmn:outgoing>revert-noop</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="revert-set-created" name="Restore CREATED" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'CREATED')}">
+      <bpmn:incoming>revert-processing</bpmn:incoming>
+      <bpmn:outgoing>revert-created-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="revert-set-processing" name="Restore PROCESSING" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'PROCESSING')}">
+      <bpmn:incoming>revert-in-delivery</bpmn:incoming>
+      <bpmn:outgoing>revert-processing-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="revert-set-in-delivery" name="Restore IN_DELIVERY" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'IN_DELIVERY')}">
+      <bpmn:incoming>revert-ready</bpmn:incoming>
+      <bpmn:outgoing>revert-in-delivery-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="revert-set-ready" name="Restore READY_FOR_PICKUP" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'READY_FOR_PICKUP')}">
+      <bpmn:incoming>revert-terminal</bpmn:incoming>
+      <bpmn:outgoing>revert-ready-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="revert-end">
+      <bpmn:incoming>revert-created-end</bpmn:incoming>
+      <bpmn:incoming>revert-processing-end</bpmn:incoming>
+      <bpmn:incoming>revert-in-delivery-end</bpmn:incoming>
+      <bpmn:incoming>revert-ready-end</bpmn:incoming>
+      <bpmn:incoming>revert-noop</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="revert-to-load" sourceRef="revert-start" targetRef="revert-load-status"/>
+    <bpmn:sequenceFlow id="revert-to-gateway" sourceRef="revert-load-status" targetRef="revert-gateway"/>
+    <bpmn:sequenceFlow id="revert-processing" sourceRef="revert-gateway" targetRef="revert-set-created">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == revertFrom &amp;&amp; revertFrom == 'PROCESSING'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="revert-in-delivery" sourceRef="revert-gateway" targetRef="revert-set-processing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == revertFrom &amp;&amp; revertFrom == 'IN_DELIVERY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="revert-ready" sourceRef="revert-gateway" targetRef="revert-set-in-delivery">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == revertFrom &amp;&amp; revertFrom == 'READY_FOR_PICKUP'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="revert-terminal" sourceRef="revert-gateway" targetRef="revert-set-ready">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == revertFrom &amp;&amp; (revertFrom == 'DONE' || revertFrom == 'CANCELED')}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="revert-noop" sourceRef="revert-gateway" targetRef="revert-end">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus != revertFrom || revertFrom == 'CREATED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="revert-created-end" sourceRef="revert-set-created" targetRef="revert-end"/>
+    <bpmn:sequenceFlow id="revert-processing-end" sourceRef="revert-set-processing" targetRef="revert-end"/>
+    <bpmn:sequenceFlow id="revert-in-delivery-end" sourceRef="revert-set-in-delivery" targetRef="revert-end"/>
+    <bpmn:sequenceFlow id="revert-ready-end" sourceRef="revert-set-ready" targetRef="revert-end"/>
+  </bpmn:process>
+
+  <bpmn:process id="order-item-delivered-process" name="Mark order item delivered" isExecutable="true" camunda:candidateStarterGroups="WAREHOUSE,ADMIN" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="item-delivered-start">
+      <bpmn:outgoing>item-delivered-to-mark</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="item-delivered-mark" name="Save storage cell" camunda:expression="${orderWorkflowActions.markDelivered(execution)}">
+      <bpmn:incoming>item-delivered-to-mark</bpmn:incoming>
+      <bpmn:outgoing>item-delivered-to-readiness</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="item-delivered-check-readiness" name="Check delivery readiness" calledElement="order-delivery-readiness-process">
+      <bpmn:extensionElements>
+        <camunda:in source="orderId" target="orderId"/>
+      </bpmn:extensionElements>
+      <bpmn:incoming>item-delivered-to-readiness</bpmn:incoming>
+      <bpmn:outgoing>item-delivered-to-end</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="item-delivered-end">
+      <bpmn:incoming>item-delivered-to-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="item-delivered-to-mark" sourceRef="item-delivered-start" targetRef="item-delivered-mark"/>
+    <bpmn:sequenceFlow id="item-delivered-to-readiness" sourceRef="item-delivered-mark" targetRef="item-delivered-check-readiness"/>
+    <bpmn:sequenceFlow id="item-delivered-to-end" sourceRef="item-delivered-check-readiness" targetRef="item-delivered-end"/>
+  </bpmn:process>
+
+  <bpmn:process id="order-delivery-readiness-process" name="Move order to pickup when all items arrived" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="readiness-start">
+      <bpmn:outgoing>readiness-to-load</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="readiness-load" name="Load delivery readiness" camunda:expression="${orderWorkflowActions.loadDeliveryReadiness(execution)}">
+      <bpmn:incoming>readiness-to-load</bpmn:incoming>
+      <bpmn:outgoing>readiness-to-gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="readiness-gateway" name="All items arrived">
+      <bpmn:incoming>readiness-to-gateway</bpmn:incoming>
+      <bpmn:outgoing>readiness-ready</bpmn:outgoing>
+      <bpmn:outgoing>readiness-not-ready</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="readiness-set-ready" name="Set READY_FOR_PICKUP" camunda:expression="${orderWorkflowActions.changeStatus(execution, 'READY_FOR_PICKUP')}">
+      <bpmn:incoming>readiness-ready</bpmn:incoming>
+      <bpmn:outgoing>readiness-ready-to-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="readiness-end">
+      <bpmn:incoming>readiness-ready-to-end</bpmn:incoming>
+      <bpmn:incoming>readiness-not-ready</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="readiness-to-load" sourceRef="readiness-start" targetRef="readiness-load"/>
+    <bpmn:sequenceFlow id="readiness-to-gateway" sourceRef="readiness-load" targetRef="readiness-gateway"/>
+    <bpmn:sequenceFlow id="readiness-ready" sourceRef="readiness-gateway" targetRef="readiness-set-ready">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus == 'IN_DELIVERY' &amp;&amp; itemsWithoutCell == 0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="readiness-not-ready" sourceRef="readiness-gateway" targetRef="readiness-end">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${currentStatus != 'IN_DELIVERY' || itemsWithoutCell != 0}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="readiness-ready-to-end" sourceRef="readiness-set-ready" targetRef="readiness-end"/>
+  </bpmn:process>
+
+  <bpmn:process id="daily-report-process" name="Daily report" isExecutable="true" camunda:candidateStarterGroups="MANAGER,ADMIN" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="report-start" name="Every day at midnight">
+      <bpmn:outgoing>report-to-generate</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">0 0 0 * * ?</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="report-generate" name="Generate report" camunda:asyncBefore="true" camunda:expression="${reportWorkflowActions.generateYesterdayReport(execution)}">
+      <bpmn:incoming>report-to-generate</bpmn:incoming>
+      <bpmn:outgoing>report-to-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="report-end">
+      <bpmn:incoming>report-to-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="report-to-generate" sourceRef="report-start" targetRef="report-generate"/>
+    <bpmn:sequenceFlow id="report-to-end" sourceRef="report-generate" targetRef="report-end"/>
+  </bpmn:process>
+
+  <bpmn:process id="bitrix-polling-process" name="Bitrix deal polling" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="bitrix-polling-start" name="Every 30 seconds">
+      <bpmn:outgoing>bitrix-polling-to-sync</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT30S</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="bitrix-polling-sync" name="Sync statuses from Bitrix" camunda:asyncBefore="true" camunda:expression="${bitrixWorkflowActions.pollDeals(execution)}">
+      <bpmn:incoming>bitrix-polling-to-sync</bpmn:incoming>
+      <bpmn:outgoing>bitrix-polling-to-end</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="bitrix-polling-end">
+      <bpmn:incoming>bitrix-polling-to-end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="bitrix-polling-to-sync" sourceRef="bitrix-polling-start" targetRef="bitrix-polling-sync"/>
+    <bpmn:sequenceFlow id="bitrix-polling-to-end" sourceRef="bitrix-polling-sync" targetRef="bitrix-polling-end"/>
+  </bpmn:process>
+</bpmn:definitions>

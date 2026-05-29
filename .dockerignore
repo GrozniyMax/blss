@@ -1,0 +1,13 @@
+.git
+.gradle
+.gradle-user
+.idea
+**/build/*
+!**/build/libs
+!**/build/libs/*.jar
+**/.classpath
+**/.project
+**/.settings
+*.iml
+README.md
+docs

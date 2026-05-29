@@ -13,6 +13,17 @@ spring:
     user: ${ARTEMIS_USER:artemis}
     password: ${ARTEMIS_PASSWORD:artemis}
 
+camunda:
+  bpm:
+    admin-user:
+      id: ${CAMUNDA_ADMIN_USER:admin}
+      password: ${CAMUNDA_ADMIN_PASSWORD:admin}
+    database:
+      schema-update: true
+    job-execution:
+      enabled: true
+    history-level: audit
+
 server:
   port: ${SERVER_PORT:25103}
 

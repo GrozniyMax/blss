@@ -3,20 +3,16 @@ package com.blss.orderservice.service.report;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE, makeFinal = true)
 public class ReportScheduler {
 
     private ReportService reportService;
 
-    @Scheduled(cron = "0 0 0 * * *")
     public void generateReport() {
         try {
             log.info("Generating report about yesterday");

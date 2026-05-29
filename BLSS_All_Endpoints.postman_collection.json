@@ -1,0 +1,811 @@
+{
+  "info": {
+    "name": "BLSS All Endpoints",
+    "_postman_id": "8dc856ff-65b3-4fc9-9fb8-9a8f53c19e0f",
+    "description": "E2E Postman collection for all REST endpoints in user-service, order-service, and status-service. Requires the three services plus PostgreSQL and Artemis to be running.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "userServiceUrl", "value": "http://127.0.0.1:25104" },
+    { "key": "orderServiceUrl", "value": "http://127.0.0.1:25103" },
+    { "key": "statusServiceUrl", "value": "http://127.0.0.1:25105" },
+    { "key": "adminUsername", "value": "admin" },
+    { "key": "adminPassword", "value": "admin123" },
+    { "key": "managerUsername", "value": "manager" },
+    { "key": "managerPassword", "value": "manager123" },
+    { "key": "consultantUsername", "value": "consultant" },
+    { "key": "consultantPassword", "value": "consultant123" },
+    { "key": "warehouseUsername", "value": "warehouse" },
+    { "key": "warehousePassword", "value": "warehouse123" },
+    { "key": "registeredPassword", "value": "e2e_pass_123" },
+    { "key": "managedPassword", "value": "managed_pass_123" },
+    { "key": "runId", "value": "" },
+    { "key": "registeredUsername", "value": "" },
+    { "key": "managedUsername", "value": "" },
+    { "key": "deliveryPointId", "value": "" },
+    { "key": "productId1", "value": "" },
+    { "key": "productId2", "value": "" },
+    { "key": "orderId1", "value": "" },
+    { "key": "orderId2", "value": "" },
+    { "key": "orderItemId1", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "00 Bootstrap",
+      "item": [
+        {
+          "name": "Status Service Health",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{statusServiceUrl}}/actuator/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('health is 200', function () { pm.response.to.have.status(200); });",
+                  "const runId = Date.now().toString();",
+                  "pm.collectionVariables.set('runId', runId);",
+                  "pm.collectionVariables.set('registeredUsername', 'registered_' + runId);",
+                  "pm.collectionVariables.set('managedUsername', 'managed_' + runId);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 User Service",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{registeredUsername}}\",\n  \"password\": \"{{registeredPassword}}\"\n}"
+            },
+            "url": "{{userServiceUrl}}/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('registered user created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('registered username returned', function () { pm.expect(body.username).to.eql(pm.collectionVariables.get('registeredUsername')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Internal Validate User",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{userServiceUrl}}/internal/users/{{registeredUsername}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('internal validate returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('user exists', function () { pm.expect(body.exists).to.eql(true); });",
+                  "pm.test('user enabled', function () { pm.expect(body.enabled).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Internal Authenticate User",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{registeredUsername}}\",\n  \"password\": \"{{registeredPassword}}\"\n}"
+            },
+            "url": "{{userServiceUrl}}/internal/users/authenticate"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('internal authenticate returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('authentication succeeded', function () { pm.expect(body.exists).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User As Admin",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{managedUsername}}\",\n  \"password\": \"{{managedPassword}}\",\n  \"roles\": [\"USER\"]\n}"
+            },
+            "url": "{{userServiceUrl}}/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin user create returns 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('managed username returned', function () { pm.expect(body.username).to.eql(pm.collectionVariables.get('managedUsername')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{userServiceUrl}}/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('users list returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('managed user is listed', function () { pm.expect(body).to.include(pm.collectionVariables.get('managedUsername')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Managed User",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{userServiceUrl}}/users/{{managedUsername}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('get user returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('managed user fetched', function () { pm.expect(body.username).to.eql(pm.collectionVariables.get('managedUsername')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Managed User",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{managedPassword}}\",\n  \"roles\": [\"USER\", \"CONSULTANT\"],\n  \"enabled\": true\n}"
+            },
+            "url": "{{userServiceUrl}}/users/{{managedUsername}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('update user returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('managed user remains enabled', function () { pm.expect(body.enabled).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Order Service",
+      "item": [
+        {
+          "name": "Create Delivery Point",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"PVZ-{{runId}}\",\n  \"address\": \"Address-{{runId}}\"\n}"
+            },
+            "url": "{{orderServiceUrl}}/delivery-points"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('delivery point created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('deliveryPointId', body.data.id);",
+                  "pm.test('delivery point id captured', function () { pm.expect(pm.collectionVariables.get('deliveryPointId')).to.be.ok; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Product 1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Product-A-{{runId}}\",\n  \"price\": 100.50,\n  \"initialCount\": 10\n}"
+            },
+            "url": "{{orderServiceUrl}}/inventory/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('product 1 created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('productId1', body.data.product.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Product 2",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Product-B-{{runId}}\",\n  \"price\": 250.00,\n  \"initialCount\": 20\n}"
+            },
+            "url": "{{orderServiceUrl}}/inventory/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('product 2 created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('productId2', body.data.product.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Products",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{orderServiceUrl}}/inventory/products"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('get all products returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('wrapped product list exists', function () { pm.expect(body.data).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Product 1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{orderServiceUrl}}/inventory/products/{{productId1}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('get product returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('requested product id matches', function () { pm.expect(body.data.product.id).to.eql(pm.collectionVariables.get('productId1')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Product 1 Count",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{orderServiceUrl}}/inventory/products/{{productId1}}/count"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('get count returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('count is numeric', function () { pm.expect(body.data).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Product 1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Product-A-Updated-{{runId}}\",\n  \"price\": 111.11\n}"
+            },
+            "url": "{{orderServiceUrl}}/inventory/products/{{productId1}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('update product returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('updated product name returned', function () { pm.expect(body.data.product.name).to.eql('Product-A-Updated-' + pm.collectionVariables.get('runId')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change Product 1 Count",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{orderServiceUrl}}/inventory/products/{{productId1}}/count?change=5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('change count returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('count field present after change', function () { pm.expect(body.data.count).to.be.a('number'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Order 1",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"owner\": \"{{registeredUsername}}\",\n  \"location\": \"{{deliveryPointId}}\",\n  \"productIds\": [\n    \"{{productId1}}\"\n  ]\n}"
+            },
+            "url": "{{orderServiceUrl}}/order/create"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('order 1 created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('orderId1', body.data.orderId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Order 1 As Owner",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{registeredUsername}}", "type": "string" },
+                { "key": "password", "value": "{{registeredPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{orderServiceUrl}}/order/{{orderId1}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('get order returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('orderItemId1', body.data.positions[0].id);",
+                  "pm.test('order item id captured', function () { pm.expect(pm.collectionVariables.get('orderItemId1')).to.be.ok; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Advance Order 1 Status To Next",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+                { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{orderServiceUrl}}/order/{{orderId1}}/status/next"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('advance status returns 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Advance Order 1 Status To Next Again",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+                { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{orderServiceUrl}}/order/{{orderId1}}/status/next"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('advance status again returns 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark Order Item Delivered",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{warehouseUsername}}", "type": "string" },
+                { "key": "password", "value": "{{warehousePassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{orderItemId1}}\",\n  \"yacheyka\": \"A-01\"\n}"
+            },
+            "url": "{{orderServiceUrl}}/mark-delivered"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('mark delivered returns 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sync Order 1 Bitrix Document",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+                { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "url": "{{orderServiceUrl}}/order/{{orderId1}}/bitrix-document"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('bitrix sync request accepted', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Order 2 For Cancel Flow",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{managerUsername}}", "type": "string" },
+                { "key": "password", "value": "{{managerPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"owner\": \"{{registeredUsername}}\",\n  \"location\": \"{{deliveryPointId}}\",\n  \"productIds\": [\n    \"{{productId2}}\"\n  ]\n}"
+            },
+            "url": "{{orderServiceUrl}}/order/create"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('order 2 created', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('orderId2', body.data.orderId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Order 2",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{consultantUsername}}", "type": "string" },
+                { "key": "password", "value": "{{consultantPassword}}", "type": "string" }
+              ]
+            },
+            "method": "PATCH",
+            "url": "{{orderServiceUrl}}/order/{{orderId2}}/status/cancel"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('cancel order returns 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Status Service",
+      "item": [
+        {
+          "name": "Get Order 1 History",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{registeredUsername}}", "type": "string" },
+                { "key": "password", "value": "{{registeredPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{statusServiceUrl}}/order/{{orderId1}}/history"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('history returns 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('history order id matches', function () { pm.expect(body.orderId).to.eql(pm.collectionVariables.get('orderId1')); });",
+                  "pm.test('history array returned', function () { pm.expect(body.history).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "99 Cleanup",
+      "item": [
+        {
+          "name": "Delete Managed User",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{userServiceUrl}}/users/{{managedUsername}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('managed user deleted', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Registered User",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{adminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+              ]
+            },
+            "method": "DELETE",
+            "url": "{{userServiceUrl}}/users/{{registeredUsername}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('registered user deleted', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

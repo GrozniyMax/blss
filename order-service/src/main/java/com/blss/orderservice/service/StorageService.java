@@ -1,16 +1,11 @@
 package com.blss.orderservice.service;
 
-import com.blss.orderservice.db.order.OrderItemRepo;
-import com.blss.orderservice.domain.order.OrderItem;
-import com.blss.orderservice.exception.NotFoundException;
-import com.blss.orderservice.service.order.OrderStatusUpdater;
-import com.blss.orderservice.service.tx.TransactionExecutor;
+import com.blss.orderservice.service.order.OrderProcessService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -18,17 +13,9 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class StorageService {
 
-    OrderItemRepo orderItemRepo;
-
-    OrderStatusUpdater updater;
-
-    TransactionExecutor transactionExecutor;
+    OrderProcessService orderProcessService;
 
     public void updateYacheyka(UUID itemId, String yacheyka) {
-        var item = transactionExecutor.inTransaction(() ->
-                orderItemRepo.updateYacheyka(itemId, yacheyka)
-                        .orElseThrow(() -> new NotFoundException(OrderItem.class, itemId))
-        );
-        updater.updateStatusIfReady(item.orderId());
+        orderProcessService.markDelivered(itemId, yacheyka);
     }
 }

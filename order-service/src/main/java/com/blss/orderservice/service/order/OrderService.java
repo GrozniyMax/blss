@@ -1,18 +1,13 @@
 package com.blss.orderservice.service.order;
 
-import com.blss.orderservice.client.UserServiceClient;
-import com.blss.orderservice.db.DeliveryPointRepo;
 import com.blss.orderservice.db.ProductRepo;
-import com.blss.orderservice.db.StoreRepo;
 import com.blss.orderservice.db.order.OrderItemRepo;
 import com.blss.orderservice.db.order.OrderRepo;
 import com.blss.orderservice.domain.Product;
 import com.blss.orderservice.domain.order.Order;
 import com.blss.orderservice.domain.order.OrderItem;
 import com.blss.orderservice.domain.order.Status;
-import com.blss.orderservice.exception.InvalidOrderException;
 import com.blss.orderservice.exception.NotFoundException;
-import com.blss.orderservice.jms.OrderStatusProducer;
 import com.blss.orderservice.service.tx.TransactionExecutor;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -42,77 +37,16 @@ public class OrderService {
 
     ProductRepo productRepo;
 
-    StoreRepo storeRepo;
-
     OrderRepo orderRepo;
 
     OrderItemRepo orderItemRepo;
 
-    DeliveryPointRepo deliveryPointRepo;
-
-    UserServiceClient userServiceClient;
-
     TransactionExecutor transactionExecutor;
 
-    OrderDocumentSyncService orderDocumentSyncService;
-
-    OrderStatusProducer orderStatusProducer;
+    OrderProcessService orderProcessService;
 
     public CreationOrderResponse createOrder(String owner, UUID location, List<UUID> productIds) {
-        var response = transactionExecutor.inTransaction(() -> {
-            var foundProduct = StreamSupport.stream(productRepo.findAllById(productIds).spliterator(), false).toList();
-
-            if (foundProduct.size() != productIds.size()) {
-                throw new InvalidOrderException("Не все продукты были найдены");
-            }
-
-            if (deliveryPointRepo.findById(location).isEmpty()) {
-                throw new InvalidOrderException("ПВЗ не существует");
-            }
-
-            if (!userServiceClient.existsByUsername(owner)) {
-                throw new InvalidOrderException("Пользователь не существует");
-            }
-
-                    var totalPrice = foundProduct.stream()
-                    .map(Product::price)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            var order = Order.builder()
-                    .owner(owner)
-                    .location(location)
-                    .creationDate(Instant.now())
-                    .status(Status.CREATED)
-                    .totalAmount(totalPrice)
-                    .build();
-
-            storeRepo.decrementCount(productIds);
-
-            order = orderRepo.create(order);
-            var orderId = order.id();
-
-            var positions = productIds.stream()
-                    .map(id ->
-                            new OrderItem(
-                                    null,
-                                    orderId,
-                                    id,
-                                    null
-                            )
-                    )
-                    .toList();
-
-            var ids = positions.stream()
-                    .map(orderItemRepo::create)
-                    .map(OrderItem::id)
-                    .toList();
-
-            orderStatusProducer.sendStatusChange(orderId, Status.CREATED);
-
-            return new CreationOrderResponse(orderId, ids);
-        });
-        orderDocumentSyncService.sendOrderDocument(response.orderId());
-        return response;
+        return orderProcessService.createOrder(owner, location, productIds);
     }
 
     public Status getStatus(UUID orderId) {

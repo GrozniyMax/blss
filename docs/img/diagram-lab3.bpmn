@@ -1,0 +1,1529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             id="Definitions_Lab3"
+             targetNamespace="http://bpmn.io/schema/bpmn">
+  <message id="Message_OrderCreated" name="Команда на создание заказа" />
+  <message id="Message_StatusChanged" name="Событие OrderStatusChanged" />
+  <message id="Message_EisSync" name="Документ заказа для EIS" />
+
+  <collaboration id="Collaboration_Lab3">
+    <participant id="Participant_Client" name="Клиент" processRef="Process_Client" />
+    <participant id="Participant_OrderService" name="Order Service" processRef="Process_OrderService" />
+    <participant id="Participant_ActiveMQ" name="ActiveMQ Queue" processRef="Process_ActiveMQ" />
+    <participant id="Participant_Node1" name="Узел обработки #1 (status-service)" processRef="Process_Node1" />
+    <participant id="Participant_Node2" name="Узел обработки #2 (user-service/notification node)" processRef="Process_Node2" />
+    <participant id="Participant_Quartz" name="Quartz Scheduler" processRef="Process_Quartz" />
+    <participant id="Participant_EIS" name="Внешняя EIS через JCA" processRef="Process_EIS" />
+    <participant id="Participant_0sp431r" name="Create product Transaction" processRef="Process_0nz3wm4" />
+    <participant id="Participant_1pbxk6t" name="Update product count Transaction" processRef="Process_1fg9d4n" />
+    <participant id="Participant_0yusntf" name="Book Transaction" processRef="Process_05x46yj" />
+    <participant id="Participant_1wgmyqy" name="Update order status Transaction" processRef="Process_1298f1a" />
+    <participant id="Participant_18732gp" name="Update product count Transaction" processRef="Process_1p4htho" />
+    <participant id="Participant_0lgyktb" name="Order check Transaction" processRef="Process_05fu806" />
+    <participant id="Participant_0cnfq75" name="Update yacheyka Transaction" processRef="Process_1alnsqx" />
+    <participant id="Participant_14x55xq" name="Get yacheyka Transaction" processRef="Process_0him2gc" />
+    <participant id="Participant_0w0w2c1" name="Update order status Transaction" processRef="Process_19nj9qr" />
+    <participant id="Participant_0g5lzso" name="Get yacheyka Transaction" processRef="Process_1u65dt9" />
+    <participant id="Participant_DistributedTx" name="Distributed Transaction (JTA/XA)" processRef="Process_DistributedTx" />
+
+    <messageFlow id="Flow_CreateOrder" sourceRef="ClientTask_CreateOrder" targetRef="OrderStart_CreateOrder" />
+    <messageFlow id="Flow_EnqueueStatusAfterCreate" sourceRef="OrderThrow_Created" targetRef="QueueCatch_Created" />
+    <messageFlow id="Flow_EnqueueStatusReady" sourceRef="OrderThrow_Ready" targetRef="QueueCatch_Ready" />
+    <messageFlow id="Flow_EnqueueStatusCancel" sourceRef="OrderThrow_Cancel" targetRef="QueueCatch_Cancel" />
+    <messageFlow id="Flow_DeliverToNode1_Created" sourceRef="QueueThrow_ToNode1_Created" targetRef="Node1Catch_Created" />
+    <messageFlow id="Flow_DeliverToNode2_Created" sourceRef="QueueThrow_ToNode2_Created" targetRef="Node2Catch_Created" />
+    <messageFlow id="Flow_DeliverToNode1_Ready" sourceRef="QueueThrow_ToNode1_Ready" targetRef="Node1Catch_Ready" />
+    <messageFlow id="Flow_DeliverToNode2_Ready" sourceRef="QueueThrow_ToNode2_Ready" targetRef="Node2Catch_Ready" />
+    <messageFlow id="Flow_DeliverToNode1_Cancel" sourceRef="QueueThrow_ToNode1_Cancel" targetRef="Node1Catch_Cancel" />
+    <messageFlow id="Flow_DeliverToNode2_Cancel" sourceRef="QueueThrow_ToNode2_Cancel" targetRef="Node2Catch_Cancel" />
+    <messageFlow id="Flow_OrderReadyToEis" sourceRef="OrderThrow_EisSync" targetRef="EisCatch_Sync" />
+    <messageFlow id="Flow_QuartzToOrderService" sourceRef="QuartzTask_FindExpired" targetRef="OrderCatch_ExpiredCheck" />
+    <messageFlow id="Flow_Lab3_OrderCheckTx" sourceRef="OrderTask_Validate" targetRef="Activity_038bgv1" />
+    <messageFlow id="Flow_Lab3_ReserveBookTx" sourceRef="OrderTask_Reserve" targetRef="Activity_1ezml6g" />
+    <messageFlow id="Flow_Lab3_ReserveCountTx" sourceRef="OrderTask_Reserve" targetRef="Activity_1afbuoi" />
+    <messageFlow id="Flow_Lab3_StatusTx1" sourceRef="OrderTask_StatusCreated" targetRef="Activity_0m6q70i" />
+    <messageFlow id="Flow_Lab3_UpdateYacheykaTx" sourceRef="OrderTask_Delivery" targetRef="Activity_1vfenku" />
+    <messageFlow id="Flow_Lab3_GetYacheykaTx1" sourceRef="OrderTask_CheckReady" targetRef="Activity_1ka0mmc" />
+    <messageFlow id="Flow_Lab3_StatusTx2" sourceRef="OrderTask_StatusReady" targetRef="Activity_0wlo6fm" />
+    <messageFlow id="Flow_Lab3_GetYacheykaTx2" sourceRef="OrderTask_CheckReady" targetRef="Activity_1jdgzlp" />
+    <messageFlow id="Flow_Lab3_CancelCountTx" sourceRef="OrderTask_CancelExpired" targetRef="Activity_1m2h6me" />
+    <messageFlow id="Flow_Lab3_ReadyDistributedTx" sourceRef="OrderTask_StatusReady" targetRef="Activity_DistributedTx" />
+    <messageFlow id="Flow_Lab3_CancelDistributedTx" sourceRef="OrderTask_CancelExpired" targetRef="Activity_DistributedTx" />
+  </collaboration>
+
+  <process id="Process_Client" isExecutable="false">
+    <startEvent id="ClientStart" name="Клиент хочет оформить заказ">
+      <outgoing>Flow_Client_1</outgoing>
+    </startEvent>
+    <task id="ClientTask_CreateOrder" name="Отправить запрос на создание заказа">
+      <incoming>Flow_Client_1</incoming>
+      <outgoing>Flow_Client_2</outgoing>
+    </task>
+    <intermediateCatchEvent id="ClientCatch_Ready" name="Ожидать готовности заказа">
+      <incoming>Flow_Client_2</incoming>
+      <outgoing>Flow_Client_3</outgoing>
+    </intermediateCatchEvent>
+    <task id="ClientTask_GetOrder" name="Получить заказ в ПВЗ">
+      <incoming>Flow_Client_3</incoming>
+      <outgoing>Flow_Client_4</outgoing>
+    </task>
+    <endEvent id="ClientEnd" name="Заказ получен">
+      <incoming>Flow_Client_4</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_Client_1" sourceRef="ClientStart" targetRef="ClientTask_CreateOrder" />
+    <sequenceFlow id="Flow_Client_2" sourceRef="ClientTask_CreateOrder" targetRef="ClientCatch_Ready" />
+    <sequenceFlow id="Flow_Client_3" sourceRef="ClientCatch_Ready" targetRef="ClientTask_GetOrder" />
+    <sequenceFlow id="Flow_Client_4" sourceRef="ClientTask_GetOrder" targetRef="ClientEnd" />
+  </process>
+
+  <process id="Process_OrderService" isExecutable="false">
+    <startEvent id="OrderStart_CreateOrder" name="Получен REST-запрос на создание заказа">
+      <messageEventDefinition messageRef="Message_OrderCreated" />
+      <outgoing>Flow_Order_1</outgoing>
+    </startEvent>
+    <serviceTask id="OrderTask_Validate" name="Проверить заказ и пользователя">
+      <incoming>Flow_Order_1</incoming>
+      <outgoing>Flow_Order_2</outgoing>
+    </serviceTask>
+    <serviceTask id="OrderTask_Reserve" name="Зарезервировать товар и создать заказ">
+      <incoming>Flow_Order_2</incoming>
+      <outgoing>Flow_Order_3</outgoing>
+    </serviceTask>
+    <serviceTask id="OrderTask_StatusCreated" name="Установить статус CREATED / PROCESSING">
+      <incoming>Flow_Order_3</incoming>
+      <outgoing>Flow_Order_4</outgoing>
+    </serviceTask>
+    <intermediateThrowEvent id="OrderThrow_Created" name="JMS: отправить событие статуса">
+      <incoming>Flow_Order_4</incoming>
+      <outgoing>Flow_Order_5</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+    <serviceTask id="OrderTask_Delivery" name="Передать заказ в доставку / ПВЗ">
+      <incoming>Flow_Order_5</incoming>
+      <outgoing>Flow_Order_6</outgoing>
+    </serviceTask>
+    <serviceTask id="OrderTask_CheckReady" name="Асинхронно проверить заполнение ячеек">
+      <incoming>Flow_Order_6</incoming>
+      <outgoing>Flow_Order_7</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="OrderGateway_Ready" name="Все позиции размещены?">
+      <incoming>Flow_Order_7</incoming>
+      <outgoing>Flow_Order_8_yes</outgoing>
+      <outgoing>Flow_Order_8_no</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="OrderTask_StatusReady" name="Установить статус READY_FOR_PICKUP">
+      <incoming>Flow_Order_8_yes</incoming>
+      <outgoing>Flow_Order_9</outgoing>
+    </serviceTask>
+    <intermediateThrowEvent id="OrderThrow_Ready" name="JMS: отправить READY_FOR_PICKUP">
+      <incoming>Flow_Order_9</incoming>
+      <outgoing>Flow_Order_10</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+    <serviceTask id="OrderTask_PrepareEis" name="Сформировать документ заказа">
+      <incoming>Flow_Order_10</incoming>
+      <outgoing>Flow_Order_11</outgoing>
+    </serviceTask>
+    <intermediateThrowEvent id="OrderThrow_EisSync" name="Передать документ в EIS через JCA">
+      <incoming>Flow_Order_11</incoming>
+      <outgoing>Flow_Order_12</outgoing>
+      <messageEventDefinition messageRef="Message_EisSync" />
+    </intermediateThrowEvent>
+    <intermediateThrowEvent id="OrderThrow_ClientReady" name="Сообщить клиенту о готовности заказа">
+      <incoming>Flow_Order_12</incoming>
+      <outgoing>Flow_Order_13</outgoing>
+    </intermediateThrowEvent>
+    <endEvent id="OrderEnd_Success" name="Ожидание выдачи заказа">
+      <incoming>Flow_Order_13</incoming>
+    </endEvent>
+
+    <intermediateCatchEvent id="OrderCatch_ExpiredCheck" name="Quartz: проверить просроченные заказы">
+      <outgoing>Flow_Order_14_timer</outgoing>
+    </intermediateCatchEvent>
+    <serviceTask id="OrderTask_FindExpired" name="Найти заказы с истекшим сроком хранения">
+      <incoming>Flow_Order_14_timer</incoming>
+      <outgoing>Flow_Order_15</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="OrderGateway_Expired" name="Есть просроченные?">
+      <incoming>Flow_Order_15</incoming>
+      <outgoing>Flow_Order_17_yes</outgoing>
+      <outgoing>Flow_Order_17_no</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="OrderTask_CancelExpired" name="Отменить заказ и освободить резерв">
+      <incoming>Flow_Order_17_yes</incoming>
+      <outgoing>Flow_Order_18</outgoing>
+    </serviceTask>
+    <intermediateThrowEvent id="OrderThrow_Cancel" name="JMS: отправить CANCELED">
+      <incoming>Flow_Order_18</incoming>
+      <outgoing>Flow_Order_19</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+    <endEvent id="OrderEnd_Expired" name="Просроченные заказы обработаны">
+      <incoming>Flow_Order_19</incoming>
+      <incoming>Flow_Order_17_no</incoming>
+    </endEvent>
+
+    <sequenceFlow id="Flow_Order_1" sourceRef="OrderStart_CreateOrder" targetRef="OrderTask_Validate" />
+    <sequenceFlow id="Flow_Order_2" sourceRef="OrderTask_Validate" targetRef="OrderTask_Reserve" />
+    <sequenceFlow id="Flow_Order_3" sourceRef="OrderTask_Reserve" targetRef="OrderTask_StatusCreated" />
+    <sequenceFlow id="Flow_Order_4" sourceRef="OrderTask_StatusCreated" targetRef="OrderThrow_Created" />
+    <sequenceFlow id="Flow_Order_5" sourceRef="OrderThrow_Created" targetRef="OrderTask_Delivery" />
+    <sequenceFlow id="Flow_Order_6" sourceRef="OrderTask_Delivery" targetRef="OrderTask_CheckReady" />
+    <sequenceFlow id="Flow_Order_7" sourceRef="OrderTask_CheckReady" targetRef="OrderGateway_Ready" />
+    <sequenceFlow id="Flow_Order_8_yes" sourceRef="OrderGateway_Ready" targetRef="OrderTask_StatusReady" />
+    <sequenceFlow id="Flow_Order_8_no" sourceRef="OrderGateway_Ready" targetRef="OrderEnd_Success" name="Нет" />
+    <sequenceFlow id="Flow_Order_9" sourceRef="OrderTask_StatusReady" targetRef="OrderThrow_Ready" />
+    <sequenceFlow id="Flow_Order_10" sourceRef="OrderThrow_Ready" targetRef="OrderTask_PrepareEis" />
+    <sequenceFlow id="Flow_Order_11" sourceRef="OrderTask_PrepareEis" targetRef="OrderThrow_EisSync" />
+    <sequenceFlow id="Flow_Order_12" sourceRef="OrderThrow_EisSync" targetRef="OrderThrow_ClientReady" />
+    <sequenceFlow id="Flow_Order_13" sourceRef="OrderThrow_ClientReady" targetRef="OrderEnd_Success" />
+    <sequenceFlow id="Flow_Order_14_timer" sourceRef="OrderCatch_ExpiredCheck" targetRef="OrderTask_FindExpired" />
+    <sequenceFlow id="Flow_Order_15" sourceRef="OrderTask_FindExpired" targetRef="OrderGateway_Expired" />
+    <sequenceFlow id="Flow_Order_16" sourceRef="OrderGateway_Expired" targetRef="OrderTask_CancelExpired" name="Да" />
+    <sequenceFlow id="Flow_Order_17_yes" sourceRef="OrderTask_CancelExpired" targetRef="OrderThrow_Cancel" />
+    <sequenceFlow id="Flow_Order_17_no" sourceRef="OrderGateway_Expired" targetRef="OrderEnd_Expired" name="Нет" />
+    <sequenceFlow id="Flow_Order_18" sourceRef="OrderThrow_Cancel" targetRef="OrderEnd_Expired" />
+  </process>
+
+  <process id="Process_ActiveMQ" isExecutable="false">
+    <startEvent id="QueueStart" name="Очередь активна">
+      <outgoing>Flow_Queue_0</outgoing>
+    </startEvent>
+    <parallelGateway id="QueueGateway_Split">
+      <incoming>Flow_Queue_0</incoming>
+      <outgoing>Flow_Queue_1</outgoing>
+      <outgoing>Flow_Queue_4</outgoing>
+      <outgoing>Flow_Queue_7</outgoing>
+    </parallelGateway>
+
+    <intermediateCatchEvent id="QueueCatch_Created" name="Принять CREATED/PROCESSING">
+      <incoming>Flow_Queue_1</incoming>
+      <outgoing>Flow_Queue_2</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <eventBasedGateway id="QueueGateway_Created" name="Конкурирующие потребители">
+      <incoming>Flow_Queue_2</incoming>
+      <outgoing>Flow_Queue_3a</outgoing>
+      <outgoing>Flow_Queue_3b</outgoing>
+    </eventBasedGateway>
+    <intermediateThrowEvent id="QueueThrow_ToNode1_Created" name="Доставить на узел #1">
+      <incoming>Flow_Queue_3a</incoming>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+    <intermediateThrowEvent id="QueueThrow_ToNode2_Created" name="Доставить на узел #2">
+      <incoming>Flow_Queue_3b</incoming>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+
+    <intermediateCatchEvent id="QueueCatch_Ready" name="Принять READY_FOR_PICKUP">
+      <incoming>Flow_Queue_4</incoming>
+      <outgoing>Flow_Queue_5</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <eventBasedGateway id="QueueGateway_Ready" name="Конкурирующие потребители">
+      <incoming>Flow_Queue_5</incoming>
+      <outgoing>Flow_Queue_6a</outgoing>
+      <outgoing>Flow_Queue_6b</outgoing>
+    </eventBasedGateway>
+    <intermediateThrowEvent id="QueueThrow_ToNode1_Ready" name="Доставить на узел #1">
+      <incoming>Flow_Queue_6a</incoming>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+    <intermediateThrowEvent id="QueueThrow_ToNode2_Ready" name="Доставить на узел #2">
+      <incoming>Flow_Queue_6b</incoming>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+
+    <intermediateCatchEvent id="QueueCatch_Cancel" name="Принять CANCELED">
+      <incoming>Flow_Queue_7</incoming>
+      <outgoing>Flow_Queue_8</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <eventBasedGateway id="QueueGateway_Cancel" name="Конкурирующие потребители">
+      <incoming>Flow_Queue_8</incoming>
+      <outgoing>Flow_Queue_9a</outgoing>
+      <outgoing>Flow_Queue_9b</outgoing>
+    </eventBasedGateway>
+    <intermediateThrowEvent id="QueueThrow_ToNode1_Cancel" name="Доставить на узел #1">
+      <incoming>Flow_Queue_9a</incoming>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+    <intermediateThrowEvent id="QueueThrow_ToNode2_Cancel" name="Доставить на узел #2">
+      <incoming>Flow_Queue_9b</incoming>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateThrowEvent>
+
+    <sequenceFlow id="Flow_Queue_0" sourceRef="QueueStart" targetRef="QueueGateway_Split" />
+    <sequenceFlow id="Flow_Queue_1" sourceRef="QueueGateway_Split" targetRef="QueueCatch_Created" />
+    <sequenceFlow id="Flow_Queue_2" sourceRef="QueueCatch_Created" targetRef="QueueGateway_Created" />
+    <sequenceFlow id="Flow_Queue_3a" sourceRef="QueueGateway_Created" targetRef="QueueThrow_ToNode1_Created" />
+    <sequenceFlow id="Flow_Queue_3b" sourceRef="QueueGateway_Created" targetRef="QueueThrow_ToNode2_Created" />
+    <sequenceFlow id="Flow_Queue_4" sourceRef="QueueGateway_Split" targetRef="QueueCatch_Ready" />
+    <sequenceFlow id="Flow_Queue_5" sourceRef="QueueCatch_Ready" targetRef="QueueGateway_Ready" />
+    <sequenceFlow id="Flow_Queue_6a" sourceRef="QueueGateway_Ready" targetRef="QueueThrow_ToNode1_Ready" />
+    <sequenceFlow id="Flow_Queue_6b" sourceRef="QueueGateway_Ready" targetRef="QueueThrow_ToNode2_Ready" />
+    <sequenceFlow id="Flow_Queue_7" sourceRef="QueueGateway_Split" targetRef="QueueCatch_Cancel" />
+    <sequenceFlow id="Flow_Queue_8" sourceRef="QueueCatch_Cancel" targetRef="QueueGateway_Cancel" />
+    <sequenceFlow id="Flow_Queue_9a" sourceRef="QueueGateway_Cancel" targetRef="QueueThrow_ToNode1_Cancel" />
+    <sequenceFlow id="Flow_Queue_9b" sourceRef="QueueGateway_Cancel" targetRef="QueueThrow_ToNode2_Cancel" />
+  </process>
+
+  <process id="Process_Node1" isExecutable="false">
+    <intermediateCatchEvent id="Node1Catch_Created" name="Получить событие статуса">
+      <outgoing>Flow_Node1_1</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <serviceTask id="Node1Task_SaveHistoryCreated" name="Сохранить историю статуса">
+      <incoming>Flow_Node1_1</incoming>
+      <outgoing>Flow_Node1_2</outgoing>
+    </serviceTask>
+    <endEvent id="Node1End_Created">
+      <incoming>Flow_Node1_2</incoming>
+    </endEvent>
+
+    <intermediateCatchEvent id="Node1Catch_Ready" name="Получить READY_FOR_PICKUP">
+      <outgoing>Flow_Node1_3</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <serviceTask id="Node1Task_SaveHistoryReady" name="Сохранить историю READY_FOR_PICKUP">
+      <incoming>Flow_Node1_3</incoming>
+      <outgoing>Flow_Node1_4</outgoing>
+    </serviceTask>
+    <endEvent id="Node1End_Ready">
+      <incoming>Flow_Node1_4</incoming>
+    </endEvent>
+
+    <intermediateCatchEvent id="Node1Catch_Cancel" name="Получить CANCELED">
+      <outgoing>Flow_Node1_5</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <serviceTask id="Node1Task_SaveHistoryCancel" name="Сохранить историю CANCELED">
+      <incoming>Flow_Node1_5</incoming>
+      <outgoing>Flow_Node1_6</outgoing>
+    </serviceTask>
+    <endEvent id="Node1End_Cancel">
+      <incoming>Flow_Node1_6</incoming>
+    </endEvent>
+
+    <sequenceFlow id="Flow_Node1_1" sourceRef="Node1Catch_Created" targetRef="Node1Task_SaveHistoryCreated" />
+    <sequenceFlow id="Flow_Node1_2" sourceRef="Node1Task_SaveHistoryCreated" targetRef="Node1End_Created" />
+    <sequenceFlow id="Flow_Node1_3" sourceRef="Node1Catch_Ready" targetRef="Node1Task_SaveHistoryReady" />
+    <sequenceFlow id="Flow_Node1_4" sourceRef="Node1Task_SaveHistoryReady" targetRef="Node1End_Ready" />
+    <sequenceFlow id="Flow_Node1_5" sourceRef="Node1Catch_Cancel" targetRef="Node1Task_SaveHistoryCancel" />
+    <sequenceFlow id="Flow_Node1_6" sourceRef="Node1Task_SaveHistoryCancel" targetRef="Node1End_Cancel" />
+  </process>
+
+  <process id="Process_Node2" isExecutable="false">
+    <intermediateCatchEvent id="Node2Catch_Created" name="Получить событие статуса">
+      <outgoing>Flow_Node2_1</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <serviceTask id="Node2Task_NotifyCreated" name="Запустить пользовательское уведомление">
+      <incoming>Flow_Node2_1</incoming>
+      <outgoing>Flow_Node2_2</outgoing>
+    </serviceTask>
+    <endEvent id="Node2End_Created">
+      <incoming>Flow_Node2_2</incoming>
+    </endEvent>
+
+    <intermediateCatchEvent id="Node2Catch_Ready" name="Получить READY_FOR_PICKUP">
+      <outgoing>Flow_Node2_3</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <serviceTask id="Node2Task_NotifyReady" name="Уведомить клиента о готовности">
+      <incoming>Flow_Node2_3</incoming>
+      <outgoing>Flow_Node2_4</outgoing>
+    </serviceTask>
+    <endEvent id="Node2End_Ready">
+      <incoming>Flow_Node2_4</incoming>
+    </endEvent>
+
+    <intermediateCatchEvent id="Node2Catch_Cancel" name="Получить CANCELED">
+      <outgoing>Flow_Node2_5</outgoing>
+      <messageEventDefinition messageRef="Message_StatusChanged" />
+    </intermediateCatchEvent>
+    <serviceTask id="Node2Task_NotifyCancel" name="Уведомить клиента об отмене">
+      <incoming>Flow_Node2_5</incoming>
+      <outgoing>Flow_Node2_6</outgoing>
+    </serviceTask>
+    <endEvent id="Node2End_Cancel">
+      <incoming>Flow_Node2_6</incoming>
+    </endEvent>
+
+    <sequenceFlow id="Flow_Node2_1" sourceRef="Node2Catch_Created" targetRef="Node2Task_NotifyCreated" />
+    <sequenceFlow id="Flow_Node2_2" sourceRef="Node2Task_NotifyCreated" targetRef="Node2End_Created" />
+    <sequenceFlow id="Flow_Node2_3" sourceRef="Node2Catch_Ready" targetRef="Node2Task_NotifyReady" />
+    <sequenceFlow id="Flow_Node2_4" sourceRef="Node2Task_NotifyReady" targetRef="Node2End_Ready" />
+    <sequenceFlow id="Flow_Node2_5" sourceRef="Node2Catch_Cancel" targetRef="Node2Task_NotifyCancel" />
+    <sequenceFlow id="Flow_Node2_6" sourceRef="Node2Task_NotifyCancel" targetRef="Node2End_Cancel" />
+  </process>
+
+  <process id="Process_Quartz" isExecutable="false">
+    <startEvent id="QuartzStart_Timer" name="Cron trigger Quartz">
+      <timerEventDefinition />
+      <outgoing>Flow_Quartz_1</outgoing>
+    </startEvent>
+    <serviceTask id="QuartzTask_FindExpired" name="Запустить проверку заказов по расписанию">
+      <incoming>Flow_Quartz_1</incoming>
+      <outgoing>Flow_Quartz_2</outgoing>
+    </serviceTask>
+    <endEvent id="QuartzEnd">
+      <incoming>Flow_Quartz_2</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_Quartz_1" sourceRef="QuartzStart_Timer" targetRef="QuartzTask_FindExpired" />
+    <sequenceFlow id="Flow_Quartz_2" sourceRef="QuartzTask_FindExpired" targetRef="QuartzEnd" />
+  </process>
+
+  <process id="Process_EIS" isExecutable="false">
+    <intermediateCatchEvent id="EisCatch_Sync" name="Получить документ заказа">
+      <messageEventDefinition messageRef="Message_EisSync" />
+      <outgoing>Flow_Eis_1</outgoing>
+    </intermediateCatchEvent>
+    <serviceTask id="EisTask_JcaAdapter" name="Обработать через JCA resource adapter">
+      <incoming>Flow_Eis_1</incoming>
+      <outgoing>Flow_Eis_2</outgoing>
+    </serviceTask>
+    <serviceTask id="EisTask_CreateCard" name="Создать/обновить карточку заказа в EIS">
+      <incoming>Flow_Eis_2</incoming>
+      <outgoing>Flow_Eis_3</outgoing>
+    </serviceTask>
+    <endEvent id="EisEnd" name="Интеграция завершена">
+      <incoming>Flow_Eis_3</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_Eis_1" sourceRef="EisCatch_Sync" targetRef="EisTask_JcaAdapter" />
+    <sequenceFlow id="Flow_Eis_2" sourceRef="EisTask_JcaAdapter" targetRef="EisTask_CreateCard" />
+    <sequenceFlow id="Flow_Eis_3" sourceRef="EisTask_CreateCard" targetRef="EisEnd" />
+  </process>
+
+  <process id="Process_0nz3wm4">
+    <startEvent id="Event_0fgri8a" name="Старт транзакции">
+      <outgoing>Flow_0iubq5z</outgoing>
+    </startEvent>
+    <endEvent id="Event_0fefpe4" name="Успешное окончание">
+      <incoming>Flow_1e5neek</incoming>
+    </endEvent>
+    <endEvent id="Event_1kqdccm" name="Отмена">
+      <incoming>Flow_1yvq6t6</incoming>
+    </endEvent>
+    <transaction id="Activity_0n7t80m">
+      <incoming>Flow_0iubq5z</incoming>
+      <outgoing>Flow_1e5neek</outgoing>
+      <startEvent id="Event_0ayuw5m">
+        <outgoing>Flow_1y2n6oh</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_1qpqd8f" name="Создание записи о товаре">
+        <incoming>Flow_1y2n6oh</incoming>
+        <outgoing>Flow_153j2sh</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_1psuuaz">
+        <incoming>Flow_153j2sh</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_1y2n6oh" sourceRef="Event_0ayuw5m" targetRef="Activity_1qpqd8f" />
+      <sequenceFlow id="Flow_153j2sh" sourceRef="Activity_1qpqd8f" targetRef="Event_1psuuaz" />
+    </transaction>
+    <boundaryEvent id="Event_03ev6p5" name="Ошибка в создании" attachedToRef="Activity_0n7t80m">
+      <outgoing>Flow_1yvq6t6</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_0o43ys7" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_0iubq5z" sourceRef="Event_0fgri8a" targetRef="Activity_0n7t80m" />
+    <sequenceFlow id="Flow_1e5neek" sourceRef="Activity_0n7t80m" targetRef="Event_0fefpe4" />
+    <sequenceFlow id="Flow_1yvq6t6" sourceRef="Event_03ev6p5" targetRef="Event_1kqdccm" />
+  </process>
+
+  <process id="Process_1fg9d4n">
+    <startEvent id="Event_13nkd7c">
+      <outgoing>Flow_0od29il</outgoing>
+    </startEvent>
+    <endEvent id="Event_0zn5v7r" name="Отмена">
+      <incoming>Flow_0jy1ug9</incoming>
+    </endEvent>
+    <endEvent id="Event_06vp9ya" name="Успешное создание">
+      <incoming>Flow_16bw8gi</incoming>
+    </endEvent>
+    <transaction id="Activity_1afbuoi">
+      <incoming>Flow_0od29il</incoming>
+      <outgoing>Flow_16bw8gi</outgoing>
+      <startEvent id="Event_1off6lv">
+        <outgoing>Flow_0trjrar</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_0mwbtx2" name="Обновление количества">
+        <incoming>Flow_0trjrar</incoming>
+        <outgoing>Flow_1kixc5l</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_1bmnebj">
+        <incoming>Flow_1kixc5l</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_0trjrar" sourceRef="Event_1off6lv" targetRef="Activity_0mwbtx2" />
+      <sequenceFlow id="Flow_1kixc5l" sourceRef="Activity_0mwbtx2" targetRef="Event_1bmnebj" />
+    </transaction>
+    <boundaryEvent id="Event_0h8rsp0" name="Ошибка в обновлении" attachedToRef="Activity_1afbuoi">
+      <outgoing>Flow_0jy1ug9</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_0qrit01" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_0od29il" sourceRef="Event_13nkd7c" targetRef="Activity_1afbuoi" />
+    <sequenceFlow id="Flow_0jy1ug9" sourceRef="Event_0h8rsp0" targetRef="Event_0zn5v7r" />
+    <sequenceFlow id="Flow_16bw8gi" sourceRef="Activity_1afbuoi" targetRef="Event_06vp9ya" />
+  </process>
+
+  <process id="Process_05x46yj">
+    <startEvent id="Event_0dfya0b">
+      <outgoing>Flow_1uik7aa</outgoing>
+    </startEvent>
+    <endEvent id="Event_0szlfcm" name="Успешная бронь">
+      <incoming>Flow_0kl9t7e</incoming>
+    </endEvent>
+    <endEvent id="Event_12fysjc" name="Отмена брони">
+      <incoming>Flow_0sbclni</incoming>
+    </endEvent>
+    <transaction id="Activity_1ezml6g">
+      <incoming>Flow_1uik7aa</incoming>
+      <outgoing>Flow_0kl9t7e</outgoing>
+      <startEvent id="Event_0n9jqct">
+        <outgoing>Flow_0b8us24</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_0eii1vb" name="Бронь товара на складе">
+        <incoming>Flow_0b8us24</incoming>
+        <outgoing>Flow_0jgqrm2</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <task id="Activity_0llu9od" name="Отмена брони">
+        <outgoing>Flow_134b4ek</outgoing>
+      </task>
+      <intermediateThrowEvent id="Event_1yble50">
+        <incoming>Flow_134b4ek</incoming>
+        <compensateEventDefinition id="CompensateEventDefinition_1hw1571" />
+      </intermediateThrowEvent>
+      <endEvent id="Event_1apbc8u" name="Бронь произведена">
+        <incoming>Flow_0jgqrm2</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_0b8us24" sourceRef="Event_0n9jqct" targetRef="Activity_0eii1vb" />
+      <sequenceFlow id="Flow_134b4ek" sourceRef="Activity_0llu9od" targetRef="Event_1yble50" />
+      <sequenceFlow id="Flow_0jgqrm2" sourceRef="Activity_0eii1vb" targetRef="Event_1apbc8u" />
+    </transaction>
+    <boundaryEvent id="Event_1149nr7" attachedToRef="Activity_1ezml6g">
+      <outgoing>Flow_0sbclni</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_05rwsuh" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_1uik7aa" sourceRef="Event_0dfya0b" targetRef="Activity_1ezml6g" />
+    <sequenceFlow id="Flow_0kl9t7e" sourceRef="Activity_1ezml6g" targetRef="Event_0szlfcm" />
+    <sequenceFlow id="Flow_0sbclni" sourceRef="Event_1149nr7" targetRef="Event_12fysjc" />
+  </process>
+
+  <process id="Process_1298f1a">
+    <startEvent id="Event_0xu4wlp">
+      <outgoing>Flow_0fwrr2u</outgoing>
+    </startEvent>
+    <endEvent id="Event_1tt6zfc" name="Отмена">
+      <incoming>Flow_1duirvt</incoming>
+    </endEvent>
+    <endEvent id="Event_1iwqfvm" name="Успешное окончание">
+      <incoming>Flow_15bs0o1</incoming>
+    </endEvent>
+    <transaction id="Activity_0m6q70i">
+      <incoming>Flow_0fwrr2u</incoming>
+      <outgoing>Flow_15bs0o1</outgoing>
+      <startEvent id="Event_0up77zi">
+        <outgoing>Flow_1fu0k7p</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_1myba49" name="Обновление статуса">
+        <incoming>Flow_1fu0k7p</incoming>
+        <outgoing>Flow_03esi5d</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_0y4ux0j">
+        <incoming>Flow_03esi5d</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_1fu0k7p" sourceRef="Event_0up77zi" targetRef="Activity_1myba49" />
+      <sequenceFlow id="Flow_03esi5d" sourceRef="Activity_1myba49" targetRef="Event_0y4ux0j" />
+    </transaction>
+    <boundaryEvent id="Event_0fdupf3" name="Ошибка в обновлении" attachedToRef="Activity_0m6q70i">
+      <outgoing>Flow_1duirvt</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_0qamsc8" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_0fwrr2u" sourceRef="Event_0xu4wlp" targetRef="Activity_0m6q70i" />
+    <sequenceFlow id="Flow_1duirvt" sourceRef="Event_0fdupf3" targetRef="Event_1tt6zfc" />
+    <sequenceFlow id="Flow_15bs0o1" sourceRef="Activity_0m6q70i" targetRef="Event_1iwqfvm" />
+  </process>
+
+  <process id="Process_1p4htho">
+    <startEvent id="Event_0cwg1pw">
+      <outgoing>Flow_0lajj4d</outgoing>
+    </startEvent>
+    <endEvent id="Event_0g3znhd" name="Отмена">
+      <incoming>Flow_1yka1ug</incoming>
+    </endEvent>
+    <endEvent id="Event_1vfp730" name="Успешное создание">
+      <incoming>Flow_0tauwcg</incoming>
+    </endEvent>
+    <transaction id="Activity_1m2h6me">
+      <incoming>Flow_0lajj4d</incoming>
+      <outgoing>Flow_0tauwcg</outgoing>
+      <startEvent id="Event_04wk5rn">
+        <outgoing>Flow_1kzpkzj</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_1hw88hg" name="Обновление количества">
+        <incoming>Flow_1kzpkzj</incoming>
+        <outgoing>Flow_03a7uev</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_197dugb">
+        <incoming>Flow_03a7uev</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_1kzpkzj" sourceRef="Event_04wk5rn" targetRef="Activity_1hw88hg" />
+      <sequenceFlow id="Flow_03a7uev" sourceRef="Activity_1hw88hg" targetRef="Event_197dugb" />
+    </transaction>
+    <boundaryEvent id="Event_0boztl4" name="Ошибка в обновлении" attachedToRef="Activity_1m2h6me">
+      <outgoing>Flow_1yka1ug</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_0l0xmg1" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_0lajj4d" sourceRef="Event_0cwg1pw" targetRef="Activity_1m2h6me" />
+    <sequenceFlow id="Flow_1yka1ug" sourceRef="Event_0boztl4" targetRef="Event_0g3znhd" />
+    <sequenceFlow id="Flow_0tauwcg" sourceRef="Activity_1m2h6me" targetRef="Event_1vfp730" />
+  </process>
+
+  <process id="Process_05fu806">
+    <startEvent id="Event_1e520uw">
+      <outgoing>Flow_1nksh3r</outgoing>
+    </startEvent>
+    <endEvent id="Event_15pr1hl" name="Отмена">
+      <incoming>Flow_17m5gge</incoming>
+    </endEvent>
+    <endEvent id="Event_0xnbboy" name="Успешное создание">
+      <incoming>Flow_0w80rxm</incoming>
+    </endEvent>
+    <transaction id="Activity_038bgv1">
+      <incoming>Flow_1nksh3r</incoming>
+      <outgoing>Flow_0w80rxm</outgoing>
+      <startEvent id="Event_146kgjk">
+        <outgoing>Flow_0ndng1l</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_1wk9ywm" name="Проверка товара">
+        <incoming>Flow_0ndng1l</incoming>
+        <outgoing>Flow_1vsm8k1</outgoing>
+      </serviceTask>
+      <endEvent id="Event_0wqy3iy">
+        <incoming>Flow_1vsm8k1</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_0ndng1l" sourceRef="Event_146kgjk" targetRef="Activity_1wk9ywm" />
+      <sequenceFlow id="Flow_1vsm8k1" sourceRef="Activity_1wk9ywm" targetRef="Event_0wqy3iy" />
+    </transaction>
+    <boundaryEvent id="Event_0nare4b" name="Ошибка в проверке" attachedToRef="Activity_038bgv1">
+      <outgoing>Flow_17m5gge</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_07b1asz" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_1nksh3r" sourceRef="Event_1e520uw" targetRef="Activity_038bgv1" />
+    <sequenceFlow id="Flow_17m5gge" sourceRef="Event_0nare4b" targetRef="Event_15pr1hl" />
+    <sequenceFlow id="Flow_0w80rxm" sourceRef="Activity_038bgv1" targetRef="Event_0xnbboy" />
+  </process>
+
+  <process id="Process_1alnsqx">
+    <startEvent id="Event_1tkwzqu">
+      <outgoing>Flow_1p11q8n</outgoing>
+    </startEvent>
+    <endEvent id="Event_0t4h763" name="Отмена">
+      <incoming>Flow_0chs844</incoming>
+    </endEvent>
+    <endEvent id="Event_1ogpc86" name="Успешное обновление">
+      <incoming>Flow_1rw9op7</incoming>
+    </endEvent>
+    <transaction id="Activity_1vfenku">
+      <incoming>Flow_1p11q8n</incoming>
+      <outgoing>Flow_1rw9op7</outgoing>
+      <startEvent id="Event_16xyg03">
+        <outgoing>Flow_13qmv4v</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_02vnxco" name="Обновление ячейки">
+        <incoming>Flow_13qmv4v</incoming>
+        <outgoing>Flow_05btgf0</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_1mmr56u">
+        <incoming>Flow_05btgf0</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_13qmv4v" sourceRef="Event_16xyg03" targetRef="Activity_02vnxco" />
+      <sequenceFlow id="Flow_05btgf0" sourceRef="Activity_02vnxco" targetRef="Event_1mmr56u" />
+    </transaction>
+    <boundaryEvent id="Event_03ex1ex" name="Ошибка в обновлении" attachedToRef="Activity_1vfenku">
+      <outgoing>Flow_0chs844</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_1vr2r8b" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_1p11q8n" sourceRef="Event_1tkwzqu" targetRef="Activity_1vfenku" />
+    <sequenceFlow id="Flow_0chs844" sourceRef="Event_03ex1ex" targetRef="Event_0t4h763" />
+    <sequenceFlow id="Flow_1rw9op7" sourceRef="Activity_1vfenku" targetRef="Event_1ogpc86" />
+  </process>
+
+  <process id="Process_0him2gc">
+    <startEvent id="Event_0hujtba">
+      <outgoing>Flow_1qxyynb</outgoing>
+    </startEvent>
+    <endEvent id="Event_082a2ek" name="Отмена">
+      <incoming>Flow_1gwxglo</incoming>
+    </endEvent>
+    <endEvent id="Event_1l5awa9" name="Успешное получение">
+      <incoming>Flow_09p3gav</incoming>
+    </endEvent>
+    <transaction id="Activity_1ka0mmc">
+      <incoming>Flow_1qxyynb</incoming>
+      <outgoing>Flow_09p3gav</outgoing>
+      <startEvent id="Event_0e7cojl">
+        <outgoing>Flow_0bkpl0i</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_1migwgb" name="Получение ячейки товара">
+        <incoming>Flow_0bkpl0i</incoming>
+        <outgoing>Flow_0i1fvou</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_0nypqr3">
+        <incoming>Flow_0i1fvou</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_0bkpl0i" sourceRef="Event_0e7cojl" targetRef="Activity_1migwgb" />
+      <sequenceFlow id="Flow_0i1fvou" sourceRef="Activity_1migwgb" targetRef="Event_0nypqr3" />
+    </transaction>
+    <boundaryEvent id="Event_050ypj0" name="Ошибка в получении" attachedToRef="Activity_1ka0mmc">
+      <outgoing>Flow_1gwxglo</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_0qihu9a" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_1qxyynb" sourceRef="Event_0hujtba" targetRef="Activity_1ka0mmc" />
+    <sequenceFlow id="Flow_1gwxglo" sourceRef="Event_050ypj0" targetRef="Event_082a2ek" />
+    <sequenceFlow id="Flow_09p3gav" sourceRef="Activity_1ka0mmc" targetRef="Event_1l5awa9" />
+  </process>
+
+  <process id="Process_19nj9qr">
+    <startEvent id="Event_13u1i5z">
+      <outgoing>Flow_1bzij5m</outgoing>
+    </startEvent>
+    <endEvent id="Event_0jqle3l" name="Отмена">
+      <incoming>Flow_16weoa5</incoming>
+    </endEvent>
+    <endEvent id="Event_15xu9np" name="Успешное обновление">
+      <incoming>Flow_1wgewoc</incoming>
+    </endEvent>
+    <transaction id="Activity_0wlo6fm">
+      <incoming>Flow_1bzij5m</incoming>
+      <outgoing>Flow_1wgewoc</outgoing>
+      <startEvent id="Event_0zt665x">
+        <outgoing>Flow_0fwqxn9</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_0x6yowt" name="Обновление статуса">
+        <incoming>Flow_0fwqxn9</incoming>
+        <outgoing>Flow_0yjz3te</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_0rq9jl2">
+        <incoming>Flow_0yjz3te</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_0fwqxn9" sourceRef="Event_0zt665x" targetRef="Activity_0x6yowt" />
+      <sequenceFlow id="Flow_0yjz3te" sourceRef="Activity_0x6yowt" targetRef="Event_0rq9jl2" />
+    </transaction>
+    <boundaryEvent id="Event_0gyjyg3" name="Ошибка в обновлении" attachedToRef="Activity_0wlo6fm">
+      <outgoing>Flow_16weoa5</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_0fkebfl" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_1bzij5m" sourceRef="Event_13u1i5z" targetRef="Activity_0wlo6fm" />
+    <sequenceFlow id="Flow_16weoa5" sourceRef="Event_0gyjyg3" targetRef="Event_0jqle3l" />
+    <sequenceFlow id="Flow_1wgewoc" sourceRef="Activity_0wlo6fm" targetRef="Event_15xu9np" />
+  </process>
+
+  <process id="Process_1u65dt9">
+    <startEvent id="Event_0vuoi2a">
+      <outgoing>Flow_1aajiw3</outgoing>
+    </startEvent>
+    <endEvent id="Event_1j350xn" name="Отмена">
+      <incoming>Flow_1mrns7h</incoming>
+    </endEvent>
+    <endEvent id="Event_038gi0k" name="Успешное получение">
+      <incoming>Flow_1auknia</incoming>
+    </endEvent>
+    <transaction id="Activity_1jdgzlp">
+      <incoming>Flow_1aajiw3</incoming>
+      <outgoing>Flow_1auknia</outgoing>
+      <startEvent id="Event_0tj8hnp">
+        <outgoing>Flow_0nygdeh</outgoing>
+      </startEvent>
+      <serviceTask id="Activity_0y7l51y" name="Получение ячейки товара">
+        <incoming>Flow_0nygdeh</incoming>
+        <outgoing>Flow_1t548ti</outgoing>
+        <multiInstanceLoopCharacteristics />
+      </serviceTask>
+      <endEvent id="Event_1ewv6kn">
+        <incoming>Flow_1t548ti</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_0nygdeh" sourceRef="Event_0tj8hnp" targetRef="Activity_0y7l51y" />
+      <sequenceFlow id="Flow_1t548ti" sourceRef="Activity_0y7l51y" targetRef="Event_1ewv6kn" />
+    </transaction>
+    <boundaryEvent id="Event_1apj5t4" name="Ошибка в получении" attachedToRef="Activity_1jdgzlp">
+      <outgoing>Flow_1mrns7h</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_103u4cl" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_1aajiw3" sourceRef="Event_0vuoi2a" targetRef="Activity_1jdgzlp" />
+    <sequenceFlow id="Flow_1mrns7h" sourceRef="Event_1apj5t4" targetRef="Event_1j350xn" />
+    <sequenceFlow id="Flow_1auknia" sourceRef="Activity_1jdgzlp" targetRef="Event_038gi0k" />
+  </process>
+
+  <process id="Process_DistributedTx">
+    <startEvent id="Event_DistributedStart" name="Старт распределенной транзакции">
+      <outgoing>Flow_DTx_1</outgoing>
+    </startEvent>
+    <endEvent id="Event_DistributedCommit" name="Commit">
+      <incoming>Flow_DTx_6</incoming>
+    </endEvent>
+    <endEvent id="Event_DistributedRollback" name="Rollback">
+      <incoming>Flow_DTx_rollback</incoming>
+    </endEvent>
+    <transaction id="Activity_DistributedTx" name="Распределенная транзакция статуса заказа">
+      <incoming>Flow_DTx_1</incoming>
+      <outgoing>Flow_DTx_6</outgoing>
+      <startEvent id="Event_DTx_InnerStart">
+        <outgoing>Flow_DTx_2</outgoing>
+      </startEvent>
+      <serviceTask id="Task_DTx_OrderStatus" name="XA: обновить статус в order-service">
+        <incoming>Flow_DTx_2</incoming>
+        <outgoing>Flow_DTx_3</outgoing>
+      </serviceTask>
+      <serviceTask id="Task_DTx_Jms" name="XA: отправить JMS-сообщение в ActiveMQ">
+        <incoming>Flow_DTx_3</incoming>
+        <outgoing>Flow_DTx_4</outgoing>
+      </serviceTask>
+      <serviceTask id="Task_DTx_History" name="XA: сохранить историю в status-service">
+        <incoming>Flow_DTx_4</incoming>
+        <outgoing>Flow_DTx_5</outgoing>
+      </serviceTask>
+      <serviceTask id="Task_DTx_Eis" name="XA: зафиксировать синхронизацию с EIS">
+        <incoming>Flow_DTx_5</incoming>
+        <outgoing>Flow_DTx_5b</outgoing>
+      </serviceTask>
+      <endEvent id="Event_DTx_InnerEnd">
+        <incoming>Flow_DTx_5b</incoming>
+      </endEvent>
+      <sequenceFlow id="Flow_DTx_2" sourceRef="Event_DTx_InnerStart" targetRef="Task_DTx_OrderStatus" />
+      <sequenceFlow id="Flow_DTx_3" sourceRef="Task_DTx_OrderStatus" targetRef="Task_DTx_Jms" />
+      <sequenceFlow id="Flow_DTx_4" sourceRef="Task_DTx_Jms" targetRef="Task_DTx_History" />
+      <sequenceFlow id="Flow_DTx_5" sourceRef="Task_DTx_History" targetRef="Task_DTx_Eis" />
+      <sequenceFlow id="Flow_DTx_5b" sourceRef="Task_DTx_Eis" targetRef="Event_DTx_InnerEnd" />
+    </transaction>
+    <boundaryEvent id="Event_DTx_Cancel" name="Ошибка XA / rollback" attachedToRef="Activity_DistributedTx">
+      <outgoing>Flow_DTx_rollback</outgoing>
+      <cancelEventDefinition id="CancelEventDefinition_DTx" />
+    </boundaryEvent>
+    <sequenceFlow id="Flow_DTx_1" sourceRef="Event_DistributedStart" targetRef="Activity_DistributedTx" />
+    <sequenceFlow id="Flow_DTx_6" sourceRef="Activity_DistributedTx" targetRef="Event_DistributedCommit" />
+    <sequenceFlow id="Flow_DTx_rollback" sourceRef="Event_DTx_Cancel" targetRef="Event_DistributedRollback" />
+  </process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Lab3">
+    <bpmndi:BPMNPlane id="BPMNPlane_Lab3" bpmnElement="Collaboration_Lab3">
+      <bpmndi:BPMNShape id="Participant_Client_di" bpmnElement="Participant_Client" isHorizontal="true">
+        <dc:Bounds x="100" y="80" width="1600" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_OrderService_di" bpmnElement="Participant_OrderService" isHorizontal="true">
+        <dc:Bounds x="100" y="240" width="2050" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_ActiveMQ_di" bpmnElement="Participant_ActiveMQ" isHorizontal="true">
+        <dc:Bounds x="100" y="540" width="1600" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Node1_di" bpmnElement="Participant_Node1" isHorizontal="true">
+        <dc:Bounds x="100" y="820" width="1600" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Node2_di" bpmnElement="Participant_Node2" isHorizontal="true">
+        <dc:Bounds x="100" y="1020" width="1600" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Quartz_di" bpmnElement="Participant_Quartz" isHorizontal="true">
+        <dc:Bounds x="100" y="1220" width="760" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_EIS_di" bpmnElement="Participant_EIS" isHorizontal="true">
+        <dc:Bounds x="880" y="1220" width="820" height="140" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="ClientStart_di" bpmnElement="ClientStart">
+        <dc:Bounds x="160" y="132" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ClientTask_CreateOrder_di" bpmnElement="ClientTask_CreateOrder">
+        <dc:Bounds x="240" y="110" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ClientCatch_Ready_di" bpmnElement="ClientCatch_Ready">
+        <dc:Bounds x="450" y="132" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ClientTask_GetOrder_di" bpmnElement="ClientTask_GetOrder">
+        <dc:Bounds x="540" y="110" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ClientEnd_di" bpmnElement="ClientEnd">
+        <dc:Bounds x="750" y="132" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="OrderStart_CreateOrder_di" bpmnElement="OrderStart_CreateOrder">
+        <dc:Bounds x="160" y="352" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_Validate_di" bpmnElement="OrderTask_Validate">
+        <dc:Bounds x="240" y="330" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_Reserve_di" bpmnElement="OrderTask_Reserve">
+        <dc:Bounds x="420" y="330" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_StatusCreated_di" bpmnElement="OrderTask_StatusCreated">
+        <dc:Bounds x="620" y="330" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderThrow_Created_di" bpmnElement="OrderThrow_Created">
+        <dc:Bounds x="820" y="352" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_Delivery_di" bpmnElement="OrderTask_Delivery">
+        <dc:Bounds x="900" y="330" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_CheckReady_di" bpmnElement="OrderTask_CheckReady">
+        <dc:Bounds x="1100" y="330" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderGateway_Ready_di" bpmnElement="OrderGateway_Ready" isMarkerVisible="true">
+        <dc:Bounds x="1310" y="345" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_StatusReady_di" bpmnElement="OrderTask_StatusReady">
+        <dc:Bounds x="1410" y="250" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderThrow_Ready_di" bpmnElement="OrderThrow_Ready">
+        <dc:Bounds x="1630" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_PrepareEis_di" bpmnElement="OrderTask_PrepareEis">
+        <dc:Bounds x="1720" y="250" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderThrow_EisSync_di" bpmnElement="OrderThrow_EisSync">
+        <dc:Bounds x="1920" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderThrow_ClientReady_di" bpmnElement="OrderThrow_ClientReady">
+        <dc:Bounds x="1990" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderEnd_Success_di" bpmnElement="OrderEnd_Success">
+        <dc:Bounds x="2070" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="OrderCatch_ExpiredCheck_di" bpmnElement="OrderCatch_ExpiredCheck">
+        <dc:Bounds x="240" y="452" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_FindExpired_di" bpmnElement="OrderTask_FindExpired">
+        <dc:Bounds x="320" y="430" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderGateway_Expired_di" bpmnElement="OrderGateway_Expired" isMarkerVisible="true">
+        <dc:Bounds x="550" y="445" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderTask_CancelExpired_di" bpmnElement="OrderTask_CancelExpired">
+        <dc:Bounds x="650" y="430" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderThrow_Cancel_di" bpmnElement="OrderThrow_Cancel">
+        <dc:Bounds x="870" y="452" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="OrderEnd_Expired_di" bpmnElement="OrderEnd_Expired">
+        <dc:Bounds x="960" y="452" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="QueueStart_di" bpmnElement="QueueStart">
+        <dc:Bounds x="160" y="652" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueGateway_Split_di" bpmnElement="QueueGateway_Split">
+        <dc:Bounds x="240" y="645" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueCatch_Created_di" bpmnElement="QueueCatch_Created">
+        <dc:Bounds x="360" y="572" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueGateway_Created_di" bpmnElement="QueueGateway_Created">
+        <dc:Bounds x="450" y="565" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueThrow_ToNode1_Created_di" bpmnElement="QueueThrow_ToNode1_Created">
+        <dc:Bounds x="560" y="552" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueThrow_ToNode2_Created_di" bpmnElement="QueueThrow_ToNode2_Created">
+        <dc:Bounds x="560" y="612" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="QueueCatch_Ready_di" bpmnElement="QueueCatch_Ready">
+        <dc:Bounds x="800" y="572" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueGateway_Ready_di" bpmnElement="QueueGateway_Ready">
+        <dc:Bounds x="890" y="565" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueThrow_ToNode1_Ready_di" bpmnElement="QueueThrow_ToNode1_Ready">
+        <dc:Bounds x="1000" y="552" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueThrow_ToNode2_Ready_di" bpmnElement="QueueThrow_ToNode2_Ready">
+        <dc:Bounds x="1000" y="612" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="QueueCatch_Cancel_di" bpmnElement="QueueCatch_Cancel">
+        <dc:Bounds x="1240" y="572" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueGateway_Cancel_di" bpmnElement="QueueGateway_Cancel">
+        <dc:Bounds x="1330" y="565" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueThrow_ToNode1_Cancel_di" bpmnElement="QueueThrow_ToNode1_Cancel">
+        <dc:Bounds x="1440" y="552" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QueueThrow_ToNode2_Cancel_di" bpmnElement="QueueThrow_ToNode2_Cancel">
+        <dc:Bounds x="1440" y="612" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Node1Catch_Created_di" bpmnElement="Node1Catch_Created">
+        <dc:Bounds x="240" y="892" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1Task_SaveHistoryCreated_di" bpmnElement="Node1Task_SaveHistoryCreated">
+        <dc:Bounds x="320" y="870" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1End_Created_di" bpmnElement="Node1End_Created">
+        <dc:Bounds x="550" y="892" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1Catch_Ready_di" bpmnElement="Node1Catch_Ready">
+        <dc:Bounds x="700" y="892" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1Task_SaveHistoryReady_di" bpmnElement="Node1Task_SaveHistoryReady">
+        <dc:Bounds x="780" y="870" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1End_Ready_di" bpmnElement="Node1End_Ready">
+        <dc:Bounds x="1030" y="892" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1Catch_Cancel_di" bpmnElement="Node1Catch_Cancel">
+        <dc:Bounds x="1170" y="892" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1Task_SaveHistoryCancel_di" bpmnElement="Node1Task_SaveHistoryCancel">
+        <dc:Bounds x="1250" y="870" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node1End_Cancel_di" bpmnElement="Node1End_Cancel">
+        <dc:Bounds x="1480" y="892" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Node2Catch_Created_di" bpmnElement="Node2Catch_Created">
+        <dc:Bounds x="240" y="1092" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2Task_NotifyCreated_di" bpmnElement="Node2Task_NotifyCreated">
+        <dc:Bounds x="320" y="1070" width="210" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2End_Created_di" bpmnElement="Node2End_Created">
+        <dc:Bounds x="580" y="1092" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2Catch_Ready_di" bpmnElement="Node2Catch_Ready">
+        <dc:Bounds x="700" y="1092" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2Task_NotifyReady_di" bpmnElement="Node2Task_NotifyReady">
+        <dc:Bounds x="780" y="1070" width="190" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2End_Ready_di" bpmnElement="Node2End_Ready">
+        <dc:Bounds x="1020" y="1092" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2Catch_Cancel_di" bpmnElement="Node2Catch_Cancel">
+        <dc:Bounds x="1170" y="1092" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2Task_NotifyCancel_di" bpmnElement="Node2Task_NotifyCancel">
+        <dc:Bounds x="1250" y="1070" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Node2End_Cancel_di" bpmnElement="Node2End_Cancel">
+        <dc:Bounds x="1480" y="1092" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="QuartzStart_Timer_di" bpmnElement="QuartzStart_Timer">
+        <dc:Bounds x="160" y="1272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QuartzTask_FindExpired_di" bpmnElement="QuartzTask_FindExpired">
+        <dc:Bounds x="240" y="1250" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="QuartzEnd_di" bpmnElement="QuartzEnd">
+        <dc:Bounds x="520" y="1272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EisCatch_Sync_di" bpmnElement="EisCatch_Sync">
+        <dc:Bounds x="980" y="1272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EisTask_JcaAdapter_di" bpmnElement="EisTask_JcaAdapter">
+        <dc:Bounds x="1070" y="1250" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EisTask_CreateCard_di" bpmnElement="EisTask_CreateCard">
+        <dc:Bounds x="1350" y="1250" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EisEnd_di" bpmnElement="EisEnd">
+        <dc:Bounds x="1620" y="1272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_Client_1_di" bpmnElement="Flow_Client_1">
+        <di:waypoint x="196" y="150" />
+        <di:waypoint x="240" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Client_2_di" bpmnElement="Flow_Client_2">
+        <di:waypoint x="380" y="150" />
+        <di:waypoint x="450" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Client_3_di" bpmnElement="Flow_Client_3">
+        <di:waypoint x="486" y="150" />
+        <di:waypoint x="540" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Client_4_di" bpmnElement="Flow_Client_4">
+        <di:waypoint x="680" y="150" />
+        <di:waypoint x="750" y="150" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Order_1_di" bpmnElement="Flow_Order_1">
+        <di:waypoint x="196" y="370" />
+        <di:waypoint x="240" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_2_di" bpmnElement="Flow_Order_2">
+        <di:waypoint x="370" y="370" />
+        <di:waypoint x="420" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_3_di" bpmnElement="Flow_Order_3">
+        <di:waypoint x="570" y="370" />
+        <di:waypoint x="620" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_4_di" bpmnElement="Flow_Order_4">
+        <di:waypoint x="770" y="370" />
+        <di:waypoint x="820" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_5_di" bpmnElement="Flow_Order_5">
+        <di:waypoint x="856" y="370" />
+        <di:waypoint x="900" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_6_di" bpmnElement="Flow_Order_6">
+        <di:waypoint x="1050" y="370" />
+        <di:waypoint x="1100" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_7_di" bpmnElement="Flow_Order_7">
+        <di:waypoint x="1260" y="370" />
+        <di:waypoint x="1310" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_8_yes_di" bpmnElement="Flow_Order_8_yes">
+        <di:waypoint x="1335" y="345" />
+        <di:waypoint x="1335" y="290" />
+        <di:waypoint x="1410" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_8_no_di" bpmnElement="Flow_Order_8_no">
+        <di:waypoint x="1360" y="370" />
+        <di:waypoint x="2070" y="370" />
+        <di:waypoint x="2070" y="308" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_9_di" bpmnElement="Flow_Order_9">
+        <di:waypoint x="1580" y="290" />
+        <di:waypoint x="1630" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_10_di" bpmnElement="Flow_Order_10">
+        <di:waypoint x="1666" y="290" />
+        <di:waypoint x="1720" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_11_di" bpmnElement="Flow_Order_11">
+        <di:waypoint x="1880" y="290" />
+        <di:waypoint x="1920" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_12_di" bpmnElement="Flow_Order_12">
+        <di:waypoint x="1956" y="290" />
+        <di:waypoint x="1990" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_13_di" bpmnElement="Flow_Order_13">
+        <di:waypoint x="2026" y="290" />
+        <di:waypoint x="2070" y="290" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Order_14_timer_di" bpmnElement="Flow_Order_14_timer">
+        <di:waypoint x="276" y="470" />
+        <di:waypoint x="320" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_15_di" bpmnElement="Flow_Order_15">
+        <di:waypoint x="500" y="470" />
+        <di:waypoint x="550" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_16_di" bpmnElement="Flow_Order_16">
+        <di:waypoint x="600" y="470" />
+        <di:waypoint x="650" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_17_yes_di" bpmnElement="Flow_Order_17_yes">
+        <di:waypoint x="820" y="470" />
+        <di:waypoint x="870" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_17_no_di" bpmnElement="Flow_Order_17_no">
+        <di:waypoint x="575" y="495" />
+        <di:waypoint x="575" y="550" />
+        <di:waypoint x="978" y="550" />
+        <di:waypoint x="978" y="488" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Order_18_di" bpmnElement="Flow_Order_18">
+        <di:waypoint x="906" y="470" />
+        <di:waypoint x="960" y="470" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Queue_0_di" bpmnElement="Flow_Queue_0">
+        <di:waypoint x="196" y="670" />
+        <di:waypoint x="240" y="670" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_1_di" bpmnElement="Flow_Queue_1">
+        <di:waypoint x="290" y="670" />
+        <di:waypoint x="378" y="670" />
+        <di:waypoint x="378" y="608" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_2_di" bpmnElement="Flow_Queue_2">
+        <di:waypoint x="396" y="590" />
+        <di:waypoint x="450" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_3a_di" bpmnElement="Flow_Queue_3a">
+        <di:waypoint x="500" y="577" />
+        <di:waypoint x="560" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_3b_di" bpmnElement="Flow_Queue_3b">
+        <di:waypoint x="500" y="603" />
+        <di:waypoint x="560" y="630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_4_di" bpmnElement="Flow_Queue_4">
+        <di:waypoint x="290" y="670" />
+        <di:waypoint x="818" y="670" />
+        <di:waypoint x="818" y="608" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_5_di" bpmnElement="Flow_Queue_5">
+        <di:waypoint x="836" y="590" />
+        <di:waypoint x="890" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_6a_di" bpmnElement="Flow_Queue_6a">
+        <di:waypoint x="940" y="577" />
+        <di:waypoint x="1000" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_6b_di" bpmnElement="Flow_Queue_6b">
+        <di:waypoint x="940" y="603" />
+        <di:waypoint x="1000" y="630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_7_di" bpmnElement="Flow_Queue_7">
+        <di:waypoint x="290" y="670" />
+        <di:waypoint x="1258" y="670" />
+        <di:waypoint x="1258" y="608" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_8_di" bpmnElement="Flow_Queue_8">
+        <di:waypoint x="1276" y="590" />
+        <di:waypoint x="1330" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_9a_di" bpmnElement="Flow_Queue_9a">
+        <di:waypoint x="1380" y="577" />
+        <di:waypoint x="1440" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Queue_9b_di" bpmnElement="Flow_Queue_9b">
+        <di:waypoint x="1380" y="603" />
+        <di:waypoint x="1440" y="630" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Node1_1_di" bpmnElement="Flow_Node1_1">
+        <di:waypoint x="276" y="910" />
+        <di:waypoint x="320" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node1_2_di" bpmnElement="Flow_Node1_2">
+        <di:waypoint x="500" y="910" />
+        <di:waypoint x="550" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node1_3_di" bpmnElement="Flow_Node1_3">
+        <di:waypoint x="736" y="910" />
+        <di:waypoint x="780" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node1_4_di" bpmnElement="Flow_Node1_4">
+        <di:waypoint x="980" y="910" />
+        <di:waypoint x="1030" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node1_5_di" bpmnElement="Flow_Node1_5">
+        <di:waypoint x="1206" y="910" />
+        <di:waypoint x="1250" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node1_6_di" bpmnElement="Flow_Node1_6">
+        <di:waypoint x="1430" y="910" />
+        <di:waypoint x="1480" y="910" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Node2_1_di" bpmnElement="Flow_Node2_1">
+        <di:waypoint x="276" y="1110" />
+        <di:waypoint x="320" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node2_2_di" bpmnElement="Flow_Node2_2">
+        <di:waypoint x="530" y="1110" />
+        <di:waypoint x="580" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node2_3_di" bpmnElement="Flow_Node2_3">
+        <di:waypoint x="736" y="1110" />
+        <di:waypoint x="780" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node2_4_di" bpmnElement="Flow_Node2_4">
+        <di:waypoint x="970" y="1110" />
+        <di:waypoint x="1020" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node2_5_di" bpmnElement="Flow_Node2_5">
+        <di:waypoint x="1206" y="1110" />
+        <di:waypoint x="1250" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Node2_6_di" bpmnElement="Flow_Node2_6">
+        <di:waypoint x="1430" y="1110" />
+        <di:waypoint x="1480" y="1110" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Quartz_1_di" bpmnElement="Flow_Quartz_1">
+        <di:waypoint x="196" y="1290" />
+        <di:waypoint x="240" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Quartz_2_di" bpmnElement="Flow_Quartz_2">
+        <di:waypoint x="460" y="1290" />
+        <di:waypoint x="520" y="1290" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Eis_1_di" bpmnElement="Flow_Eis_1">
+        <di:waypoint x="1016" y="1290" />
+        <di:waypoint x="1070" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Eis_2_di" bpmnElement="Flow_Eis_2">
+        <di:waypoint x="1290" y="1290" />
+        <di:waypoint x="1350" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Eis_3_di" bpmnElement="Flow_Eis_3">
+        <di:waypoint x="1570" y="1290" />
+        <di:waypoint x="1620" y="1290" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_CreateOrder_di" bpmnElement="Flow_CreateOrder">
+        <di:waypoint x="310" y="190" />
+        <di:waypoint x="310" y="352" />
+        <di:waypoint x="160" y="352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EnqueueStatusAfterCreate_di" bpmnElement="Flow_EnqueueStatusAfterCreate">
+        <di:waypoint x="838" y="388" />
+        <di:waypoint x="838" y="590" />
+        <di:waypoint x="396" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EnqueueStatusReady_di" bpmnElement="Flow_EnqueueStatusReady">
+        <di:waypoint x="1648" y="308" />
+        <di:waypoint x="1648" y="590" />
+        <di:waypoint x="836" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EnqueueStatusCancel_di" bpmnElement="Flow_EnqueueStatusCancel">
+        <di:waypoint x="888" y="488" />
+        <di:waypoint x="888" y="590" />
+        <di:waypoint x="1276" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeliverToNode1_Created_di" bpmnElement="Flow_DeliverToNode1_Created">
+        <di:waypoint x="596" y="552" />
+        <di:waypoint x="596" y="910" />
+        <di:waypoint x="240" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeliverToNode2_Created_di" bpmnElement="Flow_DeliverToNode2_Created">
+        <di:waypoint x="596" y="648" />
+        <di:waypoint x="596" y="1110" />
+        <di:waypoint x="240" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeliverToNode1_Ready_di" bpmnElement="Flow_DeliverToNode1_Ready">
+        <di:waypoint x="1036" y="552" />
+        <di:waypoint x="1036" y="910" />
+        <di:waypoint x="700" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeliverToNode2_Ready_di" bpmnElement="Flow_DeliverToNode2_Ready">
+        <di:waypoint x="1036" y="648" />
+        <di:waypoint x="1036" y="1110" />
+        <di:waypoint x="700" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeliverToNode1_Cancel_di" bpmnElement="Flow_DeliverToNode1_Cancel">
+        <di:waypoint x="1476" y="552" />
+        <di:waypoint x="1476" y="910" />
+        <di:waypoint x="1170" y="910" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DeliverToNode2_Cancel_di" bpmnElement="Flow_DeliverToNode2_Cancel">
+        <di:waypoint x="1476" y="648" />
+        <di:waypoint x="1476" y="1110" />
+        <di:waypoint x="1170" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OrderReadyToEis_di" bpmnElement="Flow_OrderReadyToEis">
+        <di:waypoint x="1938" y="308" />
+        <di:waypoint x="1938" y="1290" />
+        <di:waypoint x="1016" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_QuartzToOrderService_di" bpmnElement="Flow_QuartzToOrderService">
+        <di:waypoint x="350" y="1250" />
+        <di:waypoint x="350" y="470" />
+        <di:waypoint x="240" y="470" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNShape id="Participant_0sp431r_di" bpmnElement="Participant_0sp431r" isHorizontal="true">
+        <dc:Bounds x="100" y="1380" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0n7t80m_di" bpmnElement="Activity_0n7t80m" isExpanded="true">
+        <dc:Bounds x="300" y="1400" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_1pbxk6t_di" bpmnElement="Participant_1pbxk6t" isHorizontal="true">
+        <dc:Bounds x="1100" y="1380" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1afbuoi_di" bpmnElement="Activity_1afbuoi" isExpanded="true">
+        <dc:Bounds x="1300" y="1400" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_0yusntf_di" bpmnElement="Participant_0yusntf" isHorizontal="true">
+        <dc:Bounds x="100" y="1540" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ezml6g_di" bpmnElement="Activity_1ezml6g" isExpanded="true">
+        <dc:Bounds x="300" y="1560" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_1wgmyqy_di" bpmnElement="Participant_1wgmyqy" isHorizontal="true">
+        <dc:Bounds x="1100" y="1540" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0m6q70i_di" bpmnElement="Activity_0m6q70i" isExpanded="true">
+        <dc:Bounds x="1300" y="1560" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_18732gp_di" bpmnElement="Participant_18732gp" isHorizontal="true">
+        <dc:Bounds x="100" y="1700" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1m2h6me_di" bpmnElement="Activity_1m2h6me" isExpanded="true">
+        <dc:Bounds x="300" y="1720" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_0lgyktb_di" bpmnElement="Participant_0lgyktb" isHorizontal="true">
+        <dc:Bounds x="1100" y="1700" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_038bgv1_di" bpmnElement="Activity_038bgv1" isExpanded="true">
+        <dc:Bounds x="1300" y="1720" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_0cnfq75_di" bpmnElement="Participant_0cnfq75" isHorizontal="true">
+        <dc:Bounds x="100" y="1860" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1vfenku_di" bpmnElement="Activity_1vfenku" isExpanded="true">
+        <dc:Bounds x="300" y="1880" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_14x55xq_di" bpmnElement="Participant_14x55xq" isHorizontal="true">
+        <dc:Bounds x="1100" y="1860" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ka0mmc_di" bpmnElement="Activity_1ka0mmc" isExpanded="true">
+        <dc:Bounds x="1300" y="1880" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_0w0w2c1_di" bpmnElement="Participant_0w0w2c1" isHorizontal="true">
+        <dc:Bounds x="100" y="2020" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wlo6fm_di" bpmnElement="Activity_0wlo6fm" isExpanded="true">
+        <dc:Bounds x="300" y="2040" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_0g5lzso_di" bpmnElement="Participant_0g5lzso" isHorizontal="true">
+        <dc:Bounds x="1100" y="2020" width="980" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1jdgzlp_di" bpmnElement="Activity_1jdgzlp" isExpanded="true">
+        <dc:Bounds x="1300" y="2040" width="420" height="90" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Participant_DistributedTx_di" bpmnElement="Participant_DistributedTx" isHorizontal="true">
+        <dc:Bounds x="100" y="2180" width="1980" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DistributedStart_di" bpmnElement="Event_DistributedStart">
+        <dc:Bounds x="180" y="2272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_DistributedTx_di" bpmnElement="Activity_DistributedTx" isExpanded="true">
+        <dc:Bounds x="280" y="2220" width="1340" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DTx_InnerStart_di" bpmnElement="Event_DTx_InnerStart">
+        <dc:Bounds x="320" y="2272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DTx_OrderStatus_di" bpmnElement="Task_DTx_OrderStatus">
+        <dc:Bounds x="390" y="2250" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DTx_Jms_di" bpmnElement="Task_DTx_Jms">
+        <dc:Bounds x="660" y="2250" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DTx_History_di" bpmnElement="Task_DTx_History">
+        <dc:Bounds x="950" y="2250" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DTx_Eis_di" bpmnElement="Task_DTx_Eis">
+        <dc:Bounds x="1240" y="2250" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DTx_InnerEnd_di" bpmnElement="Event_DTx_InnerEnd">
+        <dc:Bounds x="1520" y="2272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DTx_Cancel_di" bpmnElement="Event_DTx_Cancel">
+        <dc:Bounds x="930" y="2362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DistributedCommit_di" bpmnElement="Event_DistributedCommit">
+        <dc:Bounds x="1660" y="2272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DistributedRollback_di" bpmnElement="Event_DistributedRollback">
+        <dc:Bounds x="1030" y="2362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_DTx_1_di" bpmnElement="Flow_DTx_1">
+        <di:waypoint x="216" y="2290" />
+        <di:waypoint x="280" y="2290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DTx_2_di" bpmnElement="Flow_DTx_2">
+        <di:waypoint x="356" y="2290" />
+        <di:waypoint x="390" y="2290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DTx_3_di" bpmnElement="Flow_DTx_3">
+        <di:waypoint x="610" y="2290" />
+        <di:waypoint x="660" y="2290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DTx_4_di" bpmnElement="Flow_DTx_4">
+        <di:waypoint x="900" y="2290" />
+        <di:waypoint x="950" y="2290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DTx_5_di" bpmnElement="Flow_DTx_5">
+        <di:waypoint x="1190" y="2290" />
+        <di:waypoint x="1240" y="2290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DTx_5b_di" bpmnElement="Flow_DTx_5b">
+        <di:waypoint x="1480" y="2290" />
+        <di:waypoint x="1520" y="2290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DTx_6_di" bpmnElement="Flow_DTx_6">
+        <di:waypoint x="1620" y="2290" />
+        <di:waypoint x="1660" y="2290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DTx_rollback_di" bpmnElement="Flow_DTx_rollback">
+        <di:waypoint x="966" y="2380" />
+        <di:waypoint x="1030" y="2380" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Lab3_OrderCheckTx_di" bpmnElement="Flow_Lab3_OrderCheckTx">
+        <di:waypoint x="305" y="410" />
+        <di:waypoint x="305" y="1720" />
+        <di:waypoint x="1300" y="1720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_ReserveBookTx_di" bpmnElement="Flow_Lab3_ReserveBookTx">
+        <di:waypoint x="495" y="410" />
+        <di:waypoint x="495" y="1560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_ReserveCountTx_di" bpmnElement="Flow_Lab3_ReserveCountTx">
+        <di:waypoint x="520" y="410" />
+        <di:waypoint x="520" y="1400" />
+        <di:waypoint x="1300" y="1400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_StatusTx1_di" bpmnElement="Flow_Lab3_StatusTx1">
+        <di:waypoint x="695" y="410" />
+        <di:waypoint x="695" y="1560" />
+        <di:waypoint x="1300" y="1560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_UpdateYacheykaTx_di" bpmnElement="Flow_Lab3_UpdateYacheykaTx">
+        <di:waypoint x="975" y="410" />
+        <di:waypoint x="975" y="1880" />
+        <di:waypoint x="720" y="1880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_GetYacheykaTx1_di" bpmnElement="Flow_Lab3_GetYacheykaTx1">
+        <di:waypoint x="1180" y="410" />
+        <di:waypoint x="1180" y="1880" />
+        <di:waypoint x="1300" y="1880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_StatusTx2_di" bpmnElement="Flow_Lab3_StatusTx2">
+        <di:waypoint x="1495" y="330" />
+        <di:waypoint x="1495" y="2040" />
+        <di:waypoint x="720" y="2040" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_GetYacheykaTx2_di" bpmnElement="Flow_Lab3_GetYacheykaTx2">
+        <di:waypoint x="1220" y="410" />
+        <di:waypoint x="1220" y="2040" />
+        <di:waypoint x="1300" y="2040" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_CancelCountTx_di" bpmnElement="Flow_Lab3_CancelCountTx">
+        <di:waypoint x="735" y="510" />
+        <di:waypoint x="735" y="1720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_ReadyDistributedTx_di" bpmnElement="Flow_Lab3_ReadyDistributedTx">
+        <di:waypoint x="1580" y="290" />
+        <di:waypoint x="1580" y="2220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Lab3_CancelDistributedTx_di" bpmnElement="Flow_Lab3_CancelDistributedTx">
+        <di:waypoint x="820" y="470" />
+        <di:waypoint x="820" y="2220" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

@@ -4,15 +4,24 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.springframework.stereotype.Component;
 
-@RequiredArgsConstructor
 @Slf4j
+@Component
+@RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-public class BitrixDealPollingScheduler {
+public class BitrixWorkflowActions {
 
     BitrixDealStatusSyncService dealStatusSyncService;
+    BitrixProperties bitrixProperties;
 
-    public void pollDeals() {
+    public void pollDeals(DelegateExecution execution) {
+        if (!bitrixProperties.isEnabled() || !bitrixProperties.isPollingEnabled()) {
+            log.debug("Skipping Bitrix polling: integration or polling disabled");
+            return;
+        }
+
         try {
             dealStatusSyncService.syncOrderStatusesFromDeals();
         } catch (Exception e) {
