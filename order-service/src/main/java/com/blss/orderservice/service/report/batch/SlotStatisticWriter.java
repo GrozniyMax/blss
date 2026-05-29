@@ -10,10 +10,6 @@ import java.math.BigDecimal;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Не потокобезопасен — каждый слот работает в ОДНОМ потоке (своём).
- * Параллельность — между разными слотами, а не внутри одного.
- */
 public class SlotStatisticWriter implements ItemWriter<Order> {
 
     private BigDecimal totalPrice = BigDecimal.ZERO;

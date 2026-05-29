@@ -27,7 +27,6 @@ public class OrderSlotReader implements ItemReader<Order> {
         this.orderRepo = orderRepo;
     }
 
-    /** Вызывается перед каждым запуском Job: задаёт границы слота и сбрасывает состояние. */
     public void resetForRange(Instant from, Instant to) {
         this.from = from;
         this.to = to;
