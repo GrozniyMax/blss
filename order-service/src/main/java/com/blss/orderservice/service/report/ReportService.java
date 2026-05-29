@@ -1,78 +1,55 @@
 package com.blss.orderservice.service.report;
 
-import com.blss.orderservice.db.order.OrderRepo;
-import com.blss.orderservice.domain.order.Order;
-import com.blss.orderservice.domain.order.OrderClass;
-import lombok.AccessLevel;
+import com.blss.orderservice.config.ReportBatchConfig;
+import com.blss.orderservice.service.report.StatisticCollector.Statistic;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ReportService {
 
-    private static final int BATCH_SIZE = 500;
-    private static final UUID FIRST_PAGE_MARKER = new UUID(0L, 0L);
+    private final JobLauncher jobLauncher;
 
-    OrderRepo orderRepo;
+    @Qualifier("reportJob")
+    private final Job reportBatchJob;
 
-    public StatisticCollector.Statistic generateReport(LocalDate day) {
-        ReportAccumulator accumulator = new ReportAccumulator();
+    private final ObjectMapper objectMapper;
 
-        UUID lastOrderId = FIRST_PAGE_MARKER;
-        while (true) {
-            List<Order> orders = orderRepo.findOrdersForDay(day, lastOrderId, BATCH_SIZE);
-            if (orders.isEmpty()) {
-                break;
+    public Statistic generateReport(LocalDate day) {
+        try {
+            JobParameters params = new JobParametersBuilder()
+                    .addString(ReportBatchConfig.DAY_PARAM, day.toString())
+                    .addLong("runAt", System.currentTimeMillis())
+                    .toJobParameters();
+
+            log.info("Launching reportBatchJob for {}", day);
+            JobExecution execution = jobLauncher.run(reportBatchJob, params);
+
+            if (execution.getStatus() != BatchStatus.COMPLETED) {
+                throw new IllegalStateException(
+                        "Report job finished with status " + execution.getStatus());
             }
 
-            accumulator.addAll(orders);
-            lastOrderId = orders.get(orders.size() - 1).id();
+            String json = execution.getExecutionContext()
+                    .getString(ReportBatchConfig.CTX_STATISTIC);
+            return objectMapper.readValue(json, Statistic.class);
 
-            if (orders.size() < BATCH_SIZE) {
-                break;
-            }
-        }
-
-        StatisticCollector.Statistic statistic = accumulator.toStatistic();
-        log.debug("Report generated for {}: {}", day, statistic);
-        return statistic;
-    }
-
-    private static class ReportAccumulator {
-
-        private BigDecimal totalPrice = BigDecimal.ZERO;
-        private long totalCount = 0;
-        private final Map<OrderClass, Long> orderClassCount = new EnumMap<>(OrderClass.class);
-
-        void addAll(List<Order> orders) {
-            for (Order order : orders) {
-                add(order);
-            }
-        }
-
-        private void add(Order order) {
-            BigDecimal amount = order.totalAmount() == null ? BigDecimal.ZERO : order.totalAmount();
-            OrderClass orderClass = OrderClass.getOrderClass(amount);
-
-            totalPrice = totalPrice.add(amount);
-            totalCount++;
-            orderClassCount.merge(orderClass, 1L, Long::sum);
-        }
-
-        StatisticCollector.Statistic toStatistic() {
-            return new StatisticCollector.Statistic(totalPrice, totalCount, Map.copyOf(orderClassCount));
+        } catch (Exception e) {
+            log.error("Failed to run report job for {}", day, e);
+            throw new RuntimeException("Failed to generate report", e);
         }
     }
 }

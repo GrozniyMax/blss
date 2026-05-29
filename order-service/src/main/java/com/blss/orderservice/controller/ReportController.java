@@ -2,9 +2,7 @@ package com.blss.orderservice.controller;
 
 import com.blss.orderservice.service.report.ReportService;
 import com.blss.orderservice.service.report.StatisticCollector;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,11 +16,10 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/reports")
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class ReportController {
 
-    ReportService reportService;
+    private final ReportService reportService;
 
     @GetMapping("/daily")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")

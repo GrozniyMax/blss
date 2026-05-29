@@ -1,6 +1,6 @@
 package com.blss.orderservice.config;
 
-import com.blss.orderservice.service.report.ReportJob;
+import com.blss.orderservice.service.report.ReportQuartzJob;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.spi.TriggerFiredBundle;
@@ -9,8 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.scheduling.quartz.SpringBeanJobFactory;
-
-import java.util.Properties;
 
 @Slf4j
 @Configuration
@@ -28,7 +26,6 @@ public class QuartzConfig {
 
         factory.setWaitForJobsToCompleteOnShutdown(true);
         factory.setOverwriteExistingJobs(true);
-        factory.setAutoStartup(false);
 
         return factory;
     }
@@ -36,7 +33,7 @@ public class QuartzConfig {
     @Bean
     public JobDetail reportJobDetail() {
         log.info("Creating ReportJob JobDetail");
-        return JobBuilder.newJob(ReportJob.class)
+        return JobBuilder.newJob(ReportQuartzJob.class)
                 .withIdentity("reportJob", "reporting")
                 .withDescription("Generates daily reports")
                 .storeDurably()

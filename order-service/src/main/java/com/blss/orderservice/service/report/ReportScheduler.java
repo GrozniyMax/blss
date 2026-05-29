@@ -16,7 +16,8 @@ public class ReportScheduler {
 
     private ReportService reportService;
 
-    @Scheduled(cron = "0 0 0 * * *")
+//  Сам метод не нужен
+//  @Scheduled(cron = "0 0 0 * * *")
     public void generateReport() {
         try {
             log.info("Generating report about yesterday");

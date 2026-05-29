@@ -5,6 +5,7 @@ import com.blss.orderservice.domain.order.Status;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -57,4 +58,15 @@ public interface OrderRepo extends CrudRepository<Order, UUID> {
         ORDER BY id ASC
         LIMIT :batchSize""")
     List<Order> findOrdersForDay(LocalDate day, UUID lastId, int batchSize);
+
+    @Query("""
+    SELECT *
+    FROM orders
+    WHERE creation_date >= :from
+      AND creation_date <  :to
+      AND id > :lastId
+    ORDER BY id ASC
+    LIMIT :batchSize
+    """)
+    List<Order> findOrdersInRange(Instant from, Instant to, UUID lastId, int batchSize);
 }
