@@ -15,4 +15,11 @@ security:
   users:
     xml-path: ${SECURITY_USERS_XML_PATH:/home/studs/s408145/wildfly-37.0.1.Final/standalone/configuration/users.xml}
 
-
+camunda:
+  rest-url: ${CAMUNDA_REST_URL:http://localhost:8080/engine-rest}
+  worker-id: ${CAMUNDA_WORKER_ID:blss-worker}
+  lock-duration: ${CAMUNDA_LOCK_DURATION:10000}
+  processes:
+    product-creation-key: warehouse-product-create
+    order-creation-key: warehouse-order-create
+    order-pickup-key: warehouse-order-pickup

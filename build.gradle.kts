@@ -47,6 +47,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("jakarta.annotation:jakarta.annotation-api")
     compileOnly("jakarta.transaction:jakarta.transaction-api:2.0.1")
+    implementation("org.camunda.bpm:camunda-external-task-client:7.22.0")
     implementation("org.mapstruct:mapstruct:1.6.3")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
