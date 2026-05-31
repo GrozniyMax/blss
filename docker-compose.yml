@@ -35,9 +35,52 @@ services:
     networks:
       - BLSS-labs
 
+  camunda-postgres:
+    image: postgres:15-alpine
+    container_name: camunda-postgres
+    environment:
+      POSTGRES_DB: camunda
+      POSTGRES_USER: camunda
+      POSTGRES_PASSWORD: camunda123
+    ports:
+      - "5433:5432"
+    volumes:
+      - camunda_postgres_data:/var/lib/postgresql/data
+    networks:
+      - BLSS-labs
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U camunda -d camunda"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  camunda:
+    image: camunda/camunda-bpm-platform:7.20.0
+    container_name: camunda
+    environment:
+      DB_DRIVER: org.postgresql.Driver
+      DB_URL: jdbc:postgresql://camunda-postgres:5432/camunda
+      DB_USERNAME: camunda
+      DB_PASSWORD: camunda123
+      WAIT_FOR: camunda-postgres:5432
+      CAMUNDA_BPM_ADMIN_USER_ID: admin
+      CAMUNDA_BPM_ADMIN_USER_PASSWORD: admin123
+      TZ: Europe/Moscow
+    ports:
+      - "8080:8080"
+    depends_on:
+      camunda-postgres:
+        condition: service_healthy
+    networks:
+      - BLSS-labs
+    volumes:
+      - camunda_data:/camunda
+
 volumes:
   postgres_data:
   pgadmin_data:
+  camunda_postgres_data:
+  camunda_data:
 
 networks:
   BLSS-labs:

@@ -1,10 +1,12 @@
 package com.blss.blss;
 
+import org.camunda.bpm.client.spring.annotation.EnableExternalTaskClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @EnableAsync
+@EnableExternalTaskClient
 @SpringBootApplication
 public class BlssApplication {
 
