@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "pickup-start-form",
+  "components": [
+    {
+      "key": "orderId",
+      "label": "Номер заказа",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "consultantId",
+      "label": "Консультант",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    }
+  ]
+}

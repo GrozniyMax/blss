@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "order-status-form",
+  "components": [
+    {
+      "key": "orderId",
+      "label": "Order ID",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "action",
+      "label": "Action",
+      "type": "select",
+      "values": [
+        {
+          "label": "Next",
+          "value": "NEXT"
+        },
+        {
+          "label": "Cancel",
+          "value": "CANCEL"
+        }
+      ],
+      "validate": {
+        "required": true
+      }
+    }
+  ]
+}

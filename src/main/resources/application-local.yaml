@@ -1,0 +1,28 @@
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.JndiDataSourceAutoConfiguration
+  jta:
+    enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:studs}
+    username: ${POSTGRES_USER:s408145}
+    password: ${POSTGRES_PASSWORD:JLzD%6772}
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+
+server:
+  port: ${SPRING_PORT:3000}
+
+security:
+  users:
+    xml-path: ${SECURITY_USERS_XML_PATH:./users.xml}
+
+camunda:
+  rest-url: ${CAMUNDA_REST_URL:http://localhost:8080/engine-rest}
+  worker-id: ${CAMUNDA_WORKER_ID:blss-local-worker}
+  lock-duration: ${CAMUNDA_LOCK_DURATION:10000}
+  processes:
+    product-creation-key: warehouse-product-create
+    order-creation-key: warehouse-order-create
+    order-pickup-key: warehouse-order-pickup

@@ -38,10 +38,11 @@ public class BpmnAutoDeployer {
     @EventListener(ApplicationReadyEvent.class)
     public void deploy() throws IOException {
         var resolver = new PathMatchingResourcePatternResolver();
-        Resource[] resources = resolver.getResources("classpath:processes/*.bpmn");
+        Resource[] bpmnResources = resolver.getResources("classpath:processes/*.bpmn");
+        Resource[] formResources = resolver.getResources("classpath:forms/*.form");
 
-        if (resources.length == 0) {
-            log.warn("No BPMN files found in classpath:processes/");
+        if (bpmnResources.length == 0 && formResources.length == 0) {
+            log.warn("No BPMN or Camunda form files found in classpath:processes/ and classpath:forms/");
             return;
         }
 
@@ -50,16 +51,8 @@ public class BpmnAutoDeployer {
         body.add("deploy-changed-only", "true");
         body.add("deployment-source", "spring-boot-app");
 
-        for (Resource resource : resources) {
-            String filename = resource.getFilename();
-            log.info("Adding {} to deployment", filename);
-            body.add("data", new ByteArrayResource(resource.getInputStream().readAllBytes()) {
-                @Override
-                public String getFilename() {
-                    return filename;
-                }
-            });
-        }
+        addResources(body, bpmnResources);
+        addResources(body, formResources);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -74,6 +67,19 @@ public class BpmnAutoDeployer {
             log.info("BPMN deployed: {}", response.getBody());
         } catch (Exception e) {
             log.error("BPMN deploy failed", e);
+        }
+    }
+
+    private void addResources(MultiValueMap<String, Object> body, Resource[] resources) throws IOException {
+        for (Resource resource : resources) {
+            String filename = resource.getFilename();
+            log.info("Adding {} to deployment", filename);
+            body.add(filename, new ByteArrayResource(resource.getInputStream().readAllBytes()) {
+                @Override
+                public String getFilename() {
+                    return filename;
+                }
+            });
         }
     }
 }

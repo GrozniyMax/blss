@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "order-create-form",
+  "components": [
+    {
+      "key": "owner",
+      "label": "Покупатель",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "location",
+      "label": "ПВЗ",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "productIds",
+      "label": "UUID товаров",
+      "type": "textarea",
+      "description": "JSON-массив строк UUID, например [\"...\", \"...\"]",
+      "validate": {
+        "required": true
+      }
+    }
+  ]
+}

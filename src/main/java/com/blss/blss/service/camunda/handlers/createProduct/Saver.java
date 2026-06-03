@@ -3,6 +3,7 @@ package com.blss.blss.service.camunda.handlers.createProduct;
 import com.blss.blss.domain.Product;
 import com.blss.blss.exception.AlreadyExistsException;
 import com.blss.blss.service.StoreService;
+import com.blss.blss.service.camunda.handlers.CamundaHandlerSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
-@Component
+@Component("createProductSaverHandler")
 @RequiredArgsConstructor
 @ExternalTaskSubscription("create-product: store")
 public class Saver implements ExternalTaskHandler {
@@ -29,18 +30,19 @@ public class Saver implements ExternalTaskHandler {
         try {
             String name = task.getVariable("productName");
             String priceStr = task.getVariable("price");
-            Long initialCount = task.getVariable("initialCount");
+            Object initialCount = task.getVariable("initialCount");
 
             BigDecimal price = new BigDecimal(priceStr);
             Product product = new Product(null, name, price);
+            Integer count = initialCount instanceof Number number ? number.intValue() : null;
 
-            UUID productId = storeService.createProduct(product, initialCount.intValue());
+            UUID productId = storeService.createProduct(product, count);
             log.info("Product created: id={}", productId);
 
-            service.complete(task, Map.of("productId", productId.toString()));
+            service.complete(task, Map.of("productId", productId.toString(), "processSuccess", true));
         } catch (AlreadyExistsException e) {
             // На случай race condition между check и save
-            service.handleBpmnError(task, "PRODUCT_ALREADY_EXISTS",
+            CamundaHandlerSupport.bpmnError(task, service, "PRODUCT_ALREADY_EXISTS",
                     "Product already exists");
         } catch (Exception e) {
             log.error("Failed to save product", e);

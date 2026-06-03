@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "product-create-form",
+  "components": [
+    {
+      "key": "productName",
+      "label": "Название товара",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "price",
+      "label": "Цена",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "initialCount",
+      "label": "Начальный остаток",
+      "type": "number",
+      "validate": {
+        "required": true,
+        "min": 1
+      }
+    }
+  ]
+}

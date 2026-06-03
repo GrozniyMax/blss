@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_CreateDeliveryPoint"
+                  targetNamespace="http://blss.com/bpmn">
+  <bpmn:process id="createDeliveryPointProcess" name="Create Delivery Point Process" isExecutable="true"
+                camunda:candidateStarterGroups="MANAGER,ADMIN"
+                camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="Start_CreateDeliveryPoint" name="Create delivery point"
+                     camunda:formRef="delivery-point-create-form" camunda:formRefBinding="latest">
+      <bpmn:outgoing>Flow_Start_Save</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_CreateDeliveryPoint" name="Validate and create delivery point"
+                      camunda:type="external" camunda:topic="delivery-point: create">
+      <bpmn:incoming>Flow_Start_Save</bpmn:incoming>
+      <bpmn:outgoing>Flow_Save_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Boundary_DeliveryPointCreateError" attachedToRef="Task_CreateDeliveryPoint">
+      <bpmn:outgoing>Flow_CreateError_End</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidDeliveryPoint"/>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="End_DeliveryPointCreated" name="Delivery point created">
+      <bpmn:incoming>Flow_Save_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_DeliveryPointRejected" name="Delivery point rejected">
+      <bpmn:incoming>Flow_CreateError_End</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidDeliveryPoint"/>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_Save" sourceRef="Start_CreateDeliveryPoint" targetRef="Task_CreateDeliveryPoint"/>
+    <bpmn:sequenceFlow id="Flow_Save_End" sourceRef="Task_CreateDeliveryPoint" targetRef="End_DeliveryPointCreated"/>
+    <bpmn:sequenceFlow id="Flow_CreateError_End" sourceRef="Boundary_DeliveryPointCreateError" targetRef="End_DeliveryPointRejected"/>
+  </bpmn:process>
+  <bpmn:error id="Error_InvalidDeliveryPoint" name="InvalidDeliveryPoint" errorCode="INVALID_DELIVERY_POINT"/>
+  <bpmndi:BPMNDiagram id="Diagram_CreateDeliveryPoint">
+    <bpmndi:BPMNPlane id="Plane_CreateDeliveryPoint" bpmnElement="createDeliveryPointProcess">
+      <bpmndi:BPMNShape id="Start_CreateDeliveryPoint_di" bpmnElement="Start_CreateDeliveryPoint">
+        <dc:Bounds x="120" y="120" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateDeliveryPoint_di" bpmnElement="Task_CreateDeliveryPoint">
+        <dc:Bounds x="230" y="98" width="180" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_DeliveryPointCreateError_di" bpmnElement="Boundary_DeliveryPointCreateError">
+        <dc:Bounds x="302" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_DeliveryPointCreated_di" bpmnElement="End_DeliveryPointCreated">
+        <dc:Bounds x="480" y="120" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_DeliveryPointRejected_di" bpmnElement="End_DeliveryPointRejected">
+        <dc:Bounds x="480" y="240" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_Save_di" bpmnElement="Flow_Start_Save">
+        <di:waypoint x="156" y="138"/>
+        <di:waypoint x="230" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Save_End_di" bpmnElement="Flow_Save_End">
+        <di:waypoint x="410" y="138"/>
+        <di:waypoint x="480" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CreateError_End_di" bpmnElement="Flow_CreateError_End">
+        <di:waypoint x="320" y="196"/>
+        <di:waypoint x="320" y="258"/>
+        <di:waypoint x="480" y="258"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -9,6 +9,7 @@
                   targetNamespace="http://blss.com/bpmn">
 
     <bpmn:process id="createProductProcess" name="Create Product Process" isExecutable="true"
+                  camunda:candidateStarterGroups="MANAGER,ADMIN"
                   camunda:historyTimeToLive="P30D">
 
         <!-- ============ START EVENT С ФОРМОЙ ============ -->

@@ -1,7 +1,7 @@
 package com.blss.blss.controller;
 
 import com.blss.blss.dto.input.OrderItemDeliveredDto;
-import com.blss.blss.service.StorageService;
+import com.blss.blss.service.camunda.CamundaProcessClient;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,14 +24,17 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class PVZController {
 
-    StorageService storageService;
+    CamundaProcessClient camundaProcessClient;
 
     @PostMapping("/mark-delivered")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markDelivered(@Valid @RequestBody OrderItemDeliveredDto dto) {
         log.info("Marking order item as delivered: itemId={}, yacheyka={}", dto.itemId(), dto.yacheyka());
-        storageService.updateYacheyka(dto.itemId(), dto.yacheyka());
-        log.info("Order item marked as delivered: itemId={}", dto.itemId());
+        camundaProcessClient.startAndAwait("markDeliveredProcess", java.util.Map.of(
+                "itemId", dto.itemId().toString(),
+                "yacheyka", dto.yacheyka()
+        ), java.util.Set.of("processSuccess"));
+        log.info("Order item marked as delivered via Camunda: itemId={}", dto.itemId());
     }
 
 

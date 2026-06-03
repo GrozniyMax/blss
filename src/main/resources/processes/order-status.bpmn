@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_OrderStatus"
+                  targetNamespace="http://blss.com/bpmn">
+  <bpmn:process id="orderStatusProcess" name="Order Status Process" isExecutable="true"
+                camunda:candidateStarterGroups="CONSULTANT,MANAGER,ADMIN"
+                camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="Start_OrderStatus" name="Change order status"
+                     camunda:formRef="order-status-form" camunda:formRefBinding="latest">
+      <bpmn:outgoing>Flow_Start_Load</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_LoadStatus" name="Load current status"
+                      camunda:type="external" camunda:topic="order-status: load">
+      <bpmn:incoming>Flow_Start_Load</bpmn:incoming>
+      <bpmn:outgoing>Flow_Load_Action</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_Action" name="Requested action">
+      <bpmn:incoming>Flow_Load_Action</bpmn:incoming>
+      <bpmn:outgoing>Flow_Action_Cancel</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Action_Next</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_CancelOrder" name="Cancel order"
+                      camunda:type="external" camunda:topic="order-status: cancel">
+      <bpmn:incoming>Flow_Action_Cancel</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cancel_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_NextStatus" name="Move to next status"
+                      camunda:type="external" camunda:topic="order-status: next">
+      <bpmn:incoming>Flow_Action_Next</bpmn:incoming>
+      <bpmn:outgoing>Flow_Next_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Boundary_StatusError" attachedToRef="Task_NextStatus">
+      <bpmn:outgoing>Flow_StatusError_End</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidStatusAction"/>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Boundary_CancelError" attachedToRef="Task_CancelOrder">
+      <bpmn:outgoing>Flow_CancelError_End</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidStatusAction"/>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="End_StatusChanged" name="Status changed">
+      <bpmn:incoming>Flow_Cancel_End</bpmn:incoming>
+      <bpmn:incoming>Flow_Next_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_StatusRejected" name="Status change rejected">
+      <bpmn:incoming>Flow_StatusError_End</bpmn:incoming>
+      <bpmn:incoming>Flow_CancelError_End</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidStatusAction"/>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_Load" sourceRef="Start_OrderStatus" targetRef="Task_LoadStatus"/>
+    <bpmn:sequenceFlow id="Flow_Load_Action" sourceRef="Task_LoadStatus" targetRef="Gateway_Action"/>
+    <bpmn:sequenceFlow id="Flow_Action_Cancel" name="Cancel" sourceRef="Gateway_Action" targetRef="Task_CancelOrder">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action == 'CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Action_Next" name="Next" sourceRef="Gateway_Action" targetRef="Task_NextStatus">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${action != 'CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Cancel_End" sourceRef="Task_CancelOrder" targetRef="End_StatusChanged"/>
+    <bpmn:sequenceFlow id="Flow_Next_End" sourceRef="Task_NextStatus" targetRef="End_StatusChanged"/>
+    <bpmn:sequenceFlow id="Flow_StatusError_End" sourceRef="Boundary_StatusError" targetRef="End_StatusRejected"/>
+    <bpmn:sequenceFlow id="Flow_CancelError_End" sourceRef="Boundary_CancelError" targetRef="End_StatusRejected"/>
+  </bpmn:process>
+  <bpmn:error id="Error_InvalidStatusAction" name="InvalidStatusAction" errorCode="INVALID_STATUS_ACTION"/>
+  <bpmndi:BPMNDiagram id="Diagram_OrderStatus">
+    <bpmndi:BPMNPlane id="Plane_OrderStatus" bpmnElement="orderStatusProcess">
+      <bpmndi:BPMNShape id="Start_OrderStatus_di" bpmnElement="Start_OrderStatus">
+        <dc:Bounds x="120" y="170" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadStatus_di" bpmnElement="Task_LoadStatus">
+        <dc:Bounds x="220" y="148" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Action_di" bpmnElement="Gateway_Action" isMarkerVisible="true">
+        <dc:Bounds x="430" y="163" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CancelOrder_di" bpmnElement="Task_CancelOrder">
+        <dc:Bounds x="560" y="70" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NextStatus_di" bpmnElement="Task_NextStatus">
+        <dc:Bounds x="560" y="230" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_CancelError_di" bpmnElement="Boundary_CancelError">
+        <dc:Bounds x="622" y="132" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_StatusError_di" bpmnElement="Boundary_StatusError">
+        <dc:Bounds x="622" y="292" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_StatusChanged_di" bpmnElement="End_StatusChanged">
+        <dc:Bounds x="820" y="170" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_StatusRejected_di" bpmnElement="End_StatusRejected">
+        <dc:Bounds x="820" y="340" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_Load_di" bpmnElement="Flow_Start_Load">
+        <di:waypoint x="156" y="188"/>
+        <di:waypoint x="220" y="188"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Load_Action_di" bpmnElement="Flow_Load_Action">
+        <di:waypoint x="370" y="188"/>
+        <di:waypoint x="430" y="188"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Action_Cancel_di" bpmnElement="Flow_Action_Cancel">
+        <di:waypoint x="455" y="163"/>
+        <di:waypoint x="455" y="110"/>
+        <di:waypoint x="560" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Action_Next_di" bpmnElement="Flow_Action_Next">
+        <di:waypoint x="455" y="213"/>
+        <di:waypoint x="455" y="270"/>
+        <di:waypoint x="560" y="270"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cancel_End_di" bpmnElement="Flow_Cancel_End">
+        <di:waypoint x="710" y="110"/>
+        <di:waypoint x="838" y="110"/>
+        <di:waypoint x="838" y="170"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Next_End_di" bpmnElement="Flow_Next_End">
+        <di:waypoint x="710" y="270"/>
+        <di:waypoint x="838" y="270"/>
+        <di:waypoint x="838" y="206"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StatusError_End_di" bpmnElement="Flow_StatusError_End">
+        <di:waypoint x="640" y="328"/>
+        <di:waypoint x="640" y="358"/>
+        <di:waypoint x="820" y="358"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CancelError_End_di" bpmnElement="Flow_CancelError_End">
+        <di:waypoint x="640" y="168"/>
+        <di:waypoint x="640" y="358"/>
+        <di:waypoint x="820" y="358"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

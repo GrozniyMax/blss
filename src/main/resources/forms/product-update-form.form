@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "product-update-form",
+  "components": [
+    {
+      "key": "productId",
+      "label": "Product ID",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "name",
+      "label": "Product name",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "price",
+      "label": "Price",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    }
+  ]
+}

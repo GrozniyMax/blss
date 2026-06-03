@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "mark-delivered-form",
+  "components": [
+    {
+      "key": "itemId",
+      "label": "Order item ID",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "yacheyka",
+      "label": "Storage cell",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    }
+  ]
+}

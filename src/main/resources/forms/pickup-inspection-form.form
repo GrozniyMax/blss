@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "pickup-inspection-form",
+  "components": [
+    {
+      "key": "pickupAccepted",
+      "label": "Покупатель забирает заказ",
+      "type": "checkbox"
+    },
+    {
+      "key": "pickupComment",
+      "label": "Комментарий к выдаче",
+      "type": "textarea"
+    }
+  ]
+}

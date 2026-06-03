@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  id="Definitions_WarehouseOrderPickup"
+                  targetNamespace="http://blss.com/camunda/warehouse">
+  <bpmn:process id="warehouse-order-pickup" name="Выдача заказа" isExecutable="true"
+                camunda:candidateStarterGroups="USER,ADMIN">
+    <bpmn:startEvent id="Start_OrderPickup" name="Покупатель пришел за заказом"
+                     camunda:formRef="pickup-start-form" camunda:formRefBinding="latest">
+      <bpmn:outgoing>Flow_Pickup_Start</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_VerifyPickup" name="Проверить готовность заказа"
+                      camunda:type="external" camunda:topic="order.pickup.verify">
+      <bpmn:incoming>Flow_Pickup_Start</bpmn:incoming>
+      <bpmn:outgoing>Flow_Pickup_ToInspection</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_InspectOrder" name="Осмотр заказа покупателем"
+                   camunda:candidateGroups="USER,ADMIN"
+                   camunda:formRef="pickup-inspection-form" camunda:formRefBinding="latest">
+      <bpmn:incoming>Flow_Pickup_ToInspection</bpmn:incoming>
+      <bpmn:outgoing>Flow_Pickup_ToDecision</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="Gateway_PickupAccepted" name="Заказ забирают?">
+      <bpmn:incoming>Flow_Pickup_ToDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Pickup_Accepted</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Pickup_Rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="Task_CompletePickup" name="Выдать заказ"
+                      camunda:type="external" camunda:topic="order.pickup.complete">
+      <bpmn:incoming>Flow_Pickup_Accepted</bpmn:incoming>
+      <bpmn:outgoing>Flow_Pickup_Done</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Task_RejectPickup" name="Оформить отказ и возврат"
+                      camunda:type="external" camunda:topic="order.pickup.reject">
+      <bpmn:incoming>Flow_Pickup_Rejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_Pickup_Canceled</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="End_PickupCompleted" name="Заказ выдан">
+      <bpmn:incoming>Flow_Pickup_Done</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_PickupRejected" name="Выдача отменена">
+      <bpmn:incoming>Flow_Pickup_Canceled</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_Pickup_Start" sourceRef="Start_OrderPickup" targetRef="Task_VerifyPickup"/>
+    <bpmn:sequenceFlow id="Flow_Pickup_ToInspection" sourceRef="Task_VerifyPickup" targetRef="Task_InspectOrder"/>
+    <bpmn:sequenceFlow id="Flow_Pickup_ToDecision" sourceRef="Task_InspectOrder" targetRef="Gateway_PickupAccepted"/>
+    <bpmn:sequenceFlow id="Flow_Pickup_Accepted" name="Да" sourceRef="Gateway_PickupAccepted" targetRef="Task_CompletePickup">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${pickupAccepted == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Pickup_Rejected" name="Нет" sourceRef="Gateway_PickupAccepted" targetRef="Task_RejectPickup">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${pickupAccepted != true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Pickup_Done" sourceRef="Task_CompletePickup" targetRef="End_PickupCompleted"/>
+    <bpmn:sequenceFlow id="Flow_Pickup_Canceled" sourceRef="Task_RejectPickup" targetRef="End_PickupRejected"/>
+  </bpmn:process>
+</bpmn:definitions>

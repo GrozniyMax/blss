@@ -1,0 +1,968 @@
+﻿{
+    "info":  {
+                 "name":  "BLSS Camunda E2E",
+                 "_postman_id":  "b6a673a4-0f6a-4ec8-9bb1-f9c8af70f001",
+                 "description":  "End-to-end checks for BLSS business processes moved to standalone Camunda. Run after docker compose up -d and Spring bootRun.",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "variable":  [
+                     {
+                         "key":  "adminUser",
+                         "value":  "admin"
+                     },
+                     {
+                         "key":  "adminPassword",
+                         "value":  "admin123"
+                     },
+                     {
+                         "key":  "managerUser",
+                         "value":  "manager"
+                     },
+                     {
+                         "key":  "managerPassword",
+                         "value":  "manager123"
+                     },
+                     {
+                         "key":  "customerUser",
+                         "value":  "user"
+                     },
+                     {
+                         "key":  "customerPassword",
+                         "value":  "e2e_pass_123"
+                     },
+                     {
+                         "key":  "consultantUser",
+                         "value":  "consultant"
+                     },
+                     {
+                         "key":  "consultantPassword",
+                         "value":  "consultant123"
+                     },
+                     {
+                         "key":  "warehouseUser",
+                         "value":  "warehouse"
+                     },
+                     {
+                         "key":  "warehousePassword",
+                         "value":  "warehouse123"
+                     },
+                     {
+                         "key":  "invalidProductId",
+                         "value":  "00000000-0000-0000-0000-000000000001"
+                     }
+                 ],
+    "item":  [
+                 {
+                     "name":  "00 Camunda process definitions deployed",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{adminUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{adminPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "raw":  "http://localhost:8080/engine-rest/process-definition?latestVersion=true",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "8080",
+                                                 "path":  [
+                                                              "engine-rest",
+                                                              "process-definition"
+                                                          ],
+                                                 "query":  [
+                                                               {
+                                                                   "key":  "latestVersion",
+                                                                   "value":  "true"
+                                                               }
+                                                           ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Camunda returned process definitions\u0027, function () { pm.response.to.have.status(200); });",
+                                                                   "const defs = pm.response.json();",
+                                                                   "const keys = defs.map(d =\u003e d.key);",
+                                                                   "[\u0027createDeliveryPointProcess\u0027,\u0027createProductProcess\u0027,\u0027createOrderProcess\u0027,\u0027orderStatusProcess\u0027,\u0027markDeliveredProcess\u0027,\u0027orderPickupProcess\u0027,\u0027updateProductProcess\u0027,\u0027updateProductCountProcess\u0027].forEach(k =\u003e {",
+                                                                   "  pm.test(`Process deployed: ${k}`, function () { pm.expect(keys).to.include(k); });",
+                                                                   "});"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "01 Create delivery point",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{managerUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{managerPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"name\": \"{{deliveryPointName}}\",\n  \"address\": \"{{deliveryPointAddress}}\"\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/delivery-points",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "delivery-points"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "prerequest",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "const suffix = Date.now();",
+                                                                   "pm.collectionVariables.set(\u0027deliveryPointName\u0027, `PVZ-${suffix}`);",
+                                                                   "pm.collectionVariables.set(\u0027deliveryPointAddress\u0027, `Test street ${suffix}`);"
+                                                               ]
+                                                  }
+                                   },
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Delivery point created\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "pm.collectionVariables.set(\u0027deliveryPointId\u0027, body.data.id);",
+                                                                   "pm.test(\u0027deliveryPointId captured\u0027, function () { pm.expect(pm.collectionVariables.get(\u0027deliveryPointId\u0027)).to.be.ok; });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "02 Create product",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{managerUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{managerPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"name\": \"{{productName}}\",\n  \"price\": 1000.00,\n  \"initialCount\": 10\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/inventory/products",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "inventory",
+                                                              "products"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "prerequest",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.collectionVariables.set(\u0027productName\u0027, `Product-${Date.now()}`);"
+                                                               ]
+                                                  }
+                                   },
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Product created\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "pm.collectionVariables.set(\u0027productId\u0027, body.data.product.id);",
+                                                                   "pm.collectionVariables.set(\u0027initialCount\u0027, String(body.data.count));",
+                                                                   "pm.test(\u0027productId captured\u0027, function () { pm.expect(pm.collectionVariables.get(\u0027productId\u0027)).to.be.ok; });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "03 Create order",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{customerUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{customerPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"owner\": \"{{customerUser}}\",\n  \"location\": \"{{deliveryPointId}}\",\n  \"productIds\": [\"{{productId}}\"]\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/order/create",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "order",
+                                                              "create"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Order created\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "pm.collectionVariables.set(\u0027orderId\u0027, body.data.orderId);",
+                                                                   "pm.test(\u0027orderId captured\u0027, function () { pm.expect(pm.collectionVariables.get(\u0027orderId\u0027)).to.be.ok; });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "04 Get order and capture item",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{customerUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{customerPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/order/{{orderId}}",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "order",
+                                                              "{{orderId}}"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Order fetched\u0027, function () { pm.response.to.have.status(200); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "const order = body.data || body;",
+                                                                   "pm.test(\u0027Order status is CREATED\u0027, function () { pm.expect(order.status).to.eql(\u0027CREATED\u0027); });",
+                                                                   "pm.test(\u0027Order has positions\u0027, function () { pm.expect(order.positions).to.be.an(\u0027array\u0027).that.is.not.empty; });",
+                                                                   "const firstPosition = order.positions \u0026\u0026 order.positions[0];",
+                                                                   "const itemId = firstPosition \u0026\u0026 (firstPosition.id || firstPosition.itemId || firstPosition.orderItemId);",
+                                                                   "pm.test(\u0027order item id exists in response\u0027, function () { pm.expect(itemId).to.be.ok; });",
+                                                                   "pm.collectionVariables.set(\u0027orderItemId\u0027, itemId);",
+                                                                   "pm.test(\u0027orderItemId captured as UUID\u0027, function () { pm.expect(pm.collectionVariables.get(\u0027orderItemId\u0027)).to.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "05 Product count decremented",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{managerUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{managerPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/inventory/products/{{productId}}/count",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "inventory",
+                                                              "products",
+                                                              "{{productId}}",
+                                                              "count"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Count fetched\u0027, function () { pm.response.to.have.status(200); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "const initial = Number(pm.collectionVariables.get(\u0027initialCount\u0027));",
+                                                                   "pm.test(\u0027Stock decremented by order creation\u0027, function () { pm.expect(Number(body.data)).to.eql(initial - 1); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "06 Move order to PROCESSING",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{consultantUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{consultantPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "PATCH",
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/order/{{orderId}}/status/next",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "order",
+                                                              "{{orderId}}",
+                                                              "status",
+                                                              "next"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Status transition accepted\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 204]); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "07 Move order to IN_DELIVERY",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{consultantUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{consultantPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "PATCH",
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/order/{{orderId}}/status/next",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "order",
+                                                              "{{orderId}}",
+                                                              "status",
+                                                              "next"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Status transition accepted\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 204]); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "08 Mark item delivered",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{warehouseUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{warehousePassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"itemId\": \"{{orderItemId}}\",\n  \"yacheyka\": \"A-12-2\"\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/mark-delivered",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "mark-delivered"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "prerequest",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "const itemId = pm.collectionVariables.get(\u0027orderItemId\u0027);",
+                                                                   "if (!itemId || !/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(itemId)) {",
+                                                                   "  throw new Error(\u0027orderItemId is missing or not a UUID. Run requests 01-04 before Mark item delivered. Current value: \u0027 + itemId);",
+                                                                   "}"
+                                                               ]
+                                                  }
+                                   },
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Item delivered\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 204]); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "09 Order is READY_FOR_PICKUP",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{consultantUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{consultantPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/order/{{orderId}}",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "order",
+                                                              "{{orderId}}"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Order fetched\u0027, function () { pm.response.to.have.status(200); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "pm.test(\u0027Order status is READY_FOR_PICKUP\u0027, function () { pm.expect(body.data.status).to.eql(\u0027READY_FOR_PICKUP\u0027); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "10 Start pickup process in Camunda",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{adminUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{adminPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"variables\": {\n    \"orderId\": { \"value\": \"{{orderId}}\", \"type\": \"String\" },\n    \"consultantId\": { \"value\": \"{{consultantUser}}\", \"type\": \"String\" }\n  }\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:8080/engine-rest/process-definition/key/orderPickupProcess/start",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "8080",
+                                                 "path":  [
+                                                              "engine-rest",
+                                                              "process-definition",
+                                                              "key",
+                                                              "orderPickupProcess",
+                                                              "start"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Pickup process started\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "pm.collectionVariables.set(\u0027pickupProcessInstanceId\u0027, body.id);"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "11 Find pickup user task",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{adminUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{adminPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "raw":  "http://localhost:8080/engine-rest/task?processInstanceId={{pickupProcessInstanceId}}",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "8080",
+                                                 "path":  [
+                                                              "engine-rest",
+                                                              "task"
+                                                          ],
+                                                 "query":  [
+                                                               {
+                                                                   "key":  "processInstanceId",
+                                                                   "value":  "{{pickupProcessInstanceId}}"
+                                                               }
+                                                           ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Task query accepted\u0027, function () { pm.response.to.have.status(200); });",
+                                                                   "const tasks = pm.response.json();",
+                                                                   "pm.test(\u0027Pickup inspection task exists\u0027, function () { pm.expect(tasks.length).to.be.above(0); });",
+                                                                   "pm.collectionVariables.set(\u0027pickupTaskId\u0027, tasks[0].id);"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "12 Complete pickup user task",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{adminUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{adminPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"variables\": {\n    \"pickupAccepted\": { \"value\": true, \"type\": \"Boolean\" },\n    \"pickupComment\": { \"value\": \"Accepted in E2E test\", \"type\": \"String\" }\n  }\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:8080/engine-rest/task/{{pickupTaskId}}/complete",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "8080",
+                                                 "path":  [
+                                                              "engine-rest",
+                                                              "task",
+                                                              "{{pickupTaskId}}",
+                                                              "complete"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Pickup task completed\u0027, function () { pm.expect(pm.response.code).to.be.oneOf([200, 204]); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "13 Order is DONE",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{consultantUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{consultantPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/order/{{orderId}}",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "order",
+                                                              "{{orderId}}"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Order fetched\u0027, function () { pm.response.to.have.status(200); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "pm.test(\u0027Order status is DONE\u0027, function () { pm.expect(body.data.status).to.eql(\u0027DONE\u0027); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "14 Negative auth: user cannot create product",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{customerUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{customerPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"name\": \"Forbidden product\",\n  \"price\": 100.00,\n  \"initialCount\": 1\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/inventory/products",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "inventory",
+                                                              "products"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027User cannot create product\u0027, function () { pm.response.to.have.status(403); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "15 Negative auth: warehouse cannot change status",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{warehouseUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{warehousePassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "PATCH",
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/order/{{orderId}}/status/next",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "order",
+                                                              "{{orderId}}",
+                                                              "status",
+                                                              "next"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test(\u0027Warehouse cannot change status\u0027, function () { pm.response.to.have.status(403); });"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 }
+             ]
+}

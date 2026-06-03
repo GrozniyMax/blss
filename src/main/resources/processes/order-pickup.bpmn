@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_OrderPickup"
+                  targetNamespace="http://blss.com/bpmn">
+  <bpmn:process id="orderPickupProcess" name="Order Pickup Process" isExecutable="true"
+                camunda:candidateStarterGroups="CONSULTANT,MANAGER,ADMIN"
+                camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="Start_OrderPickup" name="Start pickup"
+                     camunda:formRef="pickup-start-form" camunda:formRefBinding="latest">
+      <bpmn:outgoing>Flow_Start_Verify</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_VerifyPickup" name="Verify order is ready"
+                      camunda:type="external" camunda:topic="order-pickup: verify"
+                      camunda:asyncBefore="true">
+      <bpmn:incoming>Flow_Start_Verify</bpmn:incoming>
+      <bpmn:outgoing>Flow_Verify_UserTask</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Boundary_PickupVerifyError" attachedToRef="Task_VerifyPickup">
+      <bpmn:outgoing>Flow_VerifyError_End</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidPickup"/>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Task_InspectOrder" name="Customer inspection"
+                   camunda:candidateGroups="CONSULTANT,MANAGER,ADMIN"
+                   camunda:formRef="pickup-inspection-form" camunda:formRefBinding="latest">
+      <bpmn:incoming>Flow_Verify_UserTask</bpmn:incoming>
+      <bpmn:outgoing>Flow_UserTask_Decision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_PickupAccepted" name="Accepted?">
+      <bpmn:incoming>Flow_UserTask_Decision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Accepted_Complete</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Rejected_Cancel</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_CompletePickup" name="Complete pickup"
+                      camunda:type="external" camunda:topic="order-pickup: complete"
+                      camunda:asyncBefore="true">
+      <bpmn:incoming>Flow_Accepted_Complete</bpmn:incoming>
+      <bpmn:outgoing>Flow_Complete_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_RejectPickup" name="Reject pickup"
+                      camunda:type="external" camunda:topic="order-pickup: reject"
+                      camunda:asyncBefore="true">
+      <bpmn:incoming>Flow_Rejected_Cancel</bpmn:incoming>
+      <bpmn:outgoing>Flow_Reject_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_PickupCompleted" name="Pickup completed">
+      <bpmn:incoming>Flow_Complete_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_PickupRejected" name="Pickup rejected">
+      <bpmn:incoming>Flow_Reject_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_PickupInvalid" name="Pickup invalid">
+      <bpmn:incoming>Flow_VerifyError_End</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidPickup"/>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_Verify" sourceRef="Start_OrderPickup" targetRef="Task_VerifyPickup"/>
+    <bpmn:sequenceFlow id="Flow_Verify_UserTask" sourceRef="Task_VerifyPickup" targetRef="Task_InspectOrder"/>
+    <bpmn:sequenceFlow id="Flow_UserTask_Decision" sourceRef="Task_InspectOrder" targetRef="Gateway_PickupAccepted"/>
+    <bpmn:sequenceFlow id="Flow_Accepted_Complete" name="Yes" sourceRef="Gateway_PickupAccepted" targetRef="Task_CompletePickup">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${pickupAccepted == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Rejected_Cancel" name="No" sourceRef="Gateway_PickupAccepted" targetRef="Task_RejectPickup">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${pickupAccepted != true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Complete_End" sourceRef="Task_CompletePickup" targetRef="End_PickupCompleted"/>
+    <bpmn:sequenceFlow id="Flow_Reject_End" sourceRef="Task_RejectPickup" targetRef="End_PickupRejected"/>
+    <bpmn:sequenceFlow id="Flow_VerifyError_End" sourceRef="Boundary_PickupVerifyError" targetRef="End_PickupInvalid"/>
+  </bpmn:process>
+  <bpmn:error id="Error_InvalidPickup" name="InvalidPickup" errorCode="INVALID_PICKUP"/>
+  <bpmndi:BPMNDiagram id="Diagram_OrderPickup">
+    <bpmndi:BPMNPlane id="Plane_OrderPickup" bpmnElement="orderPickupProcess">
+      <bpmndi:BPMNShape id="Start_OrderPickup_di" bpmnElement="Start_OrderPickup">
+        <dc:Bounds x="100" y="170" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerifyPickup_di" bpmnElement="Task_VerifyPickup">
+        <dc:Bounds x="210" y="148" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_PickupVerifyError_di" bpmnElement="Boundary_PickupVerifyError">
+        <dc:Bounds x="272" y="210" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InspectOrder_di" bpmnElement="Task_InspectOrder">
+        <dc:Bounds x="430" y="148" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PickupAccepted_di" bpmnElement="Gateway_PickupAccepted" isMarkerVisible="true">
+        <dc:Bounds x="650" y="163" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CompletePickup_di" bpmnElement="Task_CompletePickup">
+        <dc:Bounds x="780" y="80" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RejectPickup_di" bpmnElement="Task_RejectPickup">
+        <dc:Bounds x="780" y="250" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_PickupCompleted_di" bpmnElement="End_PickupCompleted">
+        <dc:Bounds x="1010" y="102" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_PickupRejected_di" bpmnElement="End_PickupRejected">
+        <dc:Bounds x="1010" y="272" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_PickupInvalid_di" bpmnElement="End_PickupInvalid">
+        <dc:Bounds x="430" y="330" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_Verify_di" bpmnElement="Flow_Start_Verify">
+        <di:waypoint x="136" y="188"/>
+        <di:waypoint x="210" y="188"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Verify_UserTask_di" bpmnElement="Flow_Verify_UserTask">
+        <di:waypoint x="360" y="188"/>
+        <di:waypoint x="430" y="188"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UserTask_Decision_di" bpmnElement="Flow_UserTask_Decision">
+        <di:waypoint x="580" y="188"/>
+        <di:waypoint x="650" y="188"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Accepted_Complete_di" bpmnElement="Flow_Accepted_Complete">
+        <di:waypoint x="675" y="163"/>
+        <di:waypoint x="675" y="120"/>
+        <di:waypoint x="780" y="120"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Rejected_Cancel_di" bpmnElement="Flow_Rejected_Cancel">
+        <di:waypoint x="675" y="213"/>
+        <di:waypoint x="675" y="290"/>
+        <di:waypoint x="780" y="290"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Complete_End_di" bpmnElement="Flow_Complete_End">
+        <di:waypoint x="930" y="120"/>
+        <di:waypoint x="1010" y="120"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Reject_End_di" bpmnElement="Flow_Reject_End">
+        <di:waypoint x="930" y="290"/>
+        <di:waypoint x="1010" y="290"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_VerifyError_End_di" bpmnElement="Flow_VerifyError_End">
+        <di:waypoint x="290" y="246"/>
+        <di:waypoint x="290" y="348"/>
+        <di:waypoint x="430" y="348"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

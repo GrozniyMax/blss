@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  id="Definitions_WarehouseProductCreate"
+                  targetNamespace="http://blss.com/camunda/warehouse">
+  <bpmn:process id="warehouse-product-create" name="Создание товара на складе" isExecutable="true"
+                camunda:candidateStarterGroups="ADMIN">
+    <bpmn:startEvent id="Start_ProductCreate" name="Заявка на создание товара"
+                     camunda:formRef="product-create-form" camunda:formRefBinding="latest">
+      <bpmn:outgoing>Flow_ProductCreate_Start</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Task_CreateProduct" name="Создать товар и остаток"
+                      camunda:type="external" camunda:topic="product.create">
+      <bpmn:incoming>Flow_ProductCreate_Start</bpmn:incoming>
+      <bpmn:outgoing>Flow_ProductCreate_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="End_ProductCreated" name="Товар создан">
+      <bpmn:incoming>Flow_ProductCreate_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_ProductCreate_Start" sourceRef="Start_ProductCreate" targetRef="Task_CreateProduct"/>
+    <bpmn:sequenceFlow id="Flow_ProductCreate_End" sourceRef="Task_CreateProduct" targetRef="End_ProductCreated"/>
+  </bpmn:process>
+</bpmn:definitions>

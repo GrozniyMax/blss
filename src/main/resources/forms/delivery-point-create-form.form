@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "delivery-point-create-form",
+  "components": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "maxLength": 30
+      }
+    },
+    {
+      "key": "address",
+      "label": "Address",
+      "type": "textfield",
+      "validate": {
+        "required": true,
+        "maxLength": 30
+      }
+    }
+  ]
+}

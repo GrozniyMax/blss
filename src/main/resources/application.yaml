@@ -12,6 +12,8 @@ spring:
     change-log: classpath:/db/changelog/changelog-master.xml
 
 camunda:
+  process:
+    await-timeout-seconds: 90
   bpm:
     client:
       base-url: http://localhost:8080/engine-rest

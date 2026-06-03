@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 10,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5"
+  },
+  "type": "default",
+  "id": "product-count-form",
+  "components": [
+    {
+      "key": "productId",
+      "label": "Product ID",
+      "type": "textfield",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "key": "change",
+      "label": "Count change",
+      "type": "number",
+      "validate": {
+        "required": true
+      }
+    }
+  ]
+}

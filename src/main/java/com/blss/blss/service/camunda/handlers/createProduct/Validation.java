@@ -2,6 +2,7 @@ package com.blss.blss.service.camunda.handlers.createProduct;
 
 import com.blss.blss.db.ProductRepo;
 import com.blss.blss.dto.input.ProductCreateRequestDto;
+import com.blss.blss.service.camunda.handlers.CamundaHandlerSupport;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.AccessLevel;
@@ -20,7 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+@Component("createProductValidationHandler")
 @RequiredArgsConstructor
 @ExternalTaskSubscription("create-product: validate")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -39,21 +40,29 @@ public class Validation implements ExternalTaskHandler {
                 .map(v -> v.getPropertyPath() + ": " + v.getMessage())
                 .collect(Collectors.joining("; "));
             log.warn("Validation failed: {}", errors);
-            service.handleBpmnError(task, "VALIDATION_FAILED", errors,
-                Map.of("validationErrors", errors));
+            CamundaHandlerSupport.bpmnError(task, service, "VALIDATION_FAILED", errors);
             return;
         }
 
         boolean exists = productRepo.findByName(dto.name()).isPresent();
         log.info("Product '{}' exists: {}", dto.name(), exists);
 
-        service.complete(task, Map.of("productExists", exists));
+        if (exists) {
+            service.complete(task, Map.of(
+                    "productExists", true,
+                    "processErrorCode", "PRODUCT_ALREADY_EXISTS",
+                    "processError", "Product already exists"
+            ));
+            return;
+        }
+
+        service.complete(task, Map.of("productExists", false));
     }
 
     private ProductCreateRequestDto buildDto(ExternalTask task) {
         String name = task.getVariable("productName");
         String priceStr = task.getVariable("price");
-        Long initialCount = task.getVariable("initialCount");
+        Object initialCount = task.getVariable("initialCount");
 
         BigDecimal price = null;
         try {
@@ -62,7 +71,7 @@ public class Validation implements ExternalTaskHandler {
             // оставим null — Bean Validation поймает через @NotNull
         }
 
-        Integer count = initialCount != null ? initialCount.intValue() : null;
+        Integer count = initialCount instanceof Number number ? number.intValue() : null;
 
         return new ProductCreateRequestDto(name, price, count);
     }

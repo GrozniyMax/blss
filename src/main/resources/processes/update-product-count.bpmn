@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_UpdateProductCount"
+                  targetNamespace="http://blss.com/bpmn">
+  <bpmn:process id="updateProductCountProcess" name="Update Product Count Process" isExecutable="true"
+                camunda:candidateStarterGroups="MANAGER,ADMIN"
+                camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="Start_UpdateProductCount" name="Update product count"
+                     camunda:formRef="product-count-form" camunda:formRefBinding="latest">
+      <bpmn:outgoing>Flow_Start_UpdateCount</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_UpdateProductCount" name="Validate and update count"
+                      camunda:type="external" camunda:topic="update-product-count: update">
+      <bpmn:incoming>Flow_Start_UpdateCount</bpmn:incoming>
+      <bpmn:outgoing>Flow_UpdateCount_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Boundary_UpdateCountError" attachedToRef="Task_UpdateProductCount">
+      <bpmn:outgoing>Flow_UpdateCountError_End</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidProductCount"/>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="End_ProductCountUpdated" name="Product count updated">
+      <bpmn:incoming>Flow_UpdateCount_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_ProductCountRejected" name="Product count rejected">
+      <bpmn:incoming>Flow_UpdateCountError_End</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidProductCount"/>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_UpdateCount" sourceRef="Start_UpdateProductCount" targetRef="Task_UpdateProductCount"/>
+    <bpmn:sequenceFlow id="Flow_UpdateCount_End" sourceRef="Task_UpdateProductCount" targetRef="End_ProductCountUpdated"/>
+    <bpmn:sequenceFlow id="Flow_UpdateCountError_End" sourceRef="Boundary_UpdateCountError" targetRef="End_ProductCountRejected"/>
+  </bpmn:process>
+  <bpmn:error id="Error_InvalidProductCount" name="InvalidProductCount" errorCode="INVALID_PRODUCT_COUNT"/>
+  <bpmndi:BPMNDiagram id="Diagram_UpdateProductCount">
+    <bpmndi:BPMNPlane id="Plane_UpdateProductCount" bpmnElement="updateProductCountProcess">
+      <bpmndi:BPMNShape id="Start_UpdateProductCount_di" bpmnElement="Start_UpdateProductCount">
+        <dc:Bounds x="120" y="120" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateProductCount_di" bpmnElement="Task_UpdateProductCount">
+        <dc:Bounds x="230" y="98" width="180" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_UpdateCountError_di" bpmnElement="Boundary_UpdateCountError">
+        <dc:Bounds x="302" y="160" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ProductCountUpdated_di" bpmnElement="End_ProductCountUpdated">
+        <dc:Bounds x="480" y="120" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ProductCountRejected_di" bpmnElement="End_ProductCountRejected">
+        <dc:Bounds x="480" y="240" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_UpdateCount_di" bpmnElement="Flow_Start_UpdateCount">
+        <di:waypoint x="156" y="138"/>
+        <di:waypoint x="230" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UpdateCount_End_di" bpmnElement="Flow_UpdateCount_End">
+        <di:waypoint x="410" y="138"/>
+        <di:waypoint x="480" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UpdateCountError_End_di" bpmnElement="Flow_UpdateCountError_End">
+        <di:waypoint x="320" y="196"/>
+        <di:waypoint x="320" y="258"/>
+        <di:waypoint x="480" y="258"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
