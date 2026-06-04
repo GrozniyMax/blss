@@ -40,9 +40,10 @@ public class BpmnAutoDeployer {
         var resolver = new PathMatchingResourcePatternResolver();
         Resource[] bpmnResources = resolver.getResources("classpath:processes/*.bpmn");
         Resource[] formResources = resolver.getResources("classpath:forms/*.form");
+        Resource[] dmnResources = resolver.getResources("classpath:decisions/*.dmn");
 
-        if (bpmnResources.length == 0 && formResources.length == 0) {
-            log.warn("No BPMN or Camunda form files found in classpath:processes/ and classpath:forms/");
+        if (bpmnResources.length == 0 && formResources.length == 0 && dmnResources.length == 0) {
+            log.warn("No BPMN, DMN or Camunda form files found in classpath:processes/, classpath:decisions/ and classpath:forms/");
             return;
         }
 
@@ -52,6 +53,7 @@ public class BpmnAutoDeployer {
         body.add("deployment-source", "spring-boot-app");
 
         addResources(body, bpmnResources);
+        addResources(body, dmnResources);
         addResources(body, formResources);
 
         HttpHeaders headers = new HttpHeaders();
