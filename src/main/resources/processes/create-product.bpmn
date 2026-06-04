@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
@@ -12,18 +12,18 @@
                   camunda:candidateStarterGroups="MANAGER,ADMIN"
                   camunda:historyTimeToLive="P30D">
 
-        <!-- ============ START EVENT С ФОРМОЙ ============ -->
-        <bpmn:startEvent id="StartEvent_Create" name="Создать продукт">
+        <!-- ============ START EVENT РЎ Р¤РћР РњРћР™ ============ -->
+        <bpmn:startEvent id="StartEvent_Create" name="РЎРѕР·РґР°С‚СЊ РїСЂРѕРґСѓРєС‚">
             <bpmn:extensionElements>
                 <camunda:formData>
-                    <camunda:formField id="productName" label="Название продукта" type="string">
+                    <camunda:formField id="productName" label="РќР°Р·РІР°РЅРёРµ РїСЂРѕРґСѓРєС‚Р°" type="string">
                         <camunda:validation>
                             <camunda:constraint name="required"/>
                             <camunda:constraint name="maxlength" config="100"/>
                         </camunda:validation>
                     </camunda:formField>
 
-                    <camunda:formField id="initialCount" label="Начальное количество" type="long" defaultValue="1">
+                    <camunda:formField id="initialCount" label="РќР°С‡Р°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ" type="long" defaultValue="1">
                         <camunda:validation>
                             <camunda:constraint name="required"/>
                             <camunda:constraint name="min" config="1"/>
@@ -31,9 +31,9 @@
                         </camunda:validation>
                     </camunda:formField>
 
-                    <camunda:formField id="price" label="Цена" type="string" defaultValue="0"/>
+                    <camunda:formField id="price" label="Р¦РµРЅР°" type="string" defaultValue="0"/>
 
-                    <camunda:formField id="productData" label="Дополнительные данные (JSON)" type="string" defaultValue="{}"/>
+                    <camunda:formField id="productData" label="Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РґР°РЅРЅС‹Рµ (JSON)" type="string" defaultValue="{}"/>
                 </camunda:formData>
             </bpmn:extensionElements>
             <bpmn:outgoing>Flow_Start_to_Validate</bpmn:outgoing>
@@ -41,9 +41,9 @@
 
         <!-- ============ VALIDATE & CHECK ============ -->
         <bpmn:serviceTask id="Task_ValidateAndCheck"
-                          name="Валидация и проверка существования"
+                          name="Р’Р°Р»РёРґР°С†РёСЏ Рё РїСЂРѕРІРµСЂРєР° СЃСѓС‰РµСЃС‚РІРѕРІР°РЅРёСЏ"
                           camunda:type="external"
-                          camunda:topic="create-product: validate">            <bpmn:incoming>Flow_Start_to_Validate</bpmn:incoming>
+                          camunda:topic="create-product: validate" camunda:asyncBefore="true">            <bpmn:incoming>Flow_Start_to_Validate</bpmn:incoming>
             <bpmn:outgoing>Flow_Validate_to_Gateway</bpmn:outgoing>
         </bpmn:serviceTask>
 
@@ -52,8 +52,8 @@
             <bpmn:errorEventDefinition errorRef="Error_InvalidInput"/>
         </bpmn:boundaryEvent>
 
-        <!-- ============ GATEWAY: уже существует? ============ -->
-        <bpmn:exclusiveGateway id="Gateway_ProductExists" name="Уже существует?">
+        <!-- ============ GATEWAY: СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚? ============ -->
+        <bpmn:exclusiveGateway id="Gateway_ProductExists" name="РЈР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚?">
             <bpmn:incoming>Flow_Validate_to_Gateway</bpmn:incoming>
             <bpmn:outgoing>Flow_Exists_Yes</bpmn:outgoing>
             <bpmn:outgoing>Flow_Exists_No</bpmn:outgoing>
@@ -61,23 +61,23 @@
 
         <!-- ============ SAVE PRODUCT + STORE ITEM ============ -->
         <bpmn:serviceTask id="Task_SaveProductAndStore"
-                          name="Сохранить продукт и запись на складе"
+                          name="РЎРѕС…СЂР°РЅРёС‚СЊ РїСЂРѕРґСѓРєС‚ Рё Р·Р°РїРёСЃСЊ РЅР° СЃРєР»Р°РґРµ"
                           camunda:type="external"
-                          camunda:topic="create-product: store">            <bpmn:incoming>Flow_Exists_No</bpmn:incoming>
+                          camunda:topic="create-product: store" camunda:asyncBefore="true">            <bpmn:incoming>Flow_Exists_No</bpmn:incoming>
             <bpmn:outgoing>Flow_Save_to_End</bpmn:outgoing>
         </bpmn:serviceTask>
 
         <!-- ============ END EVENTS ============ -->
-        <bpmn:endEvent id="EndEvent_Success" name="Продукт создан">
+        <bpmn:endEvent id="EndEvent_Success" name="РџСЂРѕРґСѓРєС‚ СЃРѕР·РґР°РЅ">
             <bpmn:incoming>Flow_Save_to_End</bpmn:incoming>
         </bpmn:endEvent>
 
-        <bpmn:endEvent id="EndEvent_AlreadyExists" name="Уже существует">
+        <bpmn:endEvent id="EndEvent_AlreadyExists" name="РЈР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚">
             <bpmn:incoming>Flow_Exists_Yes</bpmn:incoming>
             <bpmn:errorEventDefinition errorRef="Error_AlreadyExists"/>
         </bpmn:endEvent>
 
-        <bpmn:endEvent id="EndEvent_InvalidInput" name="Невалидные данные">
+        <bpmn:endEvent id="EndEvent_InvalidInput" name="РќРµРІР°Р»РёРґРЅС‹Рµ РґР°РЅРЅС‹Рµ">
             <bpmn:incoming>Flow_Error_Validation</bpmn:incoming>
             <bpmn:errorEventDefinition errorRef="Error_InvalidInput"/>
         </bpmn:endEvent>
@@ -205,3 +205,4 @@
         </bpmndi:BPMNPlane>
     </bpmndi:BPMNDiagram>
 </bpmn:definitions>
+

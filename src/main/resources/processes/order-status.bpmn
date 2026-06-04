@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -15,7 +15,7 @@
       <bpmn:outgoing>Flow_Start_Load</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:serviceTask id="Task_LoadStatus" name="Load current status"
-                      camunda:type="external" camunda:topic="order-status: load">
+                      camunda:type="external" camunda:topic="order-status: load" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_Start_Load</bpmn:incoming>
       <bpmn:outgoing>Flow_Load_Action</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -25,12 +25,12 @@
       <bpmn:outgoing>Flow_Action_Next</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:serviceTask id="Task_CancelOrder" name="Cancel order"
-                      camunda:type="external" camunda:topic="order-status: cancel">
+                      camunda:type="external" camunda:topic="order-status: cancel" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_Action_Cancel</bpmn:incoming>
       <bpmn:outgoing>Flow_Cancel_End</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:serviceTask id="Task_NextStatus" name="Move to next status"
-                      camunda:type="external" camunda:topic="order-status: next">
+                      camunda:type="external" camunda:topic="order-status: next" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_Action_Next</bpmn:incoming>
       <bpmn:outgoing>Flow_Next_End</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -135,3 +135,4 @@
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
+

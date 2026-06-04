@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
@@ -14,7 +14,7 @@
       <bpmn:outgoing>Flow_Start_UpdateCount</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:serviceTask id="Task_UpdateProductCount" name="Validate and update count"
-                      camunda:type="external" camunda:topic="update-product-count: update">
+                      camunda:type="external" camunda:topic="update-product-count: update" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_Start_UpdateCount</bpmn:incoming>
       <bpmn:outgoing>Flow_UpdateCount_End</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -67,3 +67,4 @@
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
+

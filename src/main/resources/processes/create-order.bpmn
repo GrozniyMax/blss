@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -16,7 +16,7 @@
     </bpmn:startEvent>
 
     <bpmn:serviceTask id="Task_ValidateOrder" name="Validate order request"
-                      camunda:type="external" camunda:topic="create-order: validate">
+                      camunda:type="external" camunda:topic="create-order: validate" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_Start_Validate</bpmn:incoming>
       <bpmn:outgoing>Flow_Validate_CheckProducts</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -26,7 +26,7 @@
     </bpmn:boundaryEvent>
 
     <bpmn:serviceTask id="Task_CheckProducts" name="Check products"
-                      camunda:type="external" camunda:topic="create-order: check-products">
+                      camunda:type="external" camunda:topic="create-order: check-products" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_Validate_CheckProducts</bpmn:incoming>
       <bpmn:outgoing>Flow_CheckProducts_DeliveryPoint</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -36,7 +36,7 @@
     </bpmn:boundaryEvent>
 
     <bpmn:serviceTask id="Task_CheckDeliveryPoint" name="Check delivery point"
-                      camunda:type="external" camunda:topic="create-order: check-delivery-point">
+                      camunda:type="external" camunda:topic="create-order: check-delivery-point" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_CheckProducts_DeliveryPoint</bpmn:incoming>
       <bpmn:outgoing>Flow_DeliveryPoint_Owner</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -46,7 +46,7 @@
     </bpmn:boundaryEvent>
 
     <bpmn:serviceTask id="Task_CheckOwner" name="Check customer"
-                      camunda:type="external" camunda:topic="create-order: check-owner">
+                      camunda:type="external" camunda:topic="create-order: check-owner" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_DeliveryPoint_Owner</bpmn:incoming>
       <bpmn:outgoing>Flow_Owner_Save</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -56,7 +56,7 @@
     </bpmn:boundaryEvent>
 
     <bpmn:serviceTask id="Task_SaveOrder" name="Reserve products and create order"
-                      camunda:type="external" camunda:topic="create-order: save">
+                      camunda:type="external" camunda:topic="create-order: save" camunda:asyncBefore="true">
       <bpmn:incoming>Flow_Owner_Save</bpmn:incoming>
       <bpmn:outgoing>Flow_Save_End</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -183,3 +183,4 @@
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
+
