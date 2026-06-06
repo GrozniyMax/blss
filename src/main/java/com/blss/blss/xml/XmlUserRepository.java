@@ -163,6 +163,10 @@ public class XmlUserRepository {
         );
     }
 
+    public List<XmlUser.UserAccount> getAllAccounts() {
+        return List.copyOf(usersCache.values());
+    }
+
     /**
      * Creates a new user account.
      *
