@@ -27,11 +27,27 @@
     <bpmn:userTask id="Task_InspectOrder" name="Customer inspection"
                    camunda:candidateGroups="CONSULTANT,MANAGER,ADMIN"
                    camunda:formRef="pickup-inspection-form" camunda:formRefBinding="latest">
+      <bpmn:extensionElements>
+        <camunda:taskListener event="complete"
+                              expression="${task.setVariable('formSubmitted', true)}"/>
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_Verify_UserTask</bpmn:incoming>
-      <bpmn:outgoing>Flow_UserTask_Decision</bpmn:outgoing>
+      <bpmn:incoming>Flow_FormInvalid_UserTask</bpmn:incoming>
+      <bpmn:outgoing>Flow_UserTask_Validate</bpmn:outgoing>
     </bpmn:userTask>
+    <bpmn:serviceTask id="Task_ValidatePickupForm" name="Validate pickup form"
+                      camunda:type="external" camunda:topic="order-pickup: validate-form"
+                      camunda:asyncBefore="true">
+      <bpmn:incoming>Flow_UserTask_Validate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validate_FormGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_FormValid" name="Form valid?">
+      <bpmn:incoming>Flow_Validate_FormGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_FormValid_Decision</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FormInvalid_UserTask</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
     <bpmn:exclusiveGateway id="Gateway_PickupAccepted" name="Accepted?">
-      <bpmn:incoming>Flow_UserTask_Decision</bpmn:incoming>
+      <bpmn:incoming>Flow_FormValid_Decision</bpmn:incoming>
       <bpmn:outgoing>Flow_Accepted_Complete</bpmn:outgoing>
       <bpmn:outgoing>Flow_Rejected_Cancel</bpmn:outgoing>
     </bpmn:exclusiveGateway>
@@ -59,7 +75,14 @@
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_Start_Verify" sourceRef="Start_OrderPickup" targetRef="Task_VerifyPickup"/>
     <bpmn:sequenceFlow id="Flow_Verify_UserTask" sourceRef="Task_VerifyPickup" targetRef="Task_InspectOrder"/>
-    <bpmn:sequenceFlow id="Flow_UserTask_Decision" sourceRef="Task_InspectOrder" targetRef="Gateway_PickupAccepted"/>
+    <bpmn:sequenceFlow id="Flow_UserTask_Validate" sourceRef="Task_InspectOrder" targetRef="Task_ValidatePickupForm"/>
+    <bpmn:sequenceFlow id="Flow_Validate_FormGateway" sourceRef="Task_ValidatePickupForm" targetRef="Gateway_FormValid"/>
+    <bpmn:sequenceFlow id="Flow_FormValid_Decision" name="Valid" sourceRef="Gateway_FormValid" targetRef="Gateway_PickupAccepted">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${formValid == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_FormInvalid_UserTask" name="Invalid" sourceRef="Gateway_FormValid" targetRef="Task_InspectOrder">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${formValid != true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_Accepted_Complete" name="Yes" sourceRef="Gateway_PickupAccepted" targetRef="Task_CompletePickup">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${pickupAccepted == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -85,23 +108,29 @@
       <bpmndi:BPMNShape id="Task_InspectOrder_di" bpmnElement="Task_InspectOrder">
         <dc:Bounds x="430" y="148" width="150" height="80"/>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidatePickupForm_di" bpmnElement="Task_ValidatePickupForm">
+        <dc:Bounds x="650" y="148" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_FormValid_di" bpmnElement="Gateway_FormValid" isMarkerVisible="true">
+        <dc:Bounds x="870" y="163" width="50" height="50"/>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_PickupAccepted_di" bpmnElement="Gateway_PickupAccepted" isMarkerVisible="true">
-        <dc:Bounds x="650" y="163" width="50" height="50"/>
+        <dc:Bounds x="1010" y="163" width="50" height="50"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_CompletePickup_di" bpmnElement="Task_CompletePickup">
-        <dc:Bounds x="780" y="80" width="150" height="80"/>
+        <dc:Bounds x="1140" y="80" width="150" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_RejectPickup_di" bpmnElement="Task_RejectPickup">
-        <dc:Bounds x="780" y="250" width="150" height="80"/>
+        <dc:Bounds x="1140" y="250" width="150" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_PickupCompleted_di" bpmnElement="End_PickupCompleted">
-        <dc:Bounds x="1010" y="102" width="36" height="36"/>
+        <dc:Bounds x="1370" y="102" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_PickupRejected_di" bpmnElement="End_PickupRejected">
-        <dc:Bounds x="1010" y="272" width="36" height="36"/>
+        <dc:Bounds x="1370" y="272" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_PickupInvalid_di" bpmnElement="End_PickupInvalid">
-        <dc:Bounds x="430" y="330" width="36" height="36"/>
+        <dc:Bounds x="430" y="370" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_Start_Verify_di" bpmnElement="Flow_Start_Verify">
         <di:waypoint x="136" y="188"/>
@@ -111,32 +140,46 @@
         <di:waypoint x="360" y="188"/>
         <di:waypoint x="430" y="188"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_UserTask_Decision_di" bpmnElement="Flow_UserTask_Decision">
+      <bpmndi:BPMNEdge id="Flow_UserTask_Validate_di" bpmnElement="Flow_UserTask_Validate">
         <di:waypoint x="580" y="188"/>
         <di:waypoint x="650" y="188"/>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Validate_FormGateway_di" bpmnElement="Flow_Validate_FormGateway">
+        <di:waypoint x="800" y="188"/>
+        <di:waypoint x="870" y="188"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FormValid_Decision_di" bpmnElement="Flow_FormValid_Decision">
+        <di:waypoint x="920" y="188"/>
+        <di:waypoint x="1010" y="188"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FormInvalid_UserTask_di" bpmnElement="Flow_FormInvalid_UserTask">
+        <di:waypoint x="895" y="213"/>
+        <di:waypoint x="895" y="310"/>
+        <di:waypoint x="505" y="310"/>
+        <di:waypoint x="505" y="228"/>
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Accepted_Complete_di" bpmnElement="Flow_Accepted_Complete">
-        <di:waypoint x="675" y="163"/>
-        <di:waypoint x="675" y="120"/>
-        <di:waypoint x="780" y="120"/>
+        <di:waypoint x="1035" y="163"/>
+        <di:waypoint x="1035" y="120"/>
+        <di:waypoint x="1140" y="120"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Rejected_Cancel_di" bpmnElement="Flow_Rejected_Cancel">
-        <di:waypoint x="675" y="213"/>
-        <di:waypoint x="675" y="290"/>
-        <di:waypoint x="780" y="290"/>
+        <di:waypoint x="1035" y="213"/>
+        <di:waypoint x="1035" y="290"/>
+        <di:waypoint x="1140" y="290"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Complete_End_di" bpmnElement="Flow_Complete_End">
-        <di:waypoint x="930" y="120"/>
-        <di:waypoint x="1010" y="120"/>
+        <di:waypoint x="1290" y="120"/>
+        <di:waypoint x="1370" y="120"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Reject_End_di" bpmnElement="Flow_Reject_End">
-        <di:waypoint x="930" y="290"/>
-        <di:waypoint x="1010" y="290"/>
+        <di:waypoint x="1290" y="290"/>
+        <di:waypoint x="1370" y="290"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_VerifyError_End_di" bpmnElement="Flow_VerifyError_End">
         <di:waypoint x="290" y="246"/>
-        <di:waypoint x="290" y="348"/>
-        <di:waypoint x="430" y="348"/>
+        <di:waypoint x="290" y="388"/>
+        <di:waypoint x="430" y="388"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

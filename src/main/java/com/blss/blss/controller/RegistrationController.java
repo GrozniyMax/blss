@@ -2,6 +2,7 @@ package com.blss.blss.controller;
 
 import com.blss.blss.dto.input.UserRegisterRequestDto;
 import com.blss.blss.security.Role;
+import com.blss.blss.service.camunda.identity.CamundaIdentitySynchronizer;
 import com.blss.blss.xml.XmlUser;
 import com.blss.blss.xml.XmlUserRepository;
 import jakarta.validation.Valid;
@@ -30,12 +31,19 @@ import java.util.List;
 public class RegistrationController {
 
     XmlUserRepository userRepository;
+    CamundaIdentitySynchronizer camundaIdentitySynchronizer;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public XmlUser.UserAccount register(@Valid @RequestBody UserRegisterRequestDto request) {
         log.info("Registering new user: username={}", request.username());
         var user = userRepository.create(request.username(), request.password(), List.of(Role.USER));
+        try {
+            camundaIdentitySynchronizer.synchronizeAccount(user);
+        } catch (RuntimeException e) {
+            userRepository.delete(request.username());
+            throw new IllegalStateException("Failed to create matching Camunda user", e);
+        }
         log.info("User registered successfully: username={}", request.username());
         return user;
     }

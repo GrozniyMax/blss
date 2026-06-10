@@ -49,11 +49,188 @@
                      {
                          "key":  "invalidProductId",
                          "value":  "00000000-0000-0000-0000-000000000001"
+                     },
+                     {
+                         "key":  "registeredUser",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "registeredPassword",
+                         "value":  "postman123"
                      }
                  ],
     "item":  [
                  {
-                     "name":  "00 Camunda process definitions deployed",
+                     "name":  "00 Register user and sync to Camunda",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "noauth"
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"username\": \"{{registeredUser}}\",\n  \"password\": \"{{registeredPassword}}\"\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:25102/blss/auth/register",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "25102",
+                                                 "path":  [
+                                                              "blss",
+                                                              "auth",
+                                                              "register"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "prerequest",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.collectionVariables.set('registeredUser', `postman${Date.now()}`);"
+                                                               ]
+                                                  }
+                                   },
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test('User registered', function () { pm.response.to.have.status(201); });",
+                                                                   "pm.test('Registered username returned', function () {",
+                                                                   "  const body = pm.response.json();",
+                                                                   "  const user = body.data || body;",
+                                                                   "  pm.expect(user.username).to.eql(pm.collectionVariables.get('registeredUser'));",
+                                                                   "});"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "00.1 Registered user exists in Camunda",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "basic",
+                                                  "basic":  [
+                                                                {
+                                                                    "key":  "username",
+                                                                    "value":  "{{adminUser}}",
+                                                                    "type":  "string"
+                                                                },
+                                                                {
+                                                                    "key":  "password",
+                                                                    "value":  "{{adminPassword}}",
+                                                                    "type":  "string"
+                                                                }
+                                                            ]
+                                              },
+                                     "method":  "GET",
+                                     "url":  {
+                                                 "raw":  "http://localhost:8080/engine-rest/user?id={{registeredUser}}",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "8080",
+                                                 "path":  [
+                                                              "engine-rest",
+                                                              "user"
+                                                          ],
+                                                 "query":  [
+                                                               {
+                                                                   "key":  "id",
+                                                                   "value":  "{{registeredUser}}"
+                                                               }
+                                                           ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test('Camunda user query succeeded', function () { pm.response.to.have.status(200); });",
+                                                                   "const users = pm.response.json();",
+                                                                   "pm.test('Registered user was synchronized', function () {",
+                                                                   "  pm.expect(users).to.have.lengthOf(1);",
+                                                                   "  pm.expect(users[0].id).to.eql(pm.collectionVariables.get('registeredUser'));",
+                                                                   "});"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "00.2 Registered user can authenticate in Camunda",
+                     "request":  {
+                                     "auth":  {
+                                                  "type":  "noauth"
+                                              },
+                                     "method":  "POST",
+                                     "header":  [
+                                                    {
+                                                        "key":  "Content-Type",
+                                                        "value":  "application/json"
+                                                    }
+                                                ],
+                                     "body":  {
+                                                  "mode":  "raw",
+                                                  "raw":  "{\n  \"username\": \"{{registeredUser}}\",\n  \"password\": \"{{registeredPassword}}\"\n}",
+                                                  "options":  {
+                                                                  "raw":  {
+                                                                              "language":  "json"
+                                                                          }
+                                                              }
+                                              },
+                                     "url":  {
+                                                 "raw":  "http://localhost:8080/engine-rest/identity/verify",
+                                                 "protocol":  "http",
+                                                 "host":  [
+                                                              "localhost"
+                                                          ],
+                                                 "port":  "8080",
+                                                 "path":  [
+                                                              "engine-rest",
+                                                              "identity",
+                                                              "verify"
+                                                          ]
+                                             }
+                                 },
+                     "event":  [
+                                   {
+                                       "listen":  "test",
+                                       "script":  {
+                                                      "type":  "text/javascript",
+                                                      "exec":  [
+                                                                   "pm.test('Camunda authentication check succeeded', function () { pm.response.to.have.status(200); });",
+                                                                   "const body = pm.response.json();",
+                                                                   "pm.test('Registered credentials are valid in Camunda', function () {",
+                                                                   "  pm.expect(body.authenticatedUser).to.eql(pm.collectionVariables.get('registeredUser'));",
+                                                                   "});"
+                                                               ]
+                                                  }
+                                   }
+                               ]
+                 },
+                 {
+                     "name":  "01 Camunda process definitions deployed",
                      "request":  {
                                      "auth":  {
                                                   "type":  "basic",

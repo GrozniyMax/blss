@@ -8,14 +8,23 @@
   "id": "pickup-inspection-form",
   "components": [
     {
+      "key": "formValidationErrors",
+      "label": "Validation errors",
+      "type": "textfield",
+      "disabled": true
+    },
+    {
       "key": "pickupAccepted",
-      "label": "Покупатель забирает заказ",
+      "label": "Customer accepts the order",
       "type": "checkbox"
     },
     {
       "key": "pickupComment",
-      "label": "Комментарий к выдаче",
-      "type": "textarea"
+      "label": "Pickup comment or rejection reason",
+      "type": "textarea",
+      "validate": {
+        "maxLength": 500
+      }
     }
   ]
 }
