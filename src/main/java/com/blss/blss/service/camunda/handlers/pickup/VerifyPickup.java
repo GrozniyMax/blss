@@ -25,8 +25,8 @@ public class VerifyPickup implements ExternalTaskHandler {
             var orderId = CamundaHandlerSupport.uuid(task, "orderId");
             var status = orderService.getStatus(orderId);
             if (status != Status.READY_FOR_PICKUP) {
-                CamundaHandlerSupport.bpmnError(task, service, "INVALID_PICKUP",
-                        "Order is not ready for pickup: " + status);
+                String message = "Order is not ready for pickup. Current status: " + status;
+                service.handleFailure(task, message, message, 0, 0L);
                 return;
             }
             service.complete(task);
