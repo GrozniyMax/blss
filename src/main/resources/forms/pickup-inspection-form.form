@@ -19,12 +19,24 @@
       "type": "checkbox"
     },
     {
+      "key": "pickupAcceptedError",
+      "label": "Customer acceptance error",
+      "type": "textfield",
+      "disabled": true
+    },
+    {
       "key": "pickupComment",
       "label": "Pickup comment or rejection reason",
       "type": "textarea",
       "validate": {
         "maxLength": 500
       }
+    },
+    {
+      "key": "pickupCommentError",
+      "label": "Comment error",
+      "type": "textfield",
+      "disabled": true
     }
   ]
 }
