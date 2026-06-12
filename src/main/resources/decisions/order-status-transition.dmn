@@ -18,7 +18,7 @@
           <text>"CREATED"</text>
         </inputEntry>
         <inputEntry id="Rule_CreatedNext_Action">
-          <text>"NEXT (PROCESSING)"</text>
+          <text>"NEXT"</text>
         </inputEntry>
         <outputEntry id="Rule_CreatedNext_TargetStatus">
           <text>"PROCESSING"</text>
@@ -29,7 +29,7 @@
           <text>"PROCESSING"</text>
         </inputEntry>
         <inputEntry id="Rule_ProcessingNext_Action">
-          <text>"NEXT (IN_DELIVERY)"</text>
+          <text>"NEXT"</text>
         </inputEntry>
         <outputEntry id="Rule_ProcessingNext_TargetStatus">
           <text>"IN_DELIVERY"</text>
@@ -40,7 +40,7 @@
           <text>"IN_DELIVERY"</text>
         </inputEntry>
         <inputEntry id="Rule_InDeliveryNext_Action">
-          <text>"NEXT (READY_FOR_PICKUP)"</text>
+          <text>"NEXT"</text>
         </inputEntry>
         <outputEntry id="Rule_InDeliveryNext_TargetStatus">
           <text>"READY_FOR_PICKUP"</text>
@@ -51,7 +51,7 @@
           <text>"READY_FOR_PICKUP"</text>
         </inputEntry>
         <inputEntry id="Rule_ReadyForPickupNext_Action">
-          <text>"NEXT (DONE)"</text>
+          <text>"NEXT"</text>
         </inputEntry>
         <outputEntry id="Rule_ReadyForPickupNext_TargetStatus">
           <text>"DONE"</text>
