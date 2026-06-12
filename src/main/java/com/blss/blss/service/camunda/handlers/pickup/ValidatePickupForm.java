@@ -22,30 +22,23 @@ public class ValidatePickupForm implements ExternalTaskHandler {
     public void execute(ExternalTask task, ExternalTaskService service) {
         try {
             List<String> errors = new ArrayList<>();
-            String acceptedError = "";
-            String commentError = "";
             Object acceptedValue = task.getVariable("pickupAccepted");
             Boolean accepted = acceptedValue instanceof Boolean value ? value : null;
             String comment = normalize(task.getVariable("pickupComment"));
 
             if (accepted == null) {
-                acceptedError = "Choose whether the customer accepts the order";
-                errors.add("pickupAccepted: " + acceptedError);
+                errors.add("pickupAccepted: choose whether the customer accepts the order");
             }
             if (Boolean.FALSE.equals(accepted) && comment.isBlank()) {
-                commentError = "Provide a rejection reason";
-                errors.add("pickupComment: " + commentError);
+                errors.add("pickupComment: provide a rejection reason");
             }
             if (comment.length() > MAX_COMMENT_LENGTH) {
-                commentError = "Must not exceed " + MAX_COMMENT_LENGTH + " characters";
-                errors.add("pickupComment: " + commentError);
+                errors.add("pickupComment: must not exceed " + MAX_COMMENT_LENGTH + " characters");
             }
 
             Map<String, Object> variables = new HashMap<>();
             variables.put("formValid", errors.isEmpty());
             variables.put("formValidationErrors", String.join("; ", errors));
-            variables.put("pickupAcceptedError", acceptedError);
-            variables.put("pickupCommentError", commentError);
             variables.put("pickupComment", comment);
             service.complete(task, variables);
         } catch (Exception e) {
