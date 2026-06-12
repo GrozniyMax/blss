@@ -1,36 +1,48 @@
 {
-  "schemaVersion": 10,
-  "exporter": {
-    "name": "Camunda Modeler",
-    "version": "5"
-  },
-  "type": "default",
-  "id": "order-create-form",
   "components": [
     {
-      "key": "owner",
       "label": "Покупатель",
+      "key": "owner",
       "type": "textfield",
       "validate": {
         "required": true
+      },
+      "id": "Field_06vetdc",
+      "layout": {
+        "row": "Row_0isiczf"
       }
     },
     {
-      "key": "location",
       "label": "ПВЗ",
+      "key": "location",
       "type": "textfield",
       "validate": {
         "required": true
+      },
+      "id": "Field_1ae2mxx",
+      "layout": {
+        "row": "Row_1m7obxe"
       }
     },
     {
-      "key": "productIds",
       "label": "UUID товаров",
+      "key": "productIds",
       "type": "textarea",
       "description": "JSON-массив строк UUID, например [\"...\", \"...\"]",
       "validate": {
         "required": true
+      },
+      "id": "Field_0bn80wy",
+      "layout": {
+        "row": "Row_1qbyunr"
       }
     }
-  ]
+  ],
+  "schemaVersion": 19,
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.48.0"
+  },
+  "type": "default",
+  "id": "order-create-form"
 }

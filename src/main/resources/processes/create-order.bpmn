@@ -1,70 +1,49 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                  id="Definitions_CreateOrder"
-                  targetNamespace="http://blss.com/bpmn">
-  <bpmn:process id="createOrderProcess" name="Create Order Process" isExecutable="true"
-                camunda:candidateStarterGroups="USER,ADMIN"
-                camunda:historyTimeToLive="P30D">
-    <bpmn:startEvent id="Start_CreateOrder" name="Create order"
-                     camunda:formRef="order-create-form" camunda:formRefBinding="latest">
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_CreateOrder" targetNamespace="http://blss.com/bpmn" exporter="Camunda Modeler" exporterVersion="5.48.0">
+  <bpmn:process id="createOrderProcess" name="Create Order Process" isExecutable="true" camunda:candidateStarterGroups="USER,ADMIN" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="Start_CreateOrder" name="Create order" camunda:formRef="order-create-form" camunda:formRefBinding="latest">
       <bpmn:outgoing>Flow_Start_Validate</bpmn:outgoing>
     </bpmn:startEvent>
-
-    <bpmn:serviceTask id="Task_ValidateOrder" name="Validate order request"
-                      camunda:type="external" camunda:topic="create-order: validate" camunda:asyncBefore="true">
+    <bpmn:serviceTask id="Task_ValidateOrder" name="Validate order request" camunda:asyncBefore="true" camunda:type="external" camunda:topic="create-order: validate">
       <bpmn:incoming>Flow_Start_Validate</bpmn:incoming>
       <bpmn:outgoing>Flow_Validate_CheckProducts</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:boundaryEvent id="Boundary_OrderValidationError" attachedToRef="Task_ValidateOrder">
       <bpmn:outgoing>Flow_OrderValidationError_End</bpmn:outgoing>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder" />
     </bpmn:boundaryEvent>
-
-    <bpmn:serviceTask id="Task_CheckProducts" name="Check products"
-                      camunda:type="external" camunda:topic="create-order: check-products" camunda:asyncBefore="true">
+    <bpmn:serviceTask id="Task_CheckProducts" name="Check products" camunda:asyncBefore="true" camunda:type="external" camunda:topic="create-order: check-products">
       <bpmn:incoming>Flow_Validate_CheckProducts</bpmn:incoming>
       <bpmn:outgoing>Flow_CheckProducts_DeliveryPoint</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:boundaryEvent id="Boundary_ProductsError" attachedToRef="Task_CheckProducts">
       <bpmn:outgoing>Flow_ProductsError_End</bpmn:outgoing>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder" />
     </bpmn:boundaryEvent>
-
-    <bpmn:serviceTask id="Task_CheckDeliveryPoint" name="Check delivery point"
-                      camunda:type="external" camunda:topic="create-order: check-delivery-point" camunda:asyncBefore="true">
+    <bpmn:serviceTask id="Task_CheckDeliveryPoint" name="Check delivery point" camunda:asyncBefore="true" camunda:type="external" camunda:topic="create-order: check-delivery-point">
       <bpmn:incoming>Flow_CheckProducts_DeliveryPoint</bpmn:incoming>
       <bpmn:outgoing>Flow_DeliveryPoint_Owner</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:boundaryEvent id="Boundary_DeliveryPointError" attachedToRef="Task_CheckDeliveryPoint">
       <bpmn:outgoing>Flow_DeliveryPointError_End</bpmn:outgoing>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder" />
     </bpmn:boundaryEvent>
-
-    <bpmn:serviceTask id="Task_CheckOwner" name="Check customer"
-                      camunda:type="external" camunda:topic="create-order: check-owner" camunda:asyncBefore="true">
+    <bpmn:serviceTask id="Task_CheckOwner" name="Check customer" camunda:asyncBefore="true" camunda:type="external" camunda:topic="create-order: check-owner">
       <bpmn:incoming>Flow_DeliveryPoint_Owner</bpmn:incoming>
       <bpmn:outgoing>Flow_Owner_Save</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:boundaryEvent id="Boundary_OwnerError" attachedToRef="Task_CheckOwner">
       <bpmn:outgoing>Flow_OwnerError_End</bpmn:outgoing>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder" />
     </bpmn:boundaryEvent>
-
-    <bpmn:serviceTask id="Task_SaveOrder" name="Reserve products and create order"
-                      camunda:type="external" camunda:topic="create-order: save" camunda:asyncBefore="true">
+    <bpmn:serviceTask id="Task_SaveOrder" name="Reserve products and create order" camunda:asyncBefore="true" camunda:type="external" camunda:topic="create-order: save">
       <bpmn:incoming>Flow_Owner_Save</bpmn:incoming>
       <bpmn:outgoing>Flow_Save_End</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:boundaryEvent id="Boundary_SaveOrderError" attachedToRef="Task_SaveOrder">
       <bpmn:outgoing>Flow_SaveError_End</bpmn:outgoing>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder" />
     </bpmn:boundaryEvent>
-
     <bpmn:endEvent id="End_OrderCreated" name="Order created">
       <bpmn:incoming>Flow_Save_End</bpmn:incoming>
     </bpmn:endEvent>
@@ -74,113 +53,121 @@
       <bpmn:incoming>Flow_DeliveryPointError_End</bpmn:incoming>
       <bpmn:incoming>Flow_OwnerError_End</bpmn:incoming>
       <bpmn:incoming>Flow_SaveError_End</bpmn:incoming>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidOrder" />
     </bpmn:endEvent>
-
-    <bpmn:sequenceFlow id="Flow_Start_Validate" sourceRef="Start_CreateOrder" targetRef="Task_ValidateOrder"/>
-    <bpmn:sequenceFlow id="Flow_Validate_CheckProducts" sourceRef="Task_ValidateOrder" targetRef="Task_CheckProducts"/>
-    <bpmn:sequenceFlow id="Flow_CheckProducts_DeliveryPoint" sourceRef="Task_CheckProducts" targetRef="Task_CheckDeliveryPoint"/>
-    <bpmn:sequenceFlow id="Flow_DeliveryPoint_Owner" sourceRef="Task_CheckDeliveryPoint" targetRef="Task_CheckOwner"/>
-    <bpmn:sequenceFlow id="Flow_Owner_Save" sourceRef="Task_CheckOwner" targetRef="Task_SaveOrder"/>
-    <bpmn:sequenceFlow id="Flow_Save_End" sourceRef="Task_SaveOrder" targetRef="End_OrderCreated"/>
-    <bpmn:sequenceFlow id="Flow_OrderValidationError_End" sourceRef="Boundary_OrderValidationError" targetRef="End_OrderRejected"/>
-    <bpmn:sequenceFlow id="Flow_ProductsError_End" sourceRef="Boundary_ProductsError" targetRef="End_OrderRejected"/>
-    <bpmn:sequenceFlow id="Flow_DeliveryPointError_End" sourceRef="Boundary_DeliveryPointError" targetRef="End_OrderRejected"/>
-    <bpmn:sequenceFlow id="Flow_OwnerError_End" sourceRef="Boundary_OwnerError" targetRef="End_OrderRejected"/>
-    <bpmn:sequenceFlow id="Flow_SaveError_End" sourceRef="Boundary_SaveOrderError" targetRef="End_OrderRejected"/>
+    <bpmn:sequenceFlow id="Flow_Start_Validate" sourceRef="Start_CreateOrder" targetRef="Task_ValidateOrder" />
+    <bpmn:sequenceFlow id="Flow_Validate_CheckProducts" sourceRef="Task_ValidateOrder" targetRef="Task_CheckProducts" />
+    <bpmn:sequenceFlow id="Flow_CheckProducts_DeliveryPoint" sourceRef="Task_CheckProducts" targetRef="Task_CheckDeliveryPoint" />
+    <bpmn:sequenceFlow id="Flow_DeliveryPoint_Owner" sourceRef="Task_CheckDeliveryPoint" targetRef="Task_CheckOwner" />
+    <bpmn:sequenceFlow id="Flow_Owner_Save" sourceRef="Task_CheckOwner" targetRef="Task_SaveOrder" />
+    <bpmn:sequenceFlow id="Flow_Save_End" sourceRef="Task_SaveOrder" targetRef="End_OrderCreated" />
+    <bpmn:sequenceFlow id="Flow_OrderValidationError_End" sourceRef="Boundary_OrderValidationError" targetRef="End_OrderRejected" />
+    <bpmn:sequenceFlow id="Flow_ProductsError_End" sourceRef="Boundary_ProductsError" targetRef="End_OrderRejected" />
+    <bpmn:sequenceFlow id="Flow_DeliveryPointError_End" sourceRef="Boundary_DeliveryPointError" targetRef="End_OrderRejected" />
+    <bpmn:sequenceFlow id="Flow_OwnerError_End" sourceRef="Boundary_OwnerError" targetRef="End_OrderRejected" />
+    <bpmn:sequenceFlow id="Flow_SaveError_End" sourceRef="Boundary_SaveOrderError" targetRef="End_OrderRejected" />
   </bpmn:process>
-  <bpmn:error id="Error_InvalidOrder" name="InvalidOrder" errorCode="INVALID_ORDER"/>
+  <bpmn:error id="Error_InvalidOrder" name="InvalidOrder" errorCode="INVALID_ORDER" />
   <bpmndi:BPMNDiagram id="Diagram_CreateOrder">
     <bpmndi:BPMNPlane id="Plane_CreateOrder" bpmnElement="createOrderProcess">
       <bpmndi:BPMNShape id="Start_CreateOrder_di" bpmnElement="Start_CreateOrder">
-        <dc:Bounds x="80" y="170" width="36" height="36"/>
+        <dc:Bounds x="170" y="100" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="157" y="136" width="62" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_ValidateOrder_di" bpmnElement="Task_ValidateOrder">
-        <dc:Bounds x="180" y="148" width="150" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Boundary_OrderValidationError_di" bpmnElement="Boundary_OrderValidationError">
-        <dc:Bounds x="242" y="210" width="36" height="36"/>
+        <dc:Bounds x="270" y="78" width="150" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_CheckProducts_di" bpmnElement="Task_CheckProducts">
-        <dc:Bounds x="400" y="148" width="150" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Boundary_ProductsError_di" bpmnElement="Boundary_ProductsError">
-        <dc:Bounds x="462" y="210" width="36" height="36"/>
+        <dc:Bounds x="490" y="78" width="150" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_CheckDeliveryPoint_di" bpmnElement="Task_CheckDeliveryPoint">
-        <dc:Bounds x="620" y="148" width="170" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Boundary_DeliveryPointError_di" bpmnElement="Boundary_DeliveryPointError">
-        <dc:Bounds x="688" y="210" width="36" height="36"/>
+        <dc:Bounds x="710" y="78" width="170" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_CheckOwner_di" bpmnElement="Task_CheckOwner">
-        <dc:Bounds x="860" y="148" width="150" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Boundary_OwnerError_di" bpmnElement="Boundary_OwnerError">
-        <dc:Bounds x="922" y="210" width="36" height="36"/>
+        <dc:Bounds x="950" y="78" width="150" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_SaveOrder_di" bpmnElement="Task_SaveOrder">
-        <dc:Bounds x="1080" y="148" width="180" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Boundary_SaveOrderError_di" bpmnElement="Boundary_SaveOrderError">
-        <dc:Bounds x="1152" y="210" width="36" height="36"/>
+        <dc:Bounds x="1170" y="78" width="180" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_OrderCreated_di" bpmnElement="End_OrderCreated">
-        <dc:Bounds x="1330" y="170" width="36" height="36"/>
+        <dc:Bounds x="1420" y="100" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1404" y="136" width="68" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_OrderRejected_di" bpmnElement="End_OrderRejected">
-        <dc:Bounds x="1330" y="360" width="36" height="36"/>
+        <dc:Bounds x="777" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="760" y="418" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_SaveOrderError_di" bpmnElement="Boundary_SaveOrderError">
+        <dc:Bounds x="1242" y="140" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_OwnerError_di" bpmnElement="Boundary_OwnerError">
+        <dc:Bounds x="1012" y="140" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_DeliveryPointError_di" bpmnElement="Boundary_DeliveryPointError">
+        <dc:Bounds x="778" y="140" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_ProductsError_di" bpmnElement="Boundary_ProductsError">
+        <dc:Bounds x="552" y="140" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_OrderValidationError_di" bpmnElement="Boundary_OrderValidationError">
+        <dc:Bounds x="332" y="140" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_Start_Validate_di" bpmnElement="Flow_Start_Validate">
-        <di:waypoint x="116" y="188"/>
-        <di:waypoint x="180" y="188"/>
+        <di:waypoint x="206" y="118" />
+        <di:waypoint x="270" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Validate_CheckProducts_di" bpmnElement="Flow_Validate_CheckProducts">
-        <di:waypoint x="330" y="188"/>
-        <di:waypoint x="400" y="188"/>
+        <di:waypoint x="420" y="118" />
+        <di:waypoint x="490" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_CheckProducts_DeliveryPoint_di" bpmnElement="Flow_CheckProducts_DeliveryPoint">
-        <di:waypoint x="550" y="188"/>
-        <di:waypoint x="620" y="188"/>
+        <di:waypoint x="640" y="118" />
+        <di:waypoint x="710" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_DeliveryPoint_Owner_di" bpmnElement="Flow_DeliveryPoint_Owner">
-        <di:waypoint x="790" y="188"/>
-        <di:waypoint x="860" y="188"/>
+        <di:waypoint x="880" y="118" />
+        <di:waypoint x="950" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Owner_Save_di" bpmnElement="Flow_Owner_Save">
-        <di:waypoint x="1010" y="188"/>
-        <di:waypoint x="1080" y="188"/>
+        <di:waypoint x="1100" y="118" />
+        <di:waypoint x="1170" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Save_End_di" bpmnElement="Flow_Save_End">
-        <di:waypoint x="1260" y="188"/>
-        <di:waypoint x="1330" y="188"/>
+        <di:waypoint x="1350" y="118" />
+        <di:waypoint x="1420" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_OrderValidationError_End_di" bpmnElement="Flow_OrderValidationError_End">
-        <di:waypoint x="260" y="246"/>
-        <di:waypoint x="260" y="378"/>
-        <di:waypoint x="1330" y="378"/>
+        <di:waypoint x="350" y="176" />
+        <di:waypoint x="350" y="400" />
+        <di:waypoint x="777" y="400" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_ProductsError_End_di" bpmnElement="Flow_ProductsError_End">
-        <di:waypoint x="480" y="246"/>
-        <di:waypoint x="480" y="378"/>
-        <di:waypoint x="1330" y="378"/>
+        <di:waypoint x="570" y="176" />
+        <di:waypoint x="570" y="400" />
+        <di:waypoint x="777" y="400" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_DeliveryPointError_End_di" bpmnElement="Flow_DeliveryPointError_End">
-        <di:waypoint x="706" y="246"/>
-        <di:waypoint x="706" y="378"/>
-        <di:waypoint x="1330" y="378"/>
+        <di:waypoint x="796" y="176" />
+        <di:waypoint x="796" y="279" />
+        <di:waypoint x="795" y="279" />
+        <di:waypoint x="795" y="382" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_OwnerError_End_di" bpmnElement="Flow_OwnerError_End">
-        <di:waypoint x="940" y="246"/>
-        <di:waypoint x="940" y="378"/>
-        <di:waypoint x="1330" y="378"/>
+        <di:waypoint x="1030" y="176" />
+        <di:waypoint x="1030" y="400" />
+        <di:waypoint x="813" y="400" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_SaveError_End_di" bpmnElement="Flow_SaveError_End">
-        <di:waypoint x="1170" y="246"/>
-        <di:waypoint x="1170" y="378"/>
-        <di:waypoint x="1330" y="378"/>
+        <di:waypoint x="1260" y="176" />
+        <di:waypoint x="1260" y="400" />
+        <di:waypoint x="813" y="400" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
-

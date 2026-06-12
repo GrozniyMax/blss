@@ -67,9 +67,7 @@ public class Validation implements ExternalTaskHandler {
         BigDecimal price = null;
         try {
             price = priceStr != null ? new BigDecimal(priceStr) : null;
-        } catch (NumberFormatException ignored) {
-            // оставим null — Bean Validation поймает через @NotNull
-        }
+        } catch (NumberFormatException ignored) {}
 
         Integer count = initialCount instanceof Number number ? number.intValue() : null;
 

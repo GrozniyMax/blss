@@ -1,138 +1,124 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                  id="Definitions_OrderStatus"
-                  targetNamespace="http://blss.com/bpmn">
-  <bpmn:process id="orderStatusProcess" name="Order Status Process" isExecutable="true"
-                camunda:candidateStarterGroups="CONSULTANT,MANAGER,ADMIN"
-                camunda:historyTimeToLive="P30D">
-    <bpmn:startEvent id="Start_OrderStatus" name="Change order status"
-                     camunda:formRef="order-status-form" camunda:formRefBinding="latest">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_OrderStatus" targetNamespace="http://blss.com/bpmn" exporter="Camunda Modeler" exporterVersion="5.48.0">
+  <bpmn:process id="orderStatusProcess" name="Order Status Process" isExecutable="true" camunda:candidateStarterGroups="CONSULTANT,MANAGER,ADMIN" camunda:historyTimeToLive="P30D">
+    <bpmn:startEvent id="Start_OrderStatus" name="Change order status" camunda:formRef="order-status-form" camunda:formRefBinding="latest">
       <bpmn:outgoing>Flow_Start_Load</bpmn:outgoing>
     </bpmn:startEvent>
-
-    <bpmn:serviceTask id="Task_LoadStatus" name="Load current status"
-                      camunda:type="external"
-                      camunda:topic="order-status: load"
-                      camunda:asyncBefore="true">
+    <bpmn:serviceTask id="Task_LoadStatus" name="Load current status" camunda:asyncBefore="true" camunda:type="external" camunda:topic="order-status: load">
       <bpmn:incoming>Flow_Start_Load</bpmn:incoming>
       <bpmn:outgoing>Flow_Load_Decide</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:businessRuleTask id="Task_DecideTransition" name="Decide transition"
-                           camunda:decisionRef="orderStatusTransition"
-                           camunda:decisionRefBinding="latest"
-                           camunda:mapDecisionResult="singleEntry"
-                           camunda:resultVariable="targetStatus"
-                           camunda:asyncBefore="true">
+    <bpmn:businessRuleTask id="Task_DecideTransition" name="Decide transition" camunda:asyncBefore="true" camunda:resultVariable="targetStatus" camunda:decisionRef="orderStatusTransition" camunda:mapDecisionResult="singleEntry">
       <bpmn:incoming>Flow_Load_Decide</bpmn:incoming>
       <bpmn:outgoing>Flow_Decide_Gateway</bpmn:outgoing>
     </bpmn:businessRuleTask>
-
     <bpmn:exclusiveGateway id="Gateway_TransitionAllowed" name="Transition allowed?">
       <bpmn:incoming>Flow_Decide_Gateway</bpmn:incoming>
       <bpmn:outgoing>Flow_Allowed_Apply</bpmn:outgoing>
       <bpmn:outgoing>Flow_NotAllowed_End</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-
-    <bpmn:serviceTask id="Task_ApplyStatus" name="Apply target status"
-                      camunda:type="external"
-                      camunda:topic="order-status: apply"
-                      camunda:asyncBefore="true">
+    <bpmn:serviceTask id="Task_ApplyStatus" name="Apply target status" camunda:asyncBefore="true" camunda:type="external" camunda:topic="order-status: apply">
       <bpmn:incoming>Flow_Allowed_Apply</bpmn:incoming>
       <bpmn:outgoing>Flow_Apply_End</bpmn:outgoing>
     </bpmn:serviceTask>
-
     <bpmn:boundaryEvent id="Boundary_ApplyStatusError" attachedToRef="Task_ApplyStatus">
       <bpmn:outgoing>Flow_ApplyError_End</bpmn:outgoing>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidStatusAction"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidStatusAction" />
     </bpmn:boundaryEvent>
-
     <bpmn:endEvent id="End_StatusChanged" name="Status changed">
       <bpmn:incoming>Flow_Apply_End</bpmn:incoming>
     </bpmn:endEvent>
-
     <bpmn:endEvent id="End_StatusRejected" name="Status change rejected">
       <bpmn:incoming>Flow_NotAllowed_End</bpmn:incoming>
       <bpmn:incoming>Flow_ApplyError_End</bpmn:incoming>
-      <bpmn:errorEventDefinition errorRef="Error_InvalidStatusAction"/>
+      <bpmn:errorEventDefinition errorRef="Error_InvalidStatusAction" />
     </bpmn:endEvent>
-
-    <bpmn:sequenceFlow id="Flow_Start_Load" sourceRef="Start_OrderStatus" targetRef="Task_LoadStatus"/>
-    <bpmn:sequenceFlow id="Flow_Load_Decide" sourceRef="Task_LoadStatus" targetRef="Task_DecideTransition"/>
-    <bpmn:sequenceFlow id="Flow_Decide_Gateway" sourceRef="Task_DecideTransition" targetRef="Gateway_TransitionAllowed"/>
+    <bpmn:sequenceFlow id="Flow_Start_Load" sourceRef="Start_OrderStatus" targetRef="Task_LoadStatus" />
+    <bpmn:sequenceFlow id="Flow_Load_Decide" sourceRef="Task_LoadStatus" targetRef="Task_DecideTransition" />
+    <bpmn:sequenceFlow id="Flow_Decide_Gateway" sourceRef="Task_DecideTransition" targetRef="Gateway_TransitionAllowed" />
     <bpmn:sequenceFlow id="Flow_Allowed_Apply" name="Allowed" sourceRef="Gateway_TransitionAllowed" targetRef="Task_ApplyStatus">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${targetStatus != null}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_NotAllowed_End" name="Rejected" sourceRef="Gateway_TransitionAllowed" targetRef="End_StatusRejected">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${targetStatus == null}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_Apply_End" sourceRef="Task_ApplyStatus" targetRef="End_StatusChanged"/>
-    <bpmn:sequenceFlow id="Flow_ApplyError_End" sourceRef="Boundary_ApplyStatusError" targetRef="End_StatusRejected"/>
+    <bpmn:sequenceFlow id="Flow_Apply_End" sourceRef="Task_ApplyStatus" targetRef="End_StatusChanged" />
+    <bpmn:sequenceFlow id="Flow_ApplyError_End" sourceRef="Boundary_ApplyStatusError" targetRef="End_StatusRejected" />
   </bpmn:process>
-
-  <bpmn:error id="Error_InvalidStatusAction" name="InvalidStatusAction" errorCode="INVALID_STATUS_ACTION"/>
-
+  <bpmn:error id="Error_InvalidStatusAction" name="InvalidStatusAction" errorCode="INVALID_STATUS_ACTION" />
   <bpmndi:BPMNDiagram id="Diagram_OrderStatus">
     <bpmndi:BPMNPlane id="Plane_OrderStatus" bpmnElement="orderStatusProcess">
       <bpmndi:BPMNShape id="Start_OrderStatus_di" bpmnElement="Start_OrderStatus">
-        <dc:Bounds x="100" y="170" width="36" height="36"/>
+        <dc:Bounds x="170" y="100" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="154" y="136" width="68" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_LoadStatus_di" bpmnElement="Task_LoadStatus">
-        <dc:Bounds x="200" y="148" width="150" height="80"/>
+        <dc:Bounds x="270" y="78" width="150" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_DecideTransition_di" bpmnElement="Task_DecideTransition">
-        <dc:Bounds x="420" y="148" width="160" height="80"/>
+        <dc:Bounds x="490" y="78" width="160" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_TransitionAllowed_di" bpmnElement="Gateway_TransitionAllowed" isMarkerVisible="true">
-        <dc:Bounds x="660" y="163" width="50" height="50"/>
+        <dc:Bounds x="730" y="93" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="756" y="143" width="84" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_ApplyStatus_di" bpmnElement="Task_ApplyStatus">
-        <dc:Bounds x="790" y="148" width="160" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Boundary_ApplyStatusError_di" bpmnElement="Boundary_ApplyStatusError">
-        <dc:Bounds x="852" y="210" width="36" height="36"/>
+        <dc:Bounds x="860" y="78" width="160" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_StatusChanged_di" bpmnElement="End_StatusChanged">
-        <dc:Bounds x="1030" y="170" width="36" height="36"/>
+        <dc:Bounds x="1100" y="100" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1080" y="136" width="77" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="End_StatusRejected_di" bpmnElement="End_StatusRejected">
-        <dc:Bounds x="1030" y="340" width="36" height="36"/>
+        <dc:Bounds x="1100" y="270" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1083" y="306" width="71" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-
+      <bpmndi:BPMNShape id="Boundary_ApplyStatusError_di" bpmnElement="Boundary_ApplyStatusError">
+        <dc:Bounds x="922" y="140" width="36" height="36" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_Start_Load_di" bpmnElement="Flow_Start_Load">
-        <di:waypoint x="136" y="188"/>
-        <di:waypoint x="200" y="188"/>
+        <di:waypoint x="206" y="118" />
+        <di:waypoint x="270" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Load_Decide_di" bpmnElement="Flow_Load_Decide">
-        <di:waypoint x="350" y="188"/>
-        <di:waypoint x="420" y="188"/>
+        <di:waypoint x="420" y="118" />
+        <di:waypoint x="490" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Decide_Gateway_di" bpmnElement="Flow_Decide_Gateway">
-        <di:waypoint x="580" y="188"/>
-        <di:waypoint x="660" y="188"/>
+        <di:waypoint x="650" y="118" />
+        <di:waypoint x="730" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Allowed_Apply_di" bpmnElement="Flow_Allowed_Apply">
-        <di:waypoint x="710" y="188"/>
-        <di:waypoint x="790" y="188"/>
+        <di:waypoint x="780" y="118" />
+        <di:waypoint x="860" y="118" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="801" y="93" width="39" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_NotAllowed_End_di" bpmnElement="Flow_NotAllowed_End">
-        <di:waypoint x="685" y="213"/>
-        <di:waypoint x="685" y="358"/>
-        <di:waypoint x="1030" y="358"/>
+        <di:waypoint x="755" y="143" />
+        <di:waypoint x="755" y="288" />
+        <di:waypoint x="1100" y="288" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="748" y="206" width="44" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Apply_End_di" bpmnElement="Flow_Apply_End">
-        <di:waypoint x="950" y="188"/>
-        <di:waypoint x="1030" y="188"/>
+        <di:waypoint x="1020" y="118" />
+        <di:waypoint x="1100" y="118" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_ApplyError_End_di" bpmnElement="Flow_ApplyError_End">
-        <di:waypoint x="870" y="246"/>
-        <di:waypoint x="870" y="358"/>
-        <di:waypoint x="1030" y="358"/>
+        <di:waypoint x="940" y="176" />
+        <di:waypoint x="940" y="288" />
+        <di:waypoint x="1100" y="288" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

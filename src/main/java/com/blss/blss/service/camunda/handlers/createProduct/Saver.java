@@ -41,7 +41,6 @@ public class Saver implements ExternalTaskHandler {
 
             service.complete(task, Map.of("productId", productId.toString(), "processSuccess", true));
         } catch (AlreadyExistsException e) {
-            // На случай race condition между check и save
             CamundaHandlerSupport.bpmnError(task, service, "PRODUCT_ALREADY_EXISTS",
                     "Product already exists");
         } catch (Exception e) {
