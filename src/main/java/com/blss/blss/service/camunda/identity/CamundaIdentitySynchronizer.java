@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -267,9 +268,13 @@ public class CamundaIdentitySynchronizer {
                 + "&resourceType=" + resourceType);
 
         Set<String> grantedPermissions = new HashSet<>();
+        String authorizationId = null;
         if (authorizations != null && authorizations.isArray()) {
             for (JsonNode authorization : authorizations) {
                 if (resourceId.equals(authorization.path("resourceId").asText())) {
+                    if (authorizationId == null) {
+                        authorizationId = authorization.path("id").asText();
+                    }
                     authorization.path("permissions").forEach(permission ->
                             grantedPermissions.add(permission.asText()));
                 }
@@ -283,15 +288,30 @@ public class CamundaIdentitySynchronizer {
             return;
         }
 
-        post("/authorization/create", Map.of(
-                "type", 1,
-                "permissions", missingPermissions,
-                "groupId", groupId,
-                "resourceType", resourceType,
-                "resourceId", resourceId
-        ));
-        log.info("Granted Camunda permissions {} to group {} on resource {}",
-                missingPermissions, groupId, resourceId);
+        if (authorizationId == null) {
+            post("/authorization/create", Map.of(
+                    "type", 1,
+                    "permissions", missingPermissions,
+                    "groupId", groupId,
+                    "resourceType", resourceType,
+                    "resourceId", resourceId
+            ));
+            log.info("Granted Camunda permissions {} to group {} on resource {}",
+                    missingPermissions, groupId, resourceId);
+            return;
+        }
+
+        Set<String> mergedPermissions = new HashSet<>(grantedPermissions);
+        mergedPermissions.addAll(missingPermissions);
+        Map<String, Object> update = new LinkedHashMap<>();
+        update.put("permissions", mergedPermissions);
+        update.put("userId", null);
+        update.put("groupId", groupId);
+        update.put("resourceType", resourceType);
+        update.put("resourceId", resourceId);
+        put("/authorization/" + encode(authorizationId), update);
+        log.info("Updated Camunda permissions for group {} on resource {} to {}",
+                groupId, resourceId, mergedPermissions);
     }
 
     private void deleteAuthorizations(String groupId, int resourceType, String resourceId) {
