@@ -1,73 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
-             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
-             xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
-             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
-             xmlns:camunda="http://camunda.org/schema/1.0/dmn"
-             id="Definitions_OrderStatusTransition"
-             name="Order Status Transition Decisions"
-             namespace="http://blss.com/dmn"
-             exporter="Camunda Modeler"
-             exporterVersion="5.0.0">
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:camunda="http://camunda.org/schema/1.0/dmn" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" id="Definitions_OrderStatusTransition" name="Order Status Transition Decisions" namespace="http://blss.com/dmn" exporter="Camunda Modeler" exporterVersion="5.48.0">
   <decision id="orderStatusTransition" name="Order Status Transition" camunda:historyTimeToLive="P30D">
-    <decisionTable id="DecisionTable_OrderStatusTransition" hitPolicy="UNIQUE">
+    <decisionTable id="DecisionTable_OrderStatusTransition">
       <input id="Input_CurrentStatus" label="Current status">
         <inputExpression id="InputExpression_CurrentStatus" typeRef="string">
           <text>currentStatus</text>
         </inputExpression>
       </input>
-      <input id="Input_Action" label="Action">
+      <input id="Input_Action" label="Action" biodi:width="237">
         <inputExpression id="InputExpression_Action" typeRef="string">
           <text>action</text>
         </inputExpression>
       </input>
-      <output id="Output_TargetStatus" label="Target status" name="targetStatus" typeRef="string"/>
+      <output id="Output_TargetStatus" label="Target status" name="targetStatus" typeRef="string" />
       <rule id="Rule_CreatedNext">
-        <inputEntry id="Rule_CreatedNext_CurrentStatus"><text>"CREATED"</text></inputEntry>
-        <inputEntry id="Rule_CreatedNext_Action"><text>"NEXT"</text></inputEntry>
-        <outputEntry id="Rule_CreatedNext_TargetStatus"><text>"PROCESSING"</text></outputEntry>
+        <inputEntry id="Rule_CreatedNext_CurrentStatus">
+          <text>"CREATED"</text>
+        </inputEntry>
+        <inputEntry id="Rule_CreatedNext_Action">
+          <text>"NEXT (PROCESSING)"</text>
+        </inputEntry>
+        <outputEntry id="Rule_CreatedNext_TargetStatus">
+          <text>"PROCESSING"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_ProcessingNext">
-        <inputEntry id="Rule_ProcessingNext_CurrentStatus"><text>"PROCESSING"</text></inputEntry>
-        <inputEntry id="Rule_ProcessingNext_Action"><text>"NEXT"</text></inputEntry>
-        <outputEntry id="Rule_ProcessingNext_TargetStatus"><text>"IN_DELIVERY"</text></outputEntry>
+        <inputEntry id="Rule_ProcessingNext_CurrentStatus">
+          <text>"PROCESSING"</text>
+        </inputEntry>
+        <inputEntry id="Rule_ProcessingNext_Action">
+          <text>"NEXT (IN_DELIVERY)"</text>
+        </inputEntry>
+        <outputEntry id="Rule_ProcessingNext_TargetStatus">
+          <text>"IN_DELIVERY"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_InDeliveryNext">
-        <inputEntry id="Rule_InDeliveryNext_CurrentStatus"><text>"IN_DELIVERY"</text></inputEntry>
-        <inputEntry id="Rule_InDeliveryNext_Action"><text>"NEXT"</text></inputEntry>
-        <outputEntry id="Rule_InDeliveryNext_TargetStatus"><text>"READY_FOR_PICKUP"</text></outputEntry>
+        <inputEntry id="Rule_InDeliveryNext_CurrentStatus">
+          <text>"IN_DELIVERY"</text>
+        </inputEntry>
+        <inputEntry id="Rule_InDeliveryNext_Action">
+          <text>"NEXT (READY_FOR_PICKUP)"</text>
+        </inputEntry>
+        <outputEntry id="Rule_InDeliveryNext_TargetStatus">
+          <text>"READY_FOR_PICKUP"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_ReadyForPickupNext">
-        <inputEntry id="Rule_ReadyForPickupNext_CurrentStatus"><text>"READY_FOR_PICKUP"</text></inputEntry>
-        <inputEntry id="Rule_ReadyForPickupNext_Action"><text>"NEXT"</text></inputEntry>
-        <outputEntry id="Rule_ReadyForPickupNext_TargetStatus"><text>"DONE"</text></outputEntry>
+        <inputEntry id="Rule_ReadyForPickupNext_CurrentStatus">
+          <text>"READY_FOR_PICKUP"</text>
+        </inputEntry>
+        <inputEntry id="Rule_ReadyForPickupNext_Action">
+          <text>"NEXT (DONE)"</text>
+        </inputEntry>
+        <outputEntry id="Rule_ReadyForPickupNext_TargetStatus">
+          <text>"DONE"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_CreatedCancel">
-        <inputEntry id="Rule_CreatedCancel_CurrentStatus"><text>"CREATED"</text></inputEntry>
-        <inputEntry id="Rule_CreatedCancel_Action"><text>"CANCEL"</text></inputEntry>
-        <outputEntry id="Rule_CreatedCancel_TargetStatus"><text>"CANCELED"</text></outputEntry>
+        <inputEntry id="Rule_CreatedCancel_CurrentStatus">
+          <text>"CREATED"</text>
+        </inputEntry>
+        <inputEntry id="Rule_CreatedCancel_Action">
+          <text>"CANCEL"</text>
+        </inputEntry>
+        <outputEntry id="Rule_CreatedCancel_TargetStatus">
+          <text>"CANCELED"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_ProcessingCancel">
-        <inputEntry id="Rule_ProcessingCancel_CurrentStatus"><text>"PROCESSING"</text></inputEntry>
-        <inputEntry id="Rule_ProcessingCancel_Action"><text>"CANCEL"</text></inputEntry>
-        <outputEntry id="Rule_ProcessingCancel_TargetStatus"><text>"CANCELED"</text></outputEntry>
+        <inputEntry id="Rule_ProcessingCancel_CurrentStatus">
+          <text>"PROCESSING"</text>
+        </inputEntry>
+        <inputEntry id="Rule_ProcessingCancel_Action">
+          <text>"CANCEL"</text>
+        </inputEntry>
+        <outputEntry id="Rule_ProcessingCancel_TargetStatus">
+          <text>"CANCELED"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_InDeliveryCancel">
-        <inputEntry id="Rule_InDeliveryCancel_CurrentStatus"><text>"IN_DELIVERY"</text></inputEntry>
-        <inputEntry id="Rule_InDeliveryCancel_Action"><text>"CANCEL"</text></inputEntry>
-        <outputEntry id="Rule_InDeliveryCancel_TargetStatus"><text>"CANCELED"</text></outputEntry>
+        <inputEntry id="Rule_InDeliveryCancel_CurrentStatus">
+          <text>"IN_DELIVERY"</text>
+        </inputEntry>
+        <inputEntry id="Rule_InDeliveryCancel_Action">
+          <text>"CANCEL"</text>
+        </inputEntry>
+        <outputEntry id="Rule_InDeliveryCancel_TargetStatus">
+          <text>"CANCELED"</text>
+        </outputEntry>
       </rule>
       <rule id="Rule_ReadyForPickupCancel">
-        <inputEntry id="Rule_ReadyForPickupCancel_CurrentStatus"><text>"READY_FOR_PICKUP"</text></inputEntry>
-        <inputEntry id="Rule_ReadyForPickupCancel_Action"><text>"CANCEL"</text></inputEntry>
-        <outputEntry id="Rule_ReadyForPickupCancel_TargetStatus"><text>"CANCELED"</text></outputEntry>
+        <inputEntry id="Rule_ReadyForPickupCancel_CurrentStatus">
+          <text>"READY_FOR_PICKUP"</text>
+        </inputEntry>
+        <inputEntry id="Rule_ReadyForPickupCancel_Action">
+          <text>"CANCEL"</text>
+        </inputEntry>
+        <outputEntry id="Rule_ReadyForPickupCancel_TargetStatus">
+          <text>"CANCELED"</text>
+        </outputEntry>
       </rule>
     </decisionTable>
   </decision>
   <dmndi:DMNDI>
     <dmndi:DMNDiagram id="DMNDiagram_OrderStatusTransition">
       <dmndi:DMNShape id="DMNShape_OrderStatusTransition" dmnElementRef="orderStatusTransition">
-        <dc:Bounds x="160" y="100" width="180" height="80"/>
+        <dc:Bounds height="80" width="180" x="160" y="100" />
       </dmndi:DMNShape>
     </dmndi:DMNDiagram>
   </dmndi:DMNDI>

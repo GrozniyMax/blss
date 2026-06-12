@@ -39,6 +39,7 @@ public class CamundaIdentitySynchronizer {
     private static final int PROCESS_INSTANCE_RESOURCE = 8;
 
     private static final Map<Role, Set<String>> STARTABLE_PROCESSES = startableProcesses();
+    private static final Map<Role, Set<String>> COCKPIT_PROCESSES = cockpitProcesses();
 
     private final RestTemplate restTemplate;
     private final XmlUserRepository userRepository;
@@ -220,6 +221,18 @@ public class CamundaIdentitySynchronizer {
                 List.of("ACCESS")
         );
 
+        Set<String> cockpitProcessKeys = COCKPIT_PROCESSES.getOrDefault(role, Set.of());
+        if (!cockpitProcessKeys.isEmpty()) {
+            ensureAuthorization(
+                    role.name(),
+                    APPLICATION_RESOURCE,
+                    "cockpit",
+                    List.of("ACCESS")
+            );
+        } else {
+            deleteAuthorizations(role.name(), APPLICATION_RESOURCE, "cockpit");
+        }
+
         Set<String> processKeys = STARTABLE_PROCESSES.getOrDefault(role, Set.of());
         if (!processKeys.isEmpty()) {
             ensureAuthorization(
@@ -238,28 +251,63 @@ public class CamundaIdentitySynchronizer {
                     List.of("READ", "CREATE_INSTANCE")
             );
         }
+
+        for (String processKey : cockpitProcessKeys) {
+            ensureAuthorization(
+                    role.name(),
+                    PROCESS_DEFINITION_RESOURCE,
+                    processKey,
+                    List.of("READ", "READ_INSTANCE", "READ_HISTORY")
+            );
+        }
     }
 
     private void ensureAuthorization(String groupId, int resourceType, String resourceId, List<String> permissions) {
         JsonNode authorizations = get("/authorization?type=1&groupIdIn=" + encode(groupId)
                 + "&resourceType=" + resourceType);
 
+        Set<String> grantedPermissions = new HashSet<>();
         if (authorizations != null && authorizations.isArray()) {
             for (JsonNode authorization : authorizations) {
                 if (resourceId.equals(authorization.path("resourceId").asText())) {
-                    return;
+                    authorization.path("permissions").forEach(permission ->
+                            grantedPermissions.add(permission.asText()));
                 }
             }
         }
 
+        List<String> missingPermissions = permissions.stream()
+                .filter(permission -> !grantedPermissions.contains(permission))
+                .toList();
+        if (missingPermissions.isEmpty()) {
+            return;
+        }
+
         post("/authorization/create", Map.of(
                 "type", 1,
-                "permissions", permissions,
+                "permissions", missingPermissions,
                 "groupId", groupId,
                 "resourceType", resourceType,
                 "resourceId", resourceId
         ));
-        log.info("Created Camunda authorization for group {} on resource {}", groupId, resourceId);
+        log.info("Granted Camunda permissions {} to group {} on resource {}",
+                missingPermissions, groupId, resourceId);
+    }
+
+    private void deleteAuthorizations(String groupId, int resourceType, String resourceId) {
+        JsonNode authorizations = get("/authorization?type=1&groupIdIn=" + encode(groupId)
+                + "&resourceType=" + resourceType);
+        if (authorizations == null || !authorizations.isArray()) {
+            return;
+        }
+
+        for (JsonNode authorization : authorizations) {
+            if (resourceId.equals(authorization.path("resourceId").asText())) {
+                delete("/authorization/" + encode(authorization.path("id").asText()));
+                log.info("Deleted Camunda authorization for group {} on resource {}",
+                        groupId, resourceId);
+            }
+        }
     }
 
     private boolean exists(String path) {
@@ -341,6 +389,15 @@ public class CamundaIdentitySynchronizer {
                 "markDeliveredProcess",
                 "orderPickupProcess"
         ));
+        return Map.copyOf(result);
+    }
+
+    private static Map<Role, Set<String>> cockpitProcesses() {
+        Map<Role, Set<String>> result = new EnumMap<>(Role.class);
+        result.put(Role.MANAGER, STARTABLE_PROCESSES.get(Role.MANAGER));
+        result.put(Role.CONSULTANT, STARTABLE_PROCESSES.get(Role.CONSULTANT));
+        result.put(Role.WAREHOUSE, STARTABLE_PROCESSES.get(Role.WAREHOUSE));
+        result.put(Role.ADMIN, STARTABLE_PROCESSES.get(Role.ADMIN));
         return Map.copyOf(result);
     }
 }
