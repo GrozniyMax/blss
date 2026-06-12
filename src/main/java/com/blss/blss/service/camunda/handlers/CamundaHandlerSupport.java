@@ -3,6 +3,7 @@ package com.blss.blss.service.camunda.handlers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.camunda.bpm.client.task.ExternalTask;
 import org.camunda.bpm.client.task.ExternalTaskService;
@@ -13,12 +14,18 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 public final class CamundaHandlerSupport {
 
     private CamundaHandlerSupport() {
     }
 
     public static void bpmnError(ExternalTask task, ExternalTaskService service, String code, String message) {
+        String processInstanceId = task.getProcessInstanceId();
+        String activityId = task.getActivityId();
+        log.error("BPMN Error in process instance {}: activity={}, errorCode={}, message={}",
+                processInstanceId, activityId, code, message);
+        
         service.handleBpmnError(task, code, message, Map.of(
                 "processErrorCode", code,
                 "processError", message
@@ -26,6 +33,13 @@ public final class CamundaHandlerSupport {
     }
 
     public static void failure(ExternalTask task, ExternalTaskService service, Exception e) {
+        String processInstanceId = task.getProcessInstanceId();
+        String activityId = task.getActivityId();
+        String topicName = task.getTopicName();
+        
+        log.error("Task failure: topic={}, processInstanceId={}, activity={}, error={}, stackTrace={}",
+                topicName, processInstanceId, activityId, e.getMessage(), ExceptionUtils.getStackTrace(e));
+        
         service.handleFailure(task, e.getMessage(), ExceptionUtils.getStackTrace(e), 3, 30000L);
     }
 

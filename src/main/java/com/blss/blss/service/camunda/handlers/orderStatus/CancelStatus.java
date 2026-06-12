@@ -25,16 +25,24 @@ public class CancelStatus implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var orderId = CamundaHandlerSupport.uuid(task, "orderId");
+            log.info("Cancelling order: processInstanceId={}, orderId={}", processInstanceId, orderId);
+            
             orderStatusUpdater.cancel(orderId);
+            log.info("Order cancelled successfully: processInstanceId={}, orderId={}, newStatus={}",
+                    processInstanceId, orderId, orderService.getStatus(orderId).name());
+            
             service.complete(task, Map.of(
                     "newStatus", orderService.getStatus(orderId).name(),
                     "processSuccess", true
             ));
         } catch (InvalidActionException | IllegalArgumentException e) {
+            log.warn("Invalid cancel action: processInstanceId={}, error={}", processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_STATUS_ACTION", e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to cancel order: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

@@ -27,22 +27,34 @@ public class UpdateProduct implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var productId = CamundaHandlerSupport.uuid(task, "productId");
             String name = task.getVariable("name");
             BigDecimal price = new BigDecimal(task.<String>getVariable("price"));
             var dto = new ProductUpdateRequestDto(name, price);
+            
+            log.info("Updating product: processInstanceId={}, productId={}, name={}, price={}",
+                    processInstanceId, productId, name, price);
+            
             var violations = validator.validate(dto);
             if (!violations.isEmpty()) {
-                CamundaHandlerSupport.bpmnError(task, service, "INVALID_PRODUCT_UPDATE",
-                        CamundaHandlerSupport.validationErrors(violations));
+                String errors = CamundaHandlerSupport.validationErrors(violations);
+                log.warn("Product update validation failed: processInstanceId={}, errors={}",
+                        processInstanceId, errors);
+                CamundaHandlerSupport.bpmnError(task, service, "INVALID_PRODUCT_UPDATE", errors);
                 return;
             }
             storeService.updateProduct(new Product(productId, name, price));
+            log.info("Product updated successfully: processInstanceId={}, productId={}",
+                    processInstanceId, productId);
             service.complete(task, Map.of("productId", productId.toString(), "processSuccess", true));
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid product update data: processInstanceId={}, error={}",
+                    processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_PRODUCT_UPDATE", e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to update product: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

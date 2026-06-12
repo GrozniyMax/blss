@@ -25,14 +25,24 @@ public class CheckReady implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var orderId = CamundaHandlerSupport.uuid(task, "orderId");
+            log.info("Checking order readiness for delivery: processInstanceId={}, orderId={}",
+                    processInstanceId, orderId);
+            
             boolean ready = orderService.getStatus(orderId) == Status.IN_DELIVERY
                     && orderItemRepo.countItemsWithoutYacheyka(orderId) == 0;
+            
+            log.info("Order readiness check: processInstanceId={}, orderId={}, ready={}",
+                    processInstanceId, orderId, ready);
             service.complete(task, Map.of("orderReady", ready, "processSuccess", true));
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid order ID for delivery check: processInstanceId={}, error={}",
+                    processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_DELIVERY_MARK", e.getMessage());
         } catch (Exception e) {
+            log.error("Delivery readiness check failed: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

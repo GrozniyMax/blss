@@ -25,16 +25,26 @@ public class NextStatus implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var orderId = CamundaHandlerSupport.uuid(task, "orderId");
+            log.info("Advancing order to next status: processInstanceId={}, orderId={}",
+                    processInstanceId, orderId);
+            
             orderStatusUpdater.next(orderId);
+            log.info("Order status advanced: processInstanceId={}, orderId={}, newStatus={}",
+                    processInstanceId, orderId, orderService.getStatus(orderId).name());
+            
             service.complete(task, Map.of(
                     "newStatus", orderService.getStatus(orderId).name(),
                     "processSuccess", true
             ));
         } catch (InvalidActionException | IllegalArgumentException e) {
+            log.warn("Invalid next status action: processInstanceId={}, error={}",
+                    processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_STATUS_ACTION", e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to advance order status: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

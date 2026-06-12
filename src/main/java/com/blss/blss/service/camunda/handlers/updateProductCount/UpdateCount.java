@@ -22,15 +22,26 @@ public class UpdateCount implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var productId = CamundaHandlerSupport.uuid(task, "productId");
             Integer change = CamundaHandlerSupport.integer(task, "change");
+            
+            log.info("Updating product count: processInstanceId={}, productId={}, change={}",
+                    processInstanceId, productId, change);
+            
             storeService.getProduct(productId);
             storeService.updateItemsCount(productId, change);
+            log.info("Product count updated: processInstanceId={}, productId={}, change={}",
+                    processInstanceId, productId, change);
+            
             service.complete(task, Map.of("productId", productId.toString(), "processSuccess", true));
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid product count update: processInstanceId={}, error={}",
+                    processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_PRODUCT_COUNT", e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to update product count: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

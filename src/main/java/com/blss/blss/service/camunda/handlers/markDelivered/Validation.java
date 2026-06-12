@@ -21,21 +21,31 @@ public class Validation implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var dto = new OrderItemDeliveredDto(
                     CamundaHandlerSupport.uuid(task, "itemId"),
                     task.getVariable("yacheyka")
             );
+            log.info("Validating mark-delivered request: processInstanceId={}, itemId={}",
+                    processInstanceId, dto.itemId());
+            
             var violations = validator.validate(dto);
             if (!violations.isEmpty()) {
-                CamundaHandlerSupport.bpmnError(task, service, "INVALID_DELIVERY_MARK",
-                        CamundaHandlerSupport.validationErrors(violations));
+                String errors = CamundaHandlerSupport.validationErrors(violations);
+                log.warn("Mark-delivered validation failed: processInstanceId={}, errors={}",
+                        processInstanceId, errors);
+                CamundaHandlerSupport.bpmnError(task, service, "INVALID_DELIVERY_MARK", errors);
                 return;
             }
+            log.info("Mark-delivered validated successfully: processInstanceId={}", processInstanceId);
             service.complete(task);
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid mark-delivered data: processInstanceId={}, error={}",
+                    processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_DELIVERY_MARK", e.getMessage());
         } catch (Exception e) {
+            log.error("Mark-delivered validation failed: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

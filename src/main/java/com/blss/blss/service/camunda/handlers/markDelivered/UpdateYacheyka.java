@@ -25,16 +25,26 @@ public class UpdateYacheyka implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var itemId = CamundaHandlerSupport.uuid(task, "itemId");
             String yacheyka = task.getVariable("yacheyka");
+            log.info("Updating yacheyka for order item: processInstanceId={}, itemId={}, yacheyka={}",
+                    processInstanceId, itemId, yacheyka);
+            
             storageService.updateYacheyka(itemId, yacheyka);
             var item = orderItemRepo.findById(itemId)
                     .orElseThrow(() -> new NotFoundException(com.blss.blss.domain.order.OrderItem.class, itemId));
+            
+            log.info("Yacheyka updated successfully: processInstanceId={}, itemId={}, orderId={}",
+                    processInstanceId, itemId, item.orderId());
             service.complete(task, Map.of("orderId", item.orderId().toString()));
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid item ID for yacheyka update: processInstanceId={}, error={}",
+                    processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_DELIVERY_MARK", e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to update yacheyka: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

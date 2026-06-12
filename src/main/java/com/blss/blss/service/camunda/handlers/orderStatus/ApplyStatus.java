@@ -24,9 +24,13 @@ public class ApplyStatus implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var orderId = CamundaHandlerSupport.uuid(task, "orderId");
             String targetStatusValue = task.getVariable("targetStatus");
+
+            log.info("Applying order status via DMN: processInstanceId={}, orderId={}, targetStatus={}",
+                    processInstanceId, orderId, targetStatusValue);
 
             if (targetStatusValue == null || targetStatusValue.isBlank()) {
                 throw new InvalidActionException("Order status transition is not allowed by DMN decision table");
@@ -34,15 +38,18 @@ public class ApplyStatus implements ExternalTaskHandler {
 
             var targetStatus = Status.valueOf(targetStatusValue);
             orderService.updateStatus(orderId, targetStatus);
-            log.info("Order status updated via DMN decision: orderId={}, targetStatus={}", orderId, targetStatus);
+            log.info("Order status updated via DMN decision: processInstanceId={}, orderId={}, targetStatus={}",
+                    processInstanceId, orderId, targetStatus);
 
             service.complete(task, Map.of(
                     "newStatus", targetStatus.name(),
                     "processSuccess", true
             ));
         } catch (InvalidActionException | IllegalArgumentException e) {
+            log.warn("Invalid status action: processInstanceId={}, error={}", processInstanceId, e.getMessage());
             CamundaHandlerSupport.bpmnError(task, service, "INVALID_STATUS_ACTION", e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to apply order status: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }

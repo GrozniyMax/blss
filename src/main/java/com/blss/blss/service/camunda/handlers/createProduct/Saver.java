@@ -27,6 +27,7 @@ public class Saver implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             String name = task.getVariable("productName");
             String priceStr = task.getVariable("price");
@@ -36,15 +37,20 @@ public class Saver implements ExternalTaskHandler {
             Product product = new Product(null, name, price);
             Integer count = initialCount instanceof Number number ? number.intValue() : null;
 
+            log.info("Creating product: processInstanceId={}, name={}, price={}, initialCount={}",
+                    processInstanceId, name, price, count);
+
             UUID productId = storeService.createProduct(product, count);
-            log.info("Product created: id={}", productId);
+            log.info("Product created successfully: processInstanceId={}, productId={}",
+                    processInstanceId, productId);
 
             service.complete(task, Map.of("productId", productId.toString(), "processSuccess", true));
         } catch (AlreadyExistsException e) {
+            log.warn("Product already exists: processInstanceId={}", processInstanceId);
             CamundaHandlerSupport.bpmnError(task, service, "PRODUCT_ALREADY_EXISTS",
                     "Product already exists");
         } catch (Exception e) {
-            log.error("Failed to save product", e);
+            log.error("Failed to save product: processInstanceId={}", processInstanceId, e);
             service.handleFailure(task, e.getMessage(),
                     ExceptionUtils.getStackTrace(e), 3, 30000L);
         }

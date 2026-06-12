@@ -23,11 +23,23 @@ public class CompletePickup implements ExternalTaskHandler {
 
     @Override
     public void execute(ExternalTask task, ExternalTaskService service) {
+        String processInstanceId = task.getProcessInstanceId();
         try {
             var orderId = CamundaHandlerSupport.uuid(task, "orderId");
+            log.info("Completing order pickup: processInstanceId={}, orderId={}",
+                    processInstanceId, orderId);
+            
             orderService.updateStatus(orderId, Status.DONE);
+            log.info("Order pickup completed: processInstanceId={}, orderId={}, status=Done",
+                    processInstanceId, orderId);
+            
             service.complete(task, Map.of("newStatus", Status.DONE.name(), "processSuccess", true));
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid order ID for pickup complete: processInstanceId={}, error={}",
+                    processInstanceId, e.getMessage());
+            CamundaHandlerSupport.bpmnError(task, service, "INVALID_PICKUP", e.getMessage());
         } catch (Exception e) {
+            log.error("Failed to complete order pickup: processInstanceId={}", processInstanceId, e);
             CamundaHandlerSupport.failure(task, service, e);
         }
     }
