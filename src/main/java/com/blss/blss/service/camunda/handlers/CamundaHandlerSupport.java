@@ -1,6 +1,7 @@
 package com.blss.blss.service.camunda.handlers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -60,16 +61,26 @@ public final class CamundaHandlerSupport {
             throw new IllegalArgumentException(variable + " is required");
         }
         try {
-            List<String> ids;
-            if (value instanceof List<?> list) {
-                ids = list.stream().map(Object::toString).toList();
-            } else {
-                ids = objectMapper.readValue(value.toString(), new TypeReference<>() {
-                });
+            JsonNode values = value instanceof List<?>
+                    ? objectMapper.valueToTree(value)
+                    : objectMapper.readTree(value.toString());
+            if (!values.isArray()) {
+                throw new IllegalArgumentException();
             }
-            return ids.stream().map(UUID::fromString).toList();
+
+            return objectMapper.convertValue(values, new TypeReference<List<JsonNode>>() {
+                    }).stream()
+                    .map(item -> item.isTextual() ? item : item.get("productId"))
+                    .map(item -> {
+                        if (item == null || !item.isTextual()) {
+                            throw new IllegalArgumentException();
+                        }
+                        return UUID.fromString(item.textValue());
+                    })
+                    .toList();
         } catch (Exception e) {
-            throw new IllegalArgumentException(variable + " must be a JSON array of UUID strings", e);
+            throw new IllegalArgumentException(
+                    variable + " must be an array of UUID strings or objects with productId", e);
         }
     }
 }

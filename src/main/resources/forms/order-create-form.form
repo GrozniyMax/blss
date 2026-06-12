@@ -25,14 +25,28 @@
       }
     },
     {
-      "label": "UUID товаров",
-      "key": "productIds",
-      "type": "textarea",
-      "description": "JSON-массив строк UUID, например [\"...\", \"...\"]",
-      "validate": {
-        "required": true
-      },
-      "id": "Field_0bn80wy",
+      "components": [
+        {
+          "label": "UUID продукта",
+          "key": "productId",
+          "type": "textfield",
+          "validate": {
+            "required": true
+          },
+          "id": "Field_product_id",
+          "layout": {
+            "row": "Row_product_id"
+          }
+        }
+      ],
+      "showOutline": true,
+      "isRepeating": true,
+      "allowAddRemove": true,
+      "defaultRepetitions": 1,
+      "label": "Продукты",
+      "type": "dynamiclist",
+      "id": "Field_product_ids",
+      "path": "productIds",
       "layout": {
         "row": "Row_1qbyunr"
       }
