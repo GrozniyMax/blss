@@ -36,6 +36,7 @@ public class CamundaIdentitySynchronizer {
     private static final String GROUP_TYPE = "WORKFLOW";
     private static final int APPLICATION_RESOURCE = 0;
     private static final int PROCESS_DEFINITION_RESOURCE = 6;
+    private static final int PROCESS_INSTANCE_RESOURCE = 8;
 
     private static final Map<Role, Set<String>> STARTABLE_PROCESSES = startableProcesses();
 
@@ -78,7 +79,7 @@ public class CamundaIdentitySynchronizer {
         }
 
         Arrays.stream(Role.values()).forEach(this::ensureGroup);
-        ensureRoleAuthorizations(Role.USER);
+        Arrays.stream(Role.values()).forEach(this::ensureRoleAuthorizations);
         boolean created = ensureUser(account);
         if (!created) {
             updatePassword(account);
@@ -219,7 +220,17 @@ public class CamundaIdentitySynchronizer {
                 List.of("ACCESS")
         );
 
-        for (String processKey : STARTABLE_PROCESSES.getOrDefault(role, Set.of())) {
+        Set<String> processKeys = STARTABLE_PROCESSES.getOrDefault(role, Set.of());
+        if (!processKeys.isEmpty()) {
+            ensureAuthorization(
+                    role.name(),
+                    PROCESS_INSTANCE_RESOURCE,
+                    "*",
+                    List.of("CREATE")
+            );
+        }
+
+        for (String processKey : processKeys) {
             ensureAuthorization(
                     role.name(),
                     PROCESS_DEFINITION_RESOURCE,
