@@ -22,6 +22,7 @@ import org.springframework.web.util.UriUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -87,6 +88,7 @@ public class CamundaIdentitySynchronizer {
             updatePassword(account);
         }
         synchronizeMemberships(account);
+        deleteDirectAuthorizations(account);
         log.info("Synchronized newly registered user {} with Camunda", account.getUsername());
     }
 
@@ -119,6 +121,7 @@ public class CamundaIdentitySynchronizer {
                     updatePassword(account);
                 }
                 synchronizeMemberships(account);
+                deleteDirectAuthorizations(account);
                 synchronizedUsers++;
             } catch (Exception e) {
                 log.error("Failed to synchronize XML user {} with Camunda: {}",
@@ -180,15 +183,38 @@ public class CamundaIdentitySynchronizer {
 
         String userId = camundaUserId(account.getUsername());
         Set<String> currentGroups = getUserGroups(userId);
-        for (Role role : Role.values()) {
-            String groupId = role.name();
-            boolean expected = expectedGroups.contains(groupId);
-            boolean current = currentGroups.contains(groupId);
-
-            if (expected && !current) {
+        for (String groupId : expectedGroups) {
+            if (!currentGroups.contains(groupId)) {
                 put("/group/" + encode(groupId) + "/members/" + encode(userId), null);
-            } else if (!expected && current) {
-                delete("/group/" + encode(groupId) + "/members/" + encode(userId));
+            }
+        }
+
+        if (!userId.equals(adminUsername)) {
+            for (String groupId : currentGroups) {
+                if (!expectedGroups.contains(groupId)) {
+                    delete("/group/" + encode(groupId) + "/members/" + encode(userId));
+                    log.info("Removed unexpected Camunda group {} from user {}", groupId, userId);
+                }
+            }
+        }
+    }
+
+    private void deleteDirectAuthorizations(XmlUser.UserAccount account) {
+        String userId = camundaUserId(account.getUsername());
+        if (userId.equals(adminUsername)) {
+            return;
+        }
+
+        JsonNode authorizations = get("/authorization?type=1&userIdIn=" + encode(userId));
+        if (authorizations == null || !authorizations.isArray()) {
+            return;
+        }
+
+        for (JsonNode authorization : authorizations) {
+            if (userId.equals(authorization.path("userId").asText())) {
+                delete("/authorization/" + encode(authorization.path("id").asText()));
+                log.info("Deleted direct Camunda authorization {} from user {}",
+                        authorization.path("id").asText(), userId);
             }
         }
     }
@@ -215,119 +241,122 @@ public class CamundaIdentitySynchronizer {
     }
 
     private void ensureRoleAuthorizations(Role role) {
-        ensureAuthorization(
-                role.name(),
-                APPLICATION_RESOURCE,
-                "tasklist",
-                List.of("ACCESS")
-        );
+        Map<ResourceKey, Set<String>> expected = new LinkedHashMap<>();
+        addExpectedPermission(expected, APPLICATION_RESOURCE, "tasklist", "ACCESS");
 
         Set<String> cockpitProcessKeys = COCKPIT_PROCESSES.getOrDefault(role, Set.of());
         if (!cockpitProcessKeys.isEmpty()) {
-            ensureAuthorization(
-                    role.name(),
-                    APPLICATION_RESOURCE,
-                    "cockpit",
-                    List.of("ACCESS")
-            );
-        } else {
-            deleteAuthorizations(role.name(), APPLICATION_RESOURCE, "cockpit");
+            addExpectedPermission(expected, APPLICATION_RESOURCE, "cockpit", "ACCESS");
         }
 
         Set<String> processKeys = STARTABLE_PROCESSES.getOrDefault(role, Set.of());
         if (!processKeys.isEmpty()) {
-            ensureAuthorization(
-                    role.name(),
-                    PROCESS_INSTANCE_RESOURCE,
-                    "*",
-                    List.of("CREATE")
-            );
+            addExpectedPermission(expected, PROCESS_INSTANCE_RESOURCE, "*", "CREATE");
         }
 
         for (String processKey : processKeys) {
-            ensureAuthorization(
-                    role.name(),
-                    PROCESS_DEFINITION_RESOURCE,
-                    processKey,
-                    List.of("READ", "CREATE_INSTANCE")
-            );
+            addExpectedPermission(expected, PROCESS_DEFINITION_RESOURCE, processKey, "READ");
+            addExpectedPermission(expected, PROCESS_DEFINITION_RESOURCE, processKey, "CREATE_INSTANCE");
         }
 
         for (String processKey : cockpitProcessKeys) {
-            ensureAuthorization(
-                    role.name(),
-                    PROCESS_DEFINITION_RESOURCE,
-                    processKey,
-                    List.of("READ", "READ_INSTANCE", "READ_HISTORY")
-            );
+            addExpectedPermission(expected, PROCESS_DEFINITION_RESOURCE, processKey, "READ");
+            addExpectedPermission(expected, PROCESS_DEFINITION_RESOURCE, processKey, "READ_INSTANCE");
+            addExpectedPermission(expected, PROCESS_DEFINITION_RESOURCE, processKey, "READ_HISTORY");
         }
+
+        reconcileRoleAuthorizations(role.name(), expected);
     }
 
-    private void ensureAuthorization(String groupId, int resourceType, String resourceId, List<String> permissions) {
-        JsonNode authorizations = get("/authorization?type=1&groupIdIn=" + encode(groupId)
-                + "&resourceType=" + resourceType);
+    private void addExpectedPermission(
+            Map<ResourceKey, Set<String>> expected,
+            int resourceType,
+            String resourceId,
+            String permission
+    ) {
+        expected.computeIfAbsent(new ResourceKey(resourceType, resourceId), ignored -> new HashSet<>())
+                .add(permission);
+    }
 
-        Set<String> grantedPermissions = new HashSet<>();
-        String authorizationId = null;
-        if (authorizations != null && authorizations.isArray()) {
-            for (JsonNode authorization : authorizations) {
-                if (resourceId.equals(authorization.path("resourceId").asText())) {
-                    if (authorizationId == null) {
-                        authorizationId = authorization.path("id").asText();
-                    }
-                    authorization.path("permissions").forEach(permission ->
-                            grantedPermissions.add(permission.asText()));
+    private void reconcileRoleAuthorizations(String groupId, Map<ResourceKey, Set<String>> expected) {
+        for (int resourceType : List.of(
+                APPLICATION_RESOURCE,
+                PROCESS_DEFINITION_RESOURCE,
+                PROCESS_INSTANCE_RESOURCE
+        )) {
+            JsonNode authorizations = get("/authorization?type=1&groupIdIn=" + encode(groupId)
+                    + "&resourceType=" + resourceType);
+            Map<String, List<JsonNode>> currentByResource = new LinkedHashMap<>();
+            if (authorizations != null && authorizations.isArray()) {
+                authorizations.forEach(authorization -> currentByResource
+                        .computeIfAbsent(authorization.path("resourceId").asText(), ignored -> new ArrayList<>())
+                        .add(authorization));
+            }
+
+            for (Map.Entry<String, List<JsonNode>> entry : currentByResource.entrySet()) {
+                ResourceKey key = new ResourceKey(resourceType, entry.getKey());
+                if (!expected.containsKey(key)) {
+                    entry.getValue().forEach(this::deleteAuthorization);
                 }
             }
-        }
 
-        List<String> missingPermissions = permissions.stream()
-                .filter(permission -> !grantedPermissions.contains(permission))
-                .toList();
-        if (missingPermissions.isEmpty()) {
-            return;
+            expected.entrySet().stream()
+                    .filter(entry -> entry.getKey().resourceType() == resourceType)
+                    .forEach(entry -> reconcileAuthorization(
+                            groupId,
+                            entry.getKey(),
+                            entry.getValue(),
+                            currentByResource.getOrDefault(entry.getKey().resourceId(), List.of())
+                    ));
         }
-
-        if (authorizationId == null) {
-            post("/authorization/create", Map.of(
-                    "type", 1,
-                    "permissions", missingPermissions,
-                    "groupId", groupId,
-                    "resourceType", resourceType,
-                    "resourceId", resourceId
-            ));
-            log.info("Granted Camunda permissions {} to group {} on resource {}",
-                    missingPermissions, groupId, resourceId);
-            return;
-        }
-
-        Set<String> mergedPermissions = new HashSet<>(grantedPermissions);
-        mergedPermissions.addAll(missingPermissions);
-        Map<String, Object> update = new LinkedHashMap<>();
-        update.put("permissions", mergedPermissions);
-        update.put("userId", null);
-        update.put("groupId", groupId);
-        update.put("resourceType", resourceType);
-        update.put("resourceId", resourceId);
-        put("/authorization/" + encode(authorizationId), update);
-        log.info("Updated Camunda permissions for group {} on resource {} to {}",
-                groupId, resourceId, mergedPermissions);
     }
 
-    private void deleteAuthorizations(String groupId, int resourceType, String resourceId) {
-        JsonNode authorizations = get("/authorization?type=1&groupIdIn=" + encode(groupId)
-                + "&resourceType=" + resourceType);
-        if (authorizations == null || !authorizations.isArray()) {
+    private void reconcileAuthorization(
+            String groupId,
+            ResourceKey key,
+            Set<String> expectedPermissions,
+            List<JsonNode> current
+    ) {
+        if (current.isEmpty()) {
+            post("/authorization/create", Map.of(
+                    "type", 1,
+                    "permissions", expectedPermissions,
+                    "groupId", groupId,
+                    "resourceType", key.resourceType(),
+                    "resourceId", key.resourceId()
+            ));
+            log.info("Granted Camunda permissions {} to group {} on resource {}",
+                    expectedPermissions, groupId, key.resourceId());
             return;
         }
 
-        for (JsonNode authorization : authorizations) {
-            if (resourceId.equals(authorization.path("resourceId").asText())) {
-                delete("/authorization/" + encode(authorization.path("id").asText()));
-                log.info("Deleted Camunda authorization for group {} on resource {}",
-                        groupId, resourceId);
-            }
+        JsonNode primary = current.get(0);
+        Set<String> grantedPermissions = new HashSet<>();
+        primary.path("permissions").forEach(permission -> grantedPermissions.add(permission.asText()));
+        if (!grantedPermissions.equals(expectedPermissions)) {
+            Map<String, Object> update = new LinkedHashMap<>();
+            update.put("permissions", expectedPermissions);
+            update.put("userId", null);
+            update.put("groupId", groupId);
+            update.put("resourceType", key.resourceType());
+            update.put("resourceId", key.resourceId());
+            put("/authorization/" + encode(primary.path("id").asText()), update);
+            log.info("Replaced Camunda permissions for group {} on resource {} with {}",
+                    groupId, key.resourceId(), expectedPermissions);
         }
+
+        current.stream().skip(1).forEach(this::deleteAuthorization);
+    }
+
+    private void deleteAuthorization(JsonNode authorization) {
+        String authorizationId = authorization.path("id").asText();
+        if (!authorizationId.isBlank()) {
+            delete("/authorization/" + encode(authorizationId));
+            log.info("Deleted unexpected Camunda authorization {}", authorizationId);
+        }
+    }
+
+    private record ResourceKey(int resourceType, String resourceId) {
     }
 
     private boolean exists(String path) {
